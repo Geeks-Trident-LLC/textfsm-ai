@@ -1,0 +1,24 @@
+providers:
+  openai:
+    api_key: "${OPENAI_API_KEY}"
+    model: "gpt-5-mini"
+    daily_limit: 20000
+    monthly_limit: 300000
+
+  claude:
+    api_key: "${CLAUDE_API_KEY}"
+    model: "claude-3-haiku"
+    daily_limit: 20000
+    monthly_limit: 300000
+
+  gemini:
+    api_key: "${GEMINI_API_KEY}"
+    model: "gemini-2.5-flash"
+    daily_limit: 50000
+    monthly_limit: 500000
+
+  deepseek:
+    api_key: "${DEEPSEEK_API_KEY}"
+    model: "deepseek-v3.2-exp"
+    daily_limit: 50000
+    monthly_limit: 500000

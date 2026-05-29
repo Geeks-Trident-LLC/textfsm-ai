@@ -1,0 +1,113 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "textfsm-ai"
+version = "0.1.0"
+description = "AI-powered TextFSM template generator with multi-provider routing"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Tuyen Mathew Duong", email = "tuyen@geekstrident.com" }
+]
+
+maintainers = [
+    { name = "Tuyen Mathew Duong", email = "tuyen@geekstrident.com" }
+]
+
+requires-python = ">=3.9"
+dependencies = [
+    "PyYAML>=6.0",
+    "requests>=2.32",
+]
+
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Text Processing",
+    "Topic :: Text Processing :: Linguistic",
+    "Topic :: Utilities",
+
+    "Operating System :: OS Independent",
+]
+
+
+keywords = [
+    "textfsm",
+    "network automation",
+    "nornir",
+    "netmiko",
+    "napalm",
+    "scrapli",
+    "cli parsing",
+    "template generator",
+    "ai",
+    "llm",
+    "openai",
+    "claude",
+    "gemini",
+    "deepseek",
+    "router",
+    "quota manager",
+]
+
+
+[project.urls]
+Homepage = "https://github.com/Geeks-Trident-LLC/textfsm-ai"
+Repository = "https://github.com/Geeks-Trident-LLC/textfsm-ai"
+Issues = "https://github.com/Geeks-Trident-LLC/textfsm-ai/issues"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["textfsm_ai*"]
+
+[tool.pytest.ini_options]
+addopts = "-q --disable-warnings --maxfail=1"
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+
+[project.optional-dependencies]
+dev = [
+    "build",
+    "twine",
+]
+
+test = [
+    "pytest",
+    "pytest-cov",
+]
+
+lint = [
+    "ruff",
+]
+
+all = [
+    "build",
+    "twine",
+    "pytest",
+    "pytest-cov",
+    "ruff",
+]

@@ -1,0 +1,12 @@
+-r requirements.txt
+
+# Testing
+pytest
+pytest-cov
+
+# Linting / formatting
+ruff
+
+# Packaging
+build
+twine
