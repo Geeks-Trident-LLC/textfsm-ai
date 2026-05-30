@@ -7,9 +7,11 @@ repo_name: Geeks-Trident-LLC/textfsm-ai
 theme:
   name: material
   features:
+    - navigation.tabs
     - navigation.sections
     - navigation.top
     - content.code.copy
+    - content.action.edit
 
 nav:
   - Home: index.md
@@ -29,6 +31,7 @@ markdown_extensions:
       permalink: true
 
 plugins:
+  - mike
   - search
   - minify
   - git-revision-date-localized
@@ -37,3 +40,7 @@ plugins:
         python:
           options:
             docstring_style: google
+
+extra:
+  version:
+    provider: mike

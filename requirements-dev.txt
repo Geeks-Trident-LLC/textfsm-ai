@@ -28,3 +28,4 @@ mkdocs-minify-plugin
 mkdocs-git-revision-date-localized-plugin
 mkdocstrings
 mkdocstrings-python
+mike
