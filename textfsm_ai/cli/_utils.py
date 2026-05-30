@@ -7,8 +7,6 @@ import click
 import functools
 
 
-
-
 def run_with_capture(ctx, func, *args, **kwargs):
     """Execute a subcommand, capture stdout, and wrap in JSON if requested.
 
@@ -41,7 +39,6 @@ def run_with_capture(ctx, func, *args, **kwargs):
     click.echo(output, nl=False)
     if use_time:
         click.echo(f"[time] {elapsed:.6f}s")
-
 
 
 def wrap_command(cmd):

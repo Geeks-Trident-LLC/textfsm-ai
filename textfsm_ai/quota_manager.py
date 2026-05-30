@@ -22,6 +22,7 @@ class QuotaManager:
                 "month": self._month(),
                 "daily_tokens": 0,
                 "monthly_tokens": 0,
+                "just_reset_month": False,
             }
             self._save()
 
@@ -39,24 +40,45 @@ class QuotaManager:
         today = self._today()
         month = self._month()
 
-        if self.data["day"] != today:
-            self.data["day"] = today
-            self.data["daily_tokens"] = 0
-
+        # Monthly reset
         if self.data["month"] != month:
             self.data["month"] = month
             self.data["monthly_tokens"] = 0
+            self.data["day"] = today
+            self.data["daily_tokens"] = 0
+            self.data["just_reset_month"] = True
+            self._save()
+            return
 
-    def add_tokens(self, count: int):
-        self._maybe_reset()
-        self.data["daily_tokens"] += count
-        self.data["monthly_tokens"] += count
-        self._save()
+        # Daily reset
+        if self.data["day"] != today:
+            self.data["day"] = today
+            self.data["daily_tokens"] = 0
+            self.data["just_reset_month"] = False
+            self._save()
+            return
 
     def allowed(self, count: int) -> bool:
         self._maybe_reset()
-        if self.data["daily_tokens"] + count > self.daily_limit:
-            return False
+
+        # Monthly limit always enforced
         if self.data["monthly_tokens"] + count > self.monthly_limit:
             return False
+
+        # Daily limit skipped ONCE after monthly reset
+        if not self.data.get("just_reset_month", False):
+            if self.data["daily_tokens"] + count > self.daily_limit:
+                return False
+
         return True
+
+    def add_tokens(self, count: int):
+        self._maybe_reset()
+
+        # After first request of new month, daily limit applies again
+        if self.data.get("just_reset_month", False):
+            self.data["just_reset_month"] = False
+
+        self.data["daily_tokens"] += count
+        self.data["monthly_tokens"] += count
+        self._save()
