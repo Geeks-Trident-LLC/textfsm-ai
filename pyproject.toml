@@ -90,6 +90,7 @@ textfsm-ai = "textfsm_ai.cli.top:main"
 Homepage = "https://github.com/Geeks-Trident-LLC/textfsm-ai"
 Repository = "https://github.com/Geeks-Trident-LLC/textfsm-ai"
 Issues = "https://github.com/Geeks-Trident-LLC/textfsm-ai/issues"
+Documentation = "https://geeks-trident-llc.github.io/textfsm-ai/latest/"
 
 [tool.setuptools]
 include-package-data = true
