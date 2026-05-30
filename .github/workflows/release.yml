@@ -25,9 +25,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: "pip"
 
       - name: Install tox
-        run: pip install tox
+        run: python -m pip install tox
 
       - name: Run tox tests
         run: tox -e py${{ matrix.python-version//./ }}
@@ -42,9 +43,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
 
       - name: Install tox
-        run: pip install tox
+        run: python -m pip install tox
 
       - name: Run lint
         run: tox -e lint
@@ -60,9 +62,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
 
       - name: Install build
-        run: pip install build
+        run: python -m pip install build
 
       - name: Build package
         run: python -m build
@@ -92,6 +95,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@v1.10.0
@@ -111,9 +115,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
 
       - name: Install docs tools
-        run: pip install mike
+        run: |
+          python -m pip install -r requirements-dev.txt
+          python -m pip install mike
 
       - name: Deploy versioned docs
         run: |
