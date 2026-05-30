@@ -28,10 +28,10 @@ function Ensure-Main-Branch {
 }
 
 function Get-Version {
-    python - << 'EOF'
-    import tomllib
-    print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])
-    EOF
+    @"
+import tomllib
+print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])
+"@ | python
 }
 
 function Ensure-Tool($name) {
@@ -74,7 +74,7 @@ git push
 git push --tags
 
 # Reload version after bump
-$version = Get-Version
+$version = (Get-Version).Trim()
 $testTag = "v$version-test"
 $prodTag = "v$version"
 

@@ -11,10 +11,10 @@ param(
 )
 
 function Get-Version {
-    python - << 'EOF'
-    import tomllib
-    print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])
-    EOF
+    @"
+import tomllib
+print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])
+"@ | python
 }
 
 function Bump-Version([string]$part) {

@@ -3,15 +3,24 @@
     Verify that pyproject.toml and textfsm_ai/__init__.py versions match
 #>
 
-$pyVersion = python - << 'EOF'
+# Read version from pyproject.toml
+$pyVersion = @"
 import tomllib
 print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])
-EOF
+"@ | python
+$pyVersion = $pyVersion.Trim()
 
-$initVersion = python - << 'EOF'
-import textfsm_ai
-print(textfsm_ai.__version__)
-EOF
+# Read version from local textfsm_ai/__init__.py (no install required)
+$initVersion = @"
+import sys, importlib.util, pathlib
+
+pkg = pathlib.Path("textfsm_ai/__init__.py").resolve()
+spec = importlib.util.spec_from_file_location("textfsm_ai", pkg)
+mod = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(mod)
+print(mod.__version__)
+"@ | python
+$initVersion = $initVersion.Trim()
 
 Write-Host "pyproject.toml version: $pyVersion"
 Write-Host "__init__.py version:   $initVersion"
