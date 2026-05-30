@@ -9,12 +9,9 @@ It helps you automatically generate templates, validate patterns, explain parsin
 
 ## 🚀 Features
 
-- **AI‑generated TextFSM templates** from raw CLI samples  
-- **Template validation & refinement** using LLM reasoning  
-- **Smart field extraction** with model‑assisted regex suggestions  
-- **Drift detection** between old and new device outputs  
-- **Multi‑provider AI routing** (OpenAI → Azure → Ollama fallback)  
-- **Local LLM support** (Llama3, Qwen2.5, Mistral via Ollama)  
-- **Extensible provider architecture** for custom backends  
+- **AI‑Powered Template Generation** — Turn raw CLI output into production‑ready TextFSM templates in seconds.  
+- **Smart Validation & Refinement** — Automatically verify template correctness and refine ambiguous patterns with AI assistance.  
+- **Built‑In Golden Master Testing** — Lock in deterministic parsing behavior and detect regressions instantly.  
+- **Flexible Multi‑Provider AI Routing** — Use the best AI model for each task with automatic routing across supported cloud providers.
 
 ---

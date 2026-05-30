@@ -44,3 +44,13 @@ bump-minor:
 
 bump-major:
     bump2version major
+
+
+tox:
+    tox
+
+tox-lint:
+    tox -e lint
+
+tox-typecheck:
+    tox -e typecheck
