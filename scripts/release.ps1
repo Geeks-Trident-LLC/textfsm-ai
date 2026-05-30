@@ -17,11 +17,11 @@ print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])
 "@ | python
 }
 
-function Bump-Version([string]$part) {
+function Update-Version([string]$part) {
     bump2version $part
 }
 
-function Release-Test {
+function Publish-Test {
     $version = Get-Version
     $tag = "v$version-test"
 
@@ -39,7 +39,7 @@ function Release-Test {
     Write-Host "TestPyPI tag pushed: $tag"
 }
 
-function Release-Prod {
+function Publish-Prod {
     $branch = git rev-parse --abbrev-ref HEAD
     if ($branch -ne "main") {
         Write-Error "Must be on main to release to PyPI"
@@ -65,9 +65,9 @@ function Release-Prod {
 }
 
 switch ($Command) {
-    "bump-patch" { Bump-Version "patch" }
-    "bump-minor" { Bump-Version "minor" }
-    "bump-major" { Bump-Version "major" }
-    "release-test" { Release-Test }
-    "release-prod" { Release-Prod }
+    "bump-patch" { Update-Version "patch" }
+    "bump-minor" { Update-Version "minor" }
+    "bump-major" { Update-Version "major" }
+    "release-test" { Publish-Test }
+    "release-prod" { Publish-Prod }
 }

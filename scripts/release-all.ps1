@@ -11,7 +11,7 @@
     8. create GitHub Release
 #>
 
-function Ensure-Clean-Tree {
+function Test-Clean-Tree {
     $status = git status --porcelain
     if ($status) {
         Write-Error "Working tree is not clean. Commit or stash changes first."
@@ -19,7 +19,7 @@ function Ensure-Clean-Tree {
     }
 }
 
-function Ensure-Main-Branch {
+function Test-Main-Branch {
     $branch = git rev-parse --abbrev-ref HEAD
     if ($branch -ne "main") {
         Write-Error "You must be on 'main' to run release-all.ps1"
@@ -34,7 +34,7 @@ print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])
 "@ | python
 }
 
-function Ensure-Tool($name) {
+function Test-Tool($name) {
     if (-not (Get-Command $name -ErrorAction SilentlyContinue)) {
         Write-Error "Required tool '$name' is not installed or not in PATH."
         exit 1
@@ -44,21 +44,21 @@ function Ensure-Tool($name) {
 # -----------------------------
 # 0. Tool checks
 # -----------------------------
-Ensure-Tool "git"
-Ensure-Tool "python"
-Ensure-Tool "pip"
-Ensure-Tool "bump2version"
-Ensure-Tool "gh"
+Test-Tool "git"
+Test-Tool "python"
+Test-Tool "pip"
+Test-Tool "bump2version"
+Test-Tool "gh"
 
 # -----------------------------
 # 1. Ensure clean working tree
 # -----------------------------
-Ensure-Clean-Tree
+Test-Clean-Tree
 
 # -----------------------------
 # 2. Ensure on main branch
 # -----------------------------
-Ensure-Main-Branch
+Test-Main-Branch
 
 # -----------------------------
 # 3. Bump version
