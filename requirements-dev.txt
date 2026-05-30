@@ -1,4 +1,4 @@
-# Development tools only (runtime deps live in pyproject.toml)
+# Development tools only (runtime dependencies live in pyproject.toml)
 
 # Build & publish
 build
@@ -8,20 +8,16 @@ twine
 pytest
 pytest-cov
 
-# Linting
+# Linting & formatting
 ruff
-
-# Formatting (optional)
 black
+isort
 
 # Type checking
 mypy
+types-PyYAML
 
-# Import sorting
-isort
-
-
-# Docs
+# Documentation
 mkdocs
 mkdocs-material
 mkdocs-minify-plugin
@@ -29,7 +25,6 @@ mkdocs-git-revision-date-localized-plugin
 mkdocstrings
 mkdocstrings-python
 mike
-
 
 # Versioning
 bump2version

@@ -19,6 +19,9 @@ Get-ChildItem -Recurse -Directory -Filter ".ruffcache" | Remove-Item -Recurse -F
 # tox environments
 Get-ChildItem -Recurse -Directory -Filter ".tox" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 
+# mymy cache
+Get-ChildItem -Recurse -Directory -Filter ".mypy_cache" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+
 # Coverage output
 Get-ChildItem -Recurse -Directory -Filter "htmlcov" | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 Get-ChildItem -Recurse -Filter ".coverage" | Remove-Item -Force -ErrorAction SilentlyContinue

@@ -1,3 +1,4 @@
+from typing import Optional
 import pathlib
 import click
 
@@ -20,7 +21,7 @@ import click
     default=None,
     help="Optional model name override.",
 )
-def generate(input_file: pathlib.Path, provider: str, model: str | None) -> None:
+def generate(input_file: pathlib.Path, provider: str, model: Optional[str]) -> None:
     click.echo(f"Generating template from: {input_file}")
     click.echo(f"Provider: {provider}")
     click.echo(f"Model: {model}")
