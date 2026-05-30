@@ -1,12 +1,30 @@
--r requirements.txt
+# Development tools only (runtime deps live in pyproject.toml)
+
+# Build & publish
+build
+twine
 
 # Testing
 pytest
 pytest-cov
 
-# Linting / formatting
+# Linting
 ruff
 
-# Packaging
-build
-twine
+# Formatting (optional)
+black
+
+# Type checking
+mypy
+
+# Import sorting
+isort
+
+
+# Docs
+mkdocs
+mkdocs-material
+mkdocs-minify-plugin
+mkdocs-git-revision-date-localized-plugin
+mkdocstrings
+mkdocstrings-python

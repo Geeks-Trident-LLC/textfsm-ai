@@ -1,0 +1,39 @@
+site_name: textfsm-ai
+site_description: AI-powered TextFSM template generator with multi-provider routing
+site_url: https://geekstrident.com/textfsm-ai
+repo_url: https://github.com/Geeks-Trident-LLC/textfsm-ai
+repo_name: Geeks-Trident-LLC/textfsm-ai
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - CLI:
+      - Overview: cli.md
+  - Reference:
+      - AI router: reference/ai_router.md
+      - Providers: reference/providers.md
+      - Quota manager: reference/quota_manager.md
+      - Config loader: reference/config_loader.md
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - minify
+  - git-revision-date-localized
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google

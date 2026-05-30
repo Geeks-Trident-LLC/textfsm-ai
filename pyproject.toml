@@ -7,8 +7,8 @@ name = "textfsm-ai"
 version = "0.1.0"
 description = "AI-powered TextFSM template generator with multi-provider routing"
 readme = "README.md"
-license = "MIT"
-license-files = ["LICENSE"]
+license = { text = "MIT" }
+
 authors = [
     { name = "Tuyen Mathew Duong", email = "tuyen@geekstrident.com" }
 ]
@@ -18,11 +18,12 @@ maintainers = [
 ]
 
 requires-python = ">=3.9"
+
 dependencies = [
     "PyYAML>=6.0",
-    "requests>=2.32",
+    "requests>=2.31",
+    "click>=8.1",
 ]
-
 
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -30,7 +31,6 @@ classifiers = [
     "Intended Audience :: Information Technology",
     "Intended Audience :: System Administrators",
 
-    "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -40,20 +40,14 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
     "Topic :: Software Development :: Code Generators",
     "Topic :: Text Processing",
-    "Topic :: Text Processing :: Linguistic",
     "Topic :: Utilities",
 
     "Operating System :: OS Independent",
 ]
 
-
 keywords = [
     "textfsm",
     "network automation",
-    "nornir",
-    "netmiko",
-    "napalm",
-    "scrapli",
     "cli parsing",
     "template generator",
     "ai",
@@ -65,29 +59,6 @@ keywords = [
     "router",
     "quota manager",
 ]
-
-
-[project.urls]
-Homepage = "https://github.com/Geeks-Trident-LLC/textfsm-ai"
-Repository = "https://github.com/Geeks-Trident-LLC/textfsm-ai"
-Issues = "https://github.com/Geeks-Trident-LLC/textfsm-ai/issues"
-
-[tool.setuptools]
-include-package-data = true
-
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["textfsm_ai*"]
-
-[tool.pytest.ini_options]
-addopts = "-q --disable-warnings --maxfail=1"
-
-[tool.ruff]
-line-length = 100
-target-version = "py39"
-
-[tool.ruff.lint]
-select = ["E", "F", "W"]
 
 [project.optional-dependencies]
 dev = [
@@ -111,3 +82,29 @@ all = [
     "pytest-cov",
     "ruff",
 ]
+
+[project.scripts]
+textfsm-ai = "textfsm_ai.cli.top:main"
+
+[project.urls]
+Homepage = "https://github.com/Geeks-Trident-LLC/textfsm-ai"
+Repository = "https://github.com/Geeks-Trident-LLC/textfsm-ai"
+Issues = "https://github.com/Geeks-Trident-LLC/textfsm-ai/issues"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["textfsm_ai*"]
+exclude = ["tests*", "docs*", "examples*"]
+
+[tool.pytest.ini_options]
+addopts = "-q --disable-warnings --maxfail=1"
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
