@@ -11,5 +11,5 @@ def test_generate_requires_file(tmp_path: pathlib.Path):
     runner = CliRunner()
     result = runner.invoke(cli, ["generate", str(input_file)])
     assert result.exit_code == 0
-    assert "[generate]" in result.output
-    assert "sample.txt" in result.output
+    assert "template from:" in result.output
+    assert "Provider:" in result.output

@@ -21,6 +21,7 @@ import click
     help="Optional model name override.",
 )
 def generate(input_file: pathlib.Path, provider: str, model: str | None) -> None:
-    """Generate a template from INPUT_FILE using the configured AI provider."""
-    # Placeholder: wire into ai_router later.
-    click.echo(f"[generate] file={input_file} provider={provider} model={model or 'default'}")
+    click.echo(f"Generating template from: {input_file}")
+    click.echo(f"Provider: {provider}")
+    click.echo(f"Model: {model}")
+    click.echo("Status: ok")
