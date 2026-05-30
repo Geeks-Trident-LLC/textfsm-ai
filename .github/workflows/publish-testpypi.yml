@@ -13,8 +13,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.9", "3.12" ]
-        tox-env: [ "py39", "py312" ]
+        include:
+          - python-version: "3.9"
+            tox-env: "py39"
+          - python-version: "3.12"
+            tox-env: "py312"
 
     steps:
       - uses: actions/checkout@v4
