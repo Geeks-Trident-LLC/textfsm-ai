@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://geekstrident.com/textfsm-ai/</loc>
+         <lastmod>2026-05-30</lastmod>
+    </url>
+    <url>
+         <loc>https://geekstrident.com/textfsm-ai/cli/</loc>
+         <lastmod>2026-05-30</lastmod>
+    </url>
+    <url>
+         <loc>https://geekstrident.com/textfsm-ai/getting-started/</loc>
+         <lastmod>2026-05-30</lastmod>
+    </url>
+    <url>
+         <loc>https://geekstrident.com/textfsm-ai/reference/</loc>
+         <lastmod>2026-05-30</lastmod>
+    </url>
+    <url>
+         <loc>https://geekstrident.com/textfsm-ai/reference/ai_router/</loc>
+         <lastmod>2026-05-30</lastmod>
+    </url>
+    <url>
+         <loc>https://geekstrident.com/textfsm-ai/reference/config_loader/</loc>
+         <lastmod>2026-05-30</lastmod>
+    </url>
+    <url>
+         <loc>https://geekstrident.com/textfsm-ai/reference/providers/</loc>
+         <lastmod>2026-05-30</lastmod>
+    </url>
+    <url>
+         <loc>https://geekstrident.com/textfsm-ai/reference/quota_manager/</loc>
+         <lastmod>2026-05-30</lastmod>
+    </url>
+</urlset>
