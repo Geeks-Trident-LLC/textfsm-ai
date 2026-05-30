@@ -29,3 +29,7 @@ mkdocs-git-revision-date-localized-plugin
 mkdocstrings
 mkdocstrings-python
 mike
+
+
+# Versioning
+bump2version
