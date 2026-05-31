@@ -8,9 +8,15 @@ Ensures version is consistent across:
 import re
 from pathlib import Path
 
-import tomllib
-
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def extract_version_from_pyproject():
+    text = (ROOT / "pyproject.toml").read_text()
+    match = re.search(r'version\s*=\s*"([^"]+)"', text)
+    if not match:
+        raise RuntimeError("Version not found in pyproject.toml")
+    return match.group(1)
 
 
 def test_version_consistency():
@@ -18,9 +24,8 @@ def test_version_consistency():
     init_file = ROOT / "textfsm_ai" / "__init__.py"
     init_version = re.search(r'__version__ = "(.+?)"', init_file.read_text()).group(1)
 
-    # Load version from pyproject.toml
-    pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text())
-    pyproject_version = pyproject["project"]["version"]
+    # Load version from pyproject.toml (regex, no tomllib)
+    pyproject_version = extract_version_from_pyproject()
 
     # Load version from .bumpversion.cfg
     cfg_file = ROOT / ".bumpversion.cfg"
