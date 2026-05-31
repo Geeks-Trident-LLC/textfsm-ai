@@ -54,3 +54,15 @@ tox-lint:
 
 tox-typecheck:
     tox -e typecheck
+
+
+.PHONY: verify-version test-version
+
+# Run version consistency script
+verify-version:
+    @echo "Checking version consistency..."
+    @python scripts/verify-version.py
+
+# Run pytest version test
+test-version:
+    pytest -q tests/test_version_consistency.py

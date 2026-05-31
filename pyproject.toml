@@ -92,6 +92,9 @@ Repository = "https://github.com/Geeks-Trident-LLC/textfsm-ai"
 Issues = "https://github.com/Geeks-Trident-LLC/textfsm-ai/issues"
 Documentation = "https://geeks-trident-llc.github.io/textfsm-ai/latest/"
 
+[project.optional-dependencies]
+compat = ["tomli; python_version < '3.11'"]
+
 [tool.setuptools]
 include-package-data = true
 
