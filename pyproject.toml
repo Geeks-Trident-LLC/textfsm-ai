@@ -3,11 +3,11 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "textfsm_ai"
+name = "textfsm-ai"
 version = "0.1.16"
 description = "AI-powered TextFSM template generator with multi-provider routing"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
 
 authors = [
     { name = "Tuyen Mathew Duong", email = "tuyen@geekstrident.com" }
