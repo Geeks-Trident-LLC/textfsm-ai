@@ -7,6 +7,7 @@ Ensures version is consistent across:
 
 import re
 from pathlib import Path
+
 import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,6 +24,8 @@ def test_version_consistency():
 
     # Load version from .bumpversion.cfg
     cfg_file = ROOT / ".bumpversion.cfg"
-    cfg_version = re.search(r"current_version = (.+)", cfg_file.read_text()).group(1).strip()
+    cfg_version = (
+        re.search(r"current_version = (.+)", cfg_file.read_text()).group(1).strip()
+    )
 
     assert init_version == pyproject_version == cfg_version

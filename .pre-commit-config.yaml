@@ -2,23 +2,19 @@ repos:
   - repo: local
     hooks:
       - id: verify-version
-        name: Verify version consistency
+        name: verify-version
         entry: python scripts/verify-version.py
         language: system
-        pass_filenames: false
+        types: [python]
 
   - repo: https://github.com/psf/black
     rev: 24.4.2
     hooks:
       - id: black
 
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.4.4
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.8
     hooks:
       - id: ruff
+        args: ["--fix"]
       - id: ruff-format
-
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort

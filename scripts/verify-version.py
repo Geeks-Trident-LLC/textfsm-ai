@@ -13,21 +13,26 @@ Exit code:
 import re
 import sys
 from pathlib import Path
+
 import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
+
 
 def extract_init_version():
     text = (ROOT / "textfsm_ai" / "__init__.py").read_text()
     return re.search(r'__version__ = "(.+?)"', text).group(1)
 
+
 def extract_pyproject_version():
     data = tomllib.loads((ROOT / "pyproject.toml").read_text())
     return data["project"]["version"]
 
+
 def extract_cfg_version():
     text = (ROOT / ".bumpversion.cfg").read_text()
     return re.search(r"current_version = (.+)", text).group(1).strip()
+
 
 def main():
     init_v = extract_init_version()
@@ -43,6 +48,7 @@ def main():
     print(f"  pyproject.toml:     {proj_v}")
     print(f"  .bumpversion.cfg:   {cfg_v}")
     return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())
