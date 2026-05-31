@@ -45,24 +45,31 @@ bump-minor:
 bump-major:
     bump2version major
 
-
+# -----------------------------
+# Tox
+# -----------------------------
 tox:
     tox
 
 tox-lint:
     tox -e lint
 
+# Remove this if no typecheck env exists
 tox-typecheck:
     tox -e typecheck
 
-
-.PHONY: verify-version test-version
-
-# Run version consistency script
+# -----------------------------
+# Version checks
+# -----------------------------
 verify-version:
     @echo "Checking version consistency..."
     @python scripts/verify-version.py
 
-# Run pytest version test
 test-version:
     pytest -q tests/test_version_consistency.py
+
+.PHONY: \
+    release-test release-prod release \
+    bump-patch bump-minor bump-major \
+    tox tox-lint tox-typecheck \
+    verify-version test-version
