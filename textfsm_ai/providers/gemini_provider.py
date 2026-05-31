@@ -1,25 +1,33 @@
-import requests
+# textfsm_ai/providers/gemini_provider.py
+import time
+from typing import Any
 
-from textfsm_ai.quota_manager import QuotaManager
+import google.generativeai as genai
+
+from . import AIResponse
 
 
 class GeminiProvider:
-    def __init__(self, api_key, model, daily_limit, monthly_limit):
-        self.api_key = api_key
-        self.model = model
-        self.url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-        self.quota = QuotaManager("gemini", daily_limit, monthly_limit)
+    name = "gemini"
 
-    def generate(self, prompt: str) -> str:
-        estimated_tokens = len(prompt.split()) * 2
-        if not self.quota.allowed(estimated_tokens):
-            raise RuntimeError("Gemini quota exceeded")
+    def __init__(self, api_key: str | None = None, model: str = "gemini-1.5-flash"):
+        genai.configure(api_key=api_key)
+        self._model_name = model
 
-        payload = {"contents": [{"parts": [{"text": prompt}]}]}
-        params = {"key": self.api_key}
+    def send(self, prompt: str, **kwargs: Any) -> AIResponse:
+        model_name = kwargs.get("model", self._model_name)
+        model = genai.GenerativeModel(model_name)
+        start = time.perf_counter()
 
-        resp = requests.post(self.url, json=payload, params=params, timeout=30)
-        resp.raise_for_status()
+        resp = model.generate_content(prompt)
 
-        self.quota.add_tokens(estimated_tokens)
-        return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+        latency_ms = int((time.perf_counter() - start) * 1000)
+        text = resp.text or ""
+
+        return AIResponse(
+            text=text,
+            provider=self.name,
+            model=model_name,
+            latency_ms=latency_ms,
+            raw=resp,
+        )
