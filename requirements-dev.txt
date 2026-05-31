@@ -27,3 +27,6 @@ mike
 
 # Versioning
 bump2version
+
+# Python < 3.11 needs tomli for tomllib
+tomli; python_version < "3.11"
