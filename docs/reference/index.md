@@ -1,3 +1,6 @@
-# Reference
+# API Reference
 
-Choose a module from the sidebar to view detailed API documentation.
+The API reference is generated automatically from the source code using
+`mkdocstrings`.
+
+## Under development

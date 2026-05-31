@@ -29,6 +29,11 @@ jobs:
           pip install -r requirements-dev.txt
           pip install mike
 
+      - name: Configure git identity for mike
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Deploy versioned docs with mike
         run: |
           VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
