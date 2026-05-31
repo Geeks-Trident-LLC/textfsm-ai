@@ -15,5 +15,4 @@ class AIResponse:
 class Provider(Protocol):
     name: str
 
-    def send(self, prompt: str, **kwargs: Any) -> AIResponse:
-        """"""
+    def send(self, prompt: str, **kwargs: Any) -> AIResponse: ...

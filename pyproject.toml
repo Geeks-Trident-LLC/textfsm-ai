@@ -23,6 +23,8 @@ dependencies = [
     "PyYAML>=6.0",
     "requests>=2.31",
     "click>=8.1",
+    "openai>=1.0.0",
+
 ]
 
 classifiers = [

@@ -1,28 +1,35 @@
-import requests
+# textfsm_ai/providers/openai_provider.py
+import time
+from typing import Any
 
-from textfsm_ai.quota_manager import QuotaManager
+from openai import OpenAI
+
+from . import AIResponse
 
 
 class OpenAIProvider:
-    def __init__(self, api_key, model, daily_limit, monthly_limit):
-        self.api_key = api_key
-        self.model = model
-        self.url = "https://api.openai.com/v1/chat/completions"
-        self.quota = QuotaManager("openai", daily_limit, monthly_limit)
+    name = "openai"
 
-    def generate(self, prompt: str) -> str:
-        estimated_tokens = len(prompt.split()) * 2
-        if not self.quota.allowed(estimated_tokens):
-            raise RuntimeError("OpenAI quota exceeded")
+    def __init__(self, api_key: str | None = None, model: str = "gpt-4.1-mini"):
+        self._client = OpenAI(api_key=api_key)
+        self._default_model = model
 
-        headers = {"Authorization": f"Bearer {self.api_key}"}
-        payload = {
-            "model": self.model,
-            "messages": [{"role": "user", "content": prompt}],
-        }
+    def send(self, prompt: str, **kwargs: Any) -> AIResponse:
+        model = kwargs.get("model", self._default_model)
+        start = time.perf_counter()
 
-        resp = requests.post(self.url, json=payload, headers=headers, timeout=30)
-        resp.raise_for_status()
+        resp = self._client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+        )
 
-        self.quota.add_tokens(estimated_tokens)
-        return resp.json()["choices"][0]["message"]["content"]
+        latency_ms = int((time.perf_counter() - start) * 1000)
+        text = resp.choices[0].message.content or ""
+
+        return AIResponse(
+            text=text,
+            provider=self.name,
+            model=model,
+            latency_ms=latency_ms,
+            raw=resp,
+        )
