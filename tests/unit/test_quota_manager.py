@@ -60,7 +60,9 @@ def test_quota_monthly_reset(tmp_path, monkeypatch):
     assert qm.allowed(100) is False  # would exceed monthly limit
 
     # Simulate next month
-    monkeypatch.setattr(time, "strftime", lambda fmt: "2099-03" if fmt == "%Y-%m" else "2099-03-01")
+    monkeypatch.setattr(
+        time, "strftime", lambda fmt: "2099-03" if fmt == "%Y-%m" else "2099-03-01"
+    )
 
     assert qm.allowed(150) is True  # monthly reset happened
 

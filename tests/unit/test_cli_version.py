@@ -1,4 +1,5 @@
 from click.testing import CliRunner
+
 from textfsm_ai.cli.top import cli
 
 

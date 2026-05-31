@@ -1,4 +1,5 @@
 import requests
+
 from textfsm_ai.quota_manager import QuotaManager
 
 
@@ -6,9 +7,7 @@ class GeminiProvider:
     def __init__(self, api_key, model, daily_limit, monthly_limit):
         self.api_key = api_key
         self.model = model
-        self.url = (
-            f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-        )
+        self.url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
         self.quota = QuotaManager("gemini", daily_limit, monthly_limit)
 
     def generate(self, prompt: str) -> str:

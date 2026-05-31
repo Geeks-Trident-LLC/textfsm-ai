@@ -1,6 +1,8 @@
-from click.testing import CliRunner
-from textfsm_ai.cli.top import cli
 import json
+
+from click.testing import CliRunner
+
+from textfsm_ai.cli.top import cli
 
 
 def test_json_and_time_together():

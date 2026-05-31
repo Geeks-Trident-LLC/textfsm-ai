@@ -1,8 +1,8 @@
 from textfsm_ai.config_loader import load_config
-from textfsm_ai.providers.openai_provider import OpenAIProvider
 from textfsm_ai.providers.claude_provider import ClaudeProvider
-from textfsm_ai.providers.gemini_provider import GeminiProvider
 from textfsm_ai.providers.deepseek_provider import DeepSeekProvider
+from textfsm_ai.providers.gemini_provider import GeminiProvider
+from textfsm_ai.providers.openai_provider import OpenAIProvider
 
 
 class MultiProviderRouter:

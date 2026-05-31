@@ -1,4 +1,5 @@
 import click
+
 from textfsm_ai import __version__
 
 

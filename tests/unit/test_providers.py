@@ -1,9 +1,9 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from textfsm_ai.providers.openai_provider import OpenAIProvider
 from textfsm_ai.providers.claude_provider import ClaudeProvider
-from textfsm_ai.providers.gemini_provider import GeminiProvider
 from textfsm_ai.providers.deepseek_provider import DeepSeekProvider
+from textfsm_ai.providers.gemini_provider import GeminiProvider
+from textfsm_ai.providers.openai_provider import OpenAIProvider
 
 
 # --- Helper: mock response ---
@@ -17,7 +17,9 @@ def mock_response(text):
 # --- OpenAI ---
 @patch("requests.post")
 def test_openai_provider(mock_post):
-    mock_post.return_value = mock_response({"choices": [{"message": {"content": "ok"}}]})
+    mock_post.return_value = mock_response(
+        {"choices": [{"message": {"content": "ok"}}]}
+    )
 
     p = OpenAIProvider("key", "gpt-5-mini", 999999, 999999)
     out = p.generate("hello")
@@ -49,7 +51,9 @@ def test_gemini_provider(mock_post):
 # --- DeepSeek ---
 @patch("requests.post")
 def test_deepseek_provider(mock_post):
-    mock_post.return_value = mock_response({"choices": [{"message": {"content": "ok"}}]})
+    mock_post.return_value = mock_response(
+        {"choices": [{"message": {"content": "ok"}}]}
+    )
 
     p = DeepSeekProvider("key", "deepseek-v3.2-exp", 999999, 999999)
     out = p.generate("hello")

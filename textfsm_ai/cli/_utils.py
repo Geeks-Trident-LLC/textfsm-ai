@@ -1,10 +1,10 @@
+import contextlib
+import functools
 import io
 import json
 import time
-import contextlib
-import click
 
-import functools
+import click
 
 
 def run_with_capture(ctx, func, *args, **kwargs):
