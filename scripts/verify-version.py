@@ -14,8 +14,6 @@ import re
 import sys
 from pathlib import Path
 
-import tomllib
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -25,8 +23,11 @@ def extract_init_version():
 
 
 def extract_pyproject_version():
-    data = tomllib.loads((ROOT / "pyproject.toml").read_text())
-    return data["project"]["version"]
+    text = (ROOT / "pyproject.toml").read_text()
+    match = re.search(r'version\s*=\s*"([^"]+)"', text)
+    if not match:
+        raise RuntimeError("Version not found in pyproject.toml")
+    return match.group(1)
 
 
 def extract_cfg_version():
