@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v*.*.*"   # GitHub glob, not regex
 
 permissions:
   contents: write
@@ -105,25 +105,17 @@ jobs:
 
     environment:
       name: pypi-release
-      url: https://pypi.org/project/textfsm-ai/
 
     permissions:
       id-token: write
-      contents: write
+      contents: read
 
     steps:
-      - name: Wait for manual approval
-        uses: trstringer/manual-approval@v1
-        with:
-          approvers: tuyen
-          minimum-approvals: 1
-
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: "pip"
 
       - name: Download dist artifacts
         uses: actions/download-artifact@v4
@@ -132,9 +124,10 @@ jobs:
           path: dist
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.10.0
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          skip-existing: true
+          packages-dir: dist
+          verify-metadata: true
 
   docs:
     name: Deploy Docs

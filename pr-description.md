@@ -1,23 +1,19 @@
 ## Summary
 
-This PR fixes a packaging and type‑checking issue caused by an unintended
-`__init__.py` at the project root (`textfsm-ai/`). Python treated the project
-root as a package, which resulted in duplicate module paths during mypy runs.
+This PR prepares the v0.1.20 release with improvements to the CI pipeline and documentation assets.
 
 ## Changes
 
-### Fixed
-- Removed root-level `__init__.py` to prevent invalid package resolution.
-- Resolved mypy error: “Source file found twice under different module names”.
+### CI / Release Workflow
+- Updated PyPI publish action inputs to kebab-case to align with the GitHub Actions schema.
+- Switched to the correct `pypa/gh-action-pypi-publish@release/v1` tag for trusted publishing.
+- Removed legacy authentication fields (`user`, `password`) to ensure OIDC-based publishing works reliably.
 
-### Added
-- Added `types-PyYAML` to dev and tox type‑checking dependencies.
-
-### Improved
-- Cleaned and reorganized `requirements-dev.txt`.
-- Updated `tox.ini` to ensure consistent type‑checking behavior.
+### Documentation
+- Improved `banner.svg` with better text alignment and a clean black outline for improved readability.
 
 ## Impact
 
+- Trusted publishing to PyPI now works with the correct action tag and schema.
+- Documentation visuals are cleaner and more consistent with the project’s branding.
 - No runtime or API changes.
-- Development, CI, and packaging workflows are now stable and consistent.

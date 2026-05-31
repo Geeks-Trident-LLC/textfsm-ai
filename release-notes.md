@@ -1,13 +1,12 @@
-## What’s new in 0.1.3
+## What’s new in v0.1.20
 
-### Fixes
-- Removed unintended `__init__.py` at the project root that caused Python to treat the root folder as a package.
-- Resolved mypy duplicate‑module error caused by conflicting import paths.
+### 🛠 CI Improvements
+- Updated PyPI publish workflow to use kebab-case inputs (`packages-dir`, `verify-metadata`).
+- Migrated to the correct `pypa/gh-action-pypi-publish@release/v1` tag for OIDC trusted publishing.
+- Removed legacy auth fields to ensure PyPI accepts GitHub’s OIDC token.
 
-### Improvements
-- Added `types-PyYAML` to ensure consistent type‑checking across local dev, tox, and CI.
-- Cleaned and reorganized `requirements-dev.txt`.
-- Updated `tox.ini` to include type stubs in the `typecheck` environment.
+### 🎨 Documentation
+- Updated `banner.svg` with improved alignment and a subtle black outline for better contrast.
 
-### Notes
-This release contains no runtime or API changes. It focuses entirely on development tooling, type‑checking stability, and packaging correctness.
+### 📌 Notes
+This release contains no functional or API changes. It focuses on stabilizing the release pipeline and improving documentation quality.

@@ -100,25 +100,17 @@ jobs:
 
     environment:
       name: pypi-release
-      url: https://pypi.org/project/textfsm-ai/
 
     permissions:
       id-token: write
-      contents: write
+      contents: read
 
     steps:
-      - name: Wait for manual approval
-        uses: trstringer/manual-approval@v1
-        with:
-          approvers: tuyen
-          minimum-approvals: 1
-
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: "pip"
 
       - name: Download dist artifacts
         uses: actions/download-artifact@v4
@@ -126,11 +118,8 @@ jobs:
           name: dist
           path: dist
 
-      - name: Install twine
-        run: python -m pip install twine
-
-      - name: Upload to PyPI
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: twine upload dist/*
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist
+          verify-metadata: true
