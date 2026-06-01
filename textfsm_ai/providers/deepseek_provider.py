@@ -1,35 +1,32 @@
 # textfsm_ai/providers/deepseek_provider.py
-import time
+
+import os
 from typing import Any
 
-from deepseek import DeepSeekAPI
-
-from . import AIResponse
+import click
+from openai import APIError, OpenAI  # DeepSeek uses the openai SDK
 
 
 class DeepSeekProvider:
     name = "deepseek"
 
-    def __init__(self, api_key: str | None = None, model: str = "deepseek-chat"):
-        self._client = DeepSeekAPI(api_key=api_key)
+    def __init__(self, api_key: str | None = None, model: str = "deepseek-v4-flash"):
+        self._client = OpenAI(
+            api_key=api_key or os.environ.get("DEEPSEEK_API_KEY"),
+            base_url="https://api.deepseek.com",
+        )
         self._default_model = model
 
-    def send(self, prompt: str, **kwargs: Any) -> AIResponse:
+    def send(self, prompt: str, **kwargs: Any) -> str:
         model = kwargs.get("model", self._default_model)
-        start = time.perf_counter()
 
-        resp = self._client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-        )
+        try:
+            resp = self._client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=kwargs.get("max_tokens", 1024),
+            )
+        except APIError as e:
+            raise click.ClickException(f"[ERROR] DeepSeek request failed: {e}") from e
 
-        latency_ms = int((time.perf_counter() - start) * 1000)
-        text = resp.choices[0].message.content or ""
-
-        return AIResponse(
-            text=text,
-            provider=self.name,
-            model=model,
-            latency_ms=latency_ms,
-            raw=resp,
-        )
+        return resp.choices[0].message.content
