@@ -1,7 +1,8 @@
 import pathlib
-from typing import Optional
 
 import click
+
+from textfsm_ai.api import ask_ai
 
 
 @click.command(name="generate", help="Generate a TextFSM template from raw CLI output.")
@@ -22,8 +23,10 @@ import click
     default=None,
     help="Optional model name override.",
 )
-def generate(input_file: pathlib.Path, provider: str, model: Optional[str]) -> None:
-    click.echo(f"Generating template from: {input_file}")
-    click.echo(f"Provider: {provider}")
-    click.echo(f"Model: {model}")
-    click.echo("Status: ok")
+def generate_cmd(prompt: tuple[str, ...], provider: str | None, model: str | None):
+    """
+    Generate something using an AI provider.
+    """
+    full_prompt = " ".join(prompt)
+    resp = ask_ai(full_prompt, provider=provider, model=model)
+    click.echo(resp.text)
