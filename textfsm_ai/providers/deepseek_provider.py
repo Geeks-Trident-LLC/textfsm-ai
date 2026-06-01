@@ -2,7 +2,7 @@
 import time
 from typing import Any
 
-from deepseek import DeepSeek
+from deepseek import DeepSeekAPI
 
 from . import AIResponse
 
@@ -11,7 +11,7 @@ class DeepSeekProvider:
     name = "deepseek"
 
     def __init__(self, api_key: str | None = None, model: str = "deepseek-chat"):
-        self._client = DeepSeek(api_key=api_key)
+        self._client = DeepSeekAPI(api_key=api_key)
         self._default_model = model
 
     def send(self, prompt: str, **kwargs: Any) -> AIResponse:
