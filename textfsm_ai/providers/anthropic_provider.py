@@ -40,3 +40,9 @@ class AnthropicProvider:
             latency_ms=latency_ms,
             raw=resp,
         )
+
+
+def list_anthropic_models(api_key: str) -> list[str]:
+    client = Anthropic(api_key=api_key)
+    models = client.models.list()
+    return [m.id for m in models.data]

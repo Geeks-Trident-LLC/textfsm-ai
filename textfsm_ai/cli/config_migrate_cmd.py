@@ -8,45 +8,47 @@ from textfsm_ai.config_manager import save_config
 from textfsm_ai.model_selector import get_model
 from textfsm_ai.user_config import UserConfig
 
-ENV_MAP = {
-    "openai": "OPENAI_API_KEY",
-    "anthropic": "ANTHROPIC_API_KEY",
-    "gemini": "GEMINI_API_KEY",
-    "deepseek": "DEEPSEEK_API_KEY",
-}
-
 
 @click.command("migrate")
-def config_migrate():
+@click.option(
+    "--tier",
+    type=click.Choice(
+        [
+            "quality",
+            "balance",
+            "fast",
+            "quality-reasoning",
+            "balance-reasoning",
+            "fast-reasoning",
+        ]
+    ),
+    default="quality",
+    show_default=True,
+    help="Select model tier for each provider.",
+)
+def config_migrate(tier):
     """
-    Auto-migrate environment variables into user config files.
-    Creates ~/.textfsm-ai/<provider>.config for each provider with an API key.
+    Migrate environment variables into ~/.textfsm-ai/*.config
     """
-    migrated = 0
+    providers = {
+        "openai": "OPENAI_API_KEY",
+        "anthropic": "ANTHROPIC_API_KEY",
+        "gemini": "GEMINI_API_KEY",
+        "deepseek": "DEEPSEEK_API_KEY",
+    }
 
-    for provider, env_var in ENV_MAP.items():
+    created = 0
+
+    for provider, env_var in providers.items():
         api_key = os.getenv(env_var)
         if not api_key:
             continue
 
-        # Dynamically pick the best NLP model for this provider
-        try:
-            model = get_model(provider, api_key)
-        except Exception as e:
-            click.echo(f"[WARN] Could not auto-select model for {provider}: {e}")
-            continue
+        model = get_model(provider, api_key, tier)
+        cfg = UserConfig(provider, model, api_key)
+        save_config(provider, cfg)
 
-        cfg = UserConfig(
-            provider=provider,
-            model=model,
-            api_key=api_key,
-        )
+        click.echo(f"[OK] {provider}: {model}")
+        created += 1
 
-        path = save_config(provider, cfg)
-        click.echo(f"[OK] Migrated {env_var} → {path}")
-        migrated += 1
-
-    if migrated == 0:
-        click.echo("No environment variables found to migrate.")
-    else:
-        click.echo(f"Migration complete: {migrated} configs created.")
+    click.echo(f"Migration complete: {created} configs created.")

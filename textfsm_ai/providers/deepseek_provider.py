@@ -30,3 +30,9 @@ class DeepSeekProvider:
             raise click.ClickException(f"[ERROR] DeepSeek request failed: {e}") from e
 
         return resp.choices[0].message.content
+
+
+def list_deepseek_models(api_key: str) -> list[str]:
+    client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+    models = client.models.list()
+    return [m.id for m in models.data]

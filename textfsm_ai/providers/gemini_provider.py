@@ -33,3 +33,8 @@ class GeminiProvider:
             latency_ms=latency_ms,
             raw=resp,
         )
+
+
+def list_gemini_models(api_key: str) -> list[str]:
+    client = genai.Client(api_key=api_key)
+    return [m.name for m in client.models.list()]

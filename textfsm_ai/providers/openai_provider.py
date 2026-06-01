@@ -33,3 +33,9 @@ class OpenAIProvider:
             latency_ms=latency_ms,
             raw=resp,
         )
+
+
+def list_openai_models(api_key: str) -> list[str]:
+    client = OpenAI(api_key=api_key)
+    models = client.models.list()
+    return [m.id for m in models.data]
