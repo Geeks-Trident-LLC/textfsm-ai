@@ -1,6 +1,8 @@
 # textfsm_ai/user_config.py
 
 import json
+from pathlib import Path
+from typing import Union
 
 
 class UserConfig:
@@ -10,7 +12,7 @@ class UserConfig:
         self.api_key = api_key
 
 
-def load_user_config(path: str) -> UserConfig:
+def load_user_config(path: Union[str, Path]) -> UserConfig:
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
     return UserConfig(
@@ -20,7 +22,7 @@ def load_user_config(path: str) -> UserConfig:
     )
 
 
-def save_user_config(path: str, cfg: UserConfig):
+def save_user_config(path: Union[str, Path], cfg: UserConfig) -> None:
     data = {
         "provider": cfg.provider,
         "model": cfg.model,

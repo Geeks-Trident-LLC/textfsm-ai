@@ -55,7 +55,7 @@ def config_init(output, overwrite, empty_path):
     # Overwrite check
     if os.path.exists(output) and not overwrite:
         raise click.ClickException(
-            f"Config file '{output}' already exists. " f"Use --overwrite to replace it."
+            f"Config file '{output}' already exists. Use --overwrite to replace it."
         )
 
     # -----------------------------
@@ -111,7 +111,7 @@ def config_init(output, overwrite, empty_path):
         click.echo("\nSelect a model:")
         for idx, m in enumerate(top_models, start=1):
             click.echo(f"  {idx}. {m}")
-        click.echo(f"  {len(top_models)+1}. Other (enter manually)")
+        click.echo(f"  {len(top_models) + 1}. Other (enter manually)")
 
         model_input = click.prompt("Enter model name or number").strip()
 
