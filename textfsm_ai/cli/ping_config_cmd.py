@@ -6,9 +6,9 @@ from textfsm_ai.config_loader import load_config
 from textfsm_ai.provider_ping import PING_MAP
 
 
-@click.command("test-config")
+@click.command("ping-config")
 @click.argument("config_file", type=click.Path(exists=True))
-def test_config(config_file):
+def ping_config(config_file):
     click.echo(f"Loading config: {config_file}")
 
     cfg = load_config(config_file)

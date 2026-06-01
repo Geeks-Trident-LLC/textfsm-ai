@@ -6,7 +6,7 @@ from textfsm_ai.config_loader import load_config
 from textfsm_ai.provider_ping import PING_MAP
 
 
-@click.command("config-doctor")
+@click.command("doctor")
 @click.argument("config_file", type=click.Path(exists=True))
 def config_doctor(config_file):
     """

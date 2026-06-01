@@ -1,11 +1,9 @@
-# textfsm_ai/cli/config_init_cmd.py
-
 from pathlib import Path
 
 import click
 
 
-@click.command("config-init")
+@click.command("init")
 @click.option(
     "--output",
     "-o",

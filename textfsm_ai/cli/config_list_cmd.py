@@ -5,7 +5,7 @@ from pathlib import Path
 import click
 
 
-@click.command("config-list")
+@click.command("list")
 def config_list():
     """
     List available config files in PWD and ~/.textfsm-ai/.
