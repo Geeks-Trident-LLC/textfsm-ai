@@ -1,57 +1,57 @@
-from textfsm_ai.config_loader import load_config
-from textfsm_ai.providers.claude_provider import ClaudeProvider
-from textfsm_ai.providers.deepseek_provider import DeepSeekProvider
-from textfsm_ai.providers.gemini_provider import GeminiProvider
-from textfsm_ai.providers.openai_provider import OpenAIProvider
+# textfsm_ai/ai_router.py
+from typing import Any, Dict
+
+from .config_loader import load_config
+from .providers import AIResponse
+from .providers.claude_provider import ClaudeProvider
+from .providers.deepseek_provider import DeepSeekProvider
+from .providers.gemini_provider import GeminiProvider
+from .providers.openai_provider import OpenAIProvider
+from .quota_manager import QuotaManager
 
 
-class MultiProviderRouter:
+class AIRouter:
     def __init__(self):
-        cfg = load_config()
+        self._config = load_config()
+        self._quota = QuotaManager()
+        self._providers: Dict[str, Any] = {
+            "openai": OpenAIProvider(),
+            "gemini": GeminiProvider(),
+            "claude": ClaudeProvider(),
+            "deepseek": DeepSeekProvider(),
+        }
 
-        p = cfg["providers"]
+    def send(
+        self,
+        prompt: str,
+        provider: str | None = None,
+        model: str | None = None,
+        **kwargs: Any,
+    ) -> AIResponse:
+        if not self._quota.allow():
+            raise RuntimeError("Quota exceeded")
 
-        self.openai = OpenAIProvider(
-            p["openai"]["api_key"],
-            p["openai"]["model"],
-            p["openai"]["daily_limit"],
-            p["openai"]["monthly_limit"],
+        provider_name = provider or self._config.default_provider
+        if provider_name not in self._providers:
+            raise ValueError(f"Unknown provider: {provider_name}")
+
+        provider_obj = self._providers[provider_name]
+
+        model_name = (
+            model
+            or self._config.provider_model(provider_name)
+            or self._config.default_model
         )
 
-        self.claude = ClaudeProvider(
-            p["claude"]["api_key"],
-            p["claude"]["model"],
-            p["claude"]["daily_limit"],
-            p["claude"]["monthly_limit"],
-        )
+        return provider_obj.send(prompt, model=model_name, **kwargs)
 
-        self.gemini = GeminiProvider(
-            p["gemini"]["api_key"],
-            p["gemini"]["model"],
-            p["gemini"]["daily_limit"],
-            p["gemini"]["monthly_limit"],
-        )
 
-        self.deepseek = DeepSeekProvider(
-            p["deepseek"]["api_key"],
-            p["deepseek"]["model"],
-            p["deepseek"]["daily_limit"],
-            p["deepseek"]["monthly_limit"],
-        )
+# Singleton-ish convenience
+_router: AIRouter | None = None
 
-        self.providers = [
-            self.gemini,
-            self.deepseek,
-            self.openai,
-            self.claude,
-            self.local,
-        ]
 
-    def generate(self, prompt: str) -> str:
-        for provider in self.providers:
-            try:
-                return provider.generate(prompt)
-            except Exception:
-                continue
-
-        raise RuntimeError("All providers failed")
+def get_router() -> AIRouter:
+    global _router
+    if _router is None:
+        _router = AIRouter()
+    return _router
