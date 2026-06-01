@@ -1,32 +1,42 @@
-import requests
+# textfsm_ai/providers/claude_provider.py
+import time
+from typing import Any
 
-from textfsm_ai.quota_manager import QuotaManager
+from anthropic import Anthropic
+
+from . import AIResponse
 
 
 class ClaudeProvider:
-    def __init__(self, api_key, model, daily_limit, monthly_limit):
-        self.api_key = api_key
-        self.model = model
-        self.url = "https://api.anthropic.com/v1/messages"
-        self.quota = QuotaManager("claude", daily_limit, monthly_limit)
+    name = "claude"
 
-    def generate(self, prompt: str) -> str:
-        estimated_tokens = len(prompt.split()) * 2
-        if not self.quota.allowed(estimated_tokens):
-            raise RuntimeError("Claude quota exceeded")
+    def __init__(self, api_key: str | None = None, model: str = "claude-3-5-sonnet"):
+        self._client = Anthropic(api_key=api_key)
+        self._default_model = model
 
-        headers = {
-            "x-api-key": self.api_key,
-            "anthropic-version": "2023-06-01",
-        }
-        payload = {
-            "model": self.model,
-            "max_tokens": 2048,
-            "messages": [{"role": "user", "content": prompt}],
-        }
+    def send(self, prompt: str, **kwargs: Any) -> AIResponse:
+        model = kwargs.get("model", self._default_model)
+        start = time.perf_counter()
 
-        resp = requests.post(self.url, json=payload, headers=headers, timeout=30)
-        resp.raise_for_status()
+        resp = self._client.messages.create(
+            model=model,
+            max_tokens=4096,
+            messages=[{"role": "user", "content": prompt}],
+        )
 
-        self.quota.add_tokens(estimated_tokens)
-        return resp.json()["content"][0]["text"]
+        latency_ms = int((time.perf_counter() - start) * 1000)
+
+        # Claude returns content as a list of blocks
+        text = ""
+        if resp.content and len(resp.content) > 0:
+            block = resp.content[0]
+            if hasattr(block, "text"):
+                text = block.text or ""
+
+        return AIResponse(
+            text=text,
+            provider=self.name,
+            model=model,
+            latency_ms=latency_ms,
+            raw=resp,
+        )
