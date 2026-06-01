@@ -4,8 +4,9 @@ import os
 
 import click
 
-from textfsm_ai.config_loader import ProviderConfig
 from textfsm_ai.config_manager import save_config
+from textfsm_ai.model_selector import get_model
+from textfsm_ai.user_config import UserConfig
 
 ENV_MAP = {
     "openai": "OPENAI_API_KEY",
@@ -14,30 +15,31 @@ ENV_MAP = {
     "deepseek": "DEEPSEEK_API_KEY",
 }
 
-DEFAULT_MODELS = {
-    "openai": "gpt-4o-mini",
-    "anthropic": "claude-3-haiku-20240307",
-    "gemini": "gemini-1.5-flash",
-    "deepseek": "deepseek-chat",
-}
-
 
 @click.command("migrate")
 def config_migrate():
     """
-    Auto-migrate environment variables into config files.
+    Auto-migrate environment variables into user config files.
+    Creates ~/.textfsm-ai/<provider>.config for each provider with an API key.
     """
     migrated = 0
 
     for provider, env_var in ENV_MAP.items():
-        key = os.getenv(env_var)
-        if not key:
+        api_key = os.getenv(env_var)
+        if not api_key:
             continue
 
-        cfg = ProviderConfig(
+        # Dynamically pick the best NLP model for this provider
+        try:
+            model = get_model(provider, api_key)
+        except Exception as e:
+            click.echo(f"[WARN] Could not auto-select model for {provider}: {e}")
+            continue
+
+        cfg = UserConfig(
             provider=provider,
-            model=DEFAULT_MODELS[provider],
-            api_key=key,
+            model=model,
+            api_key=api_key,
         )
 
         path = save_config(provider, cfg)

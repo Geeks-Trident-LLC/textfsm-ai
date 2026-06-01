@@ -2,8 +2,8 @@
 
 import click
 
-from textfsm_ai.config_loader import load_config
 from textfsm_ai.provider_ping import PING_MAP
+from textfsm_ai.user_config import load_user_config
 
 
 @click.command("ping-config")
@@ -11,7 +11,7 @@ from textfsm_ai.provider_ping import PING_MAP
 def ping_config(config_file):
     click.echo(f"Loading config: {config_file}")
 
-    cfg = load_config(config_file)
+    cfg = load_user_config(config_file)
     click.echo(f"[OK] provider = {cfg.provider}")
     click.echo(f"[OK] model    = {cfg.model}")
 

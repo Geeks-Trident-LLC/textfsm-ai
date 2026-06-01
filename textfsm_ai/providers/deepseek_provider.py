@@ -10,7 +10,7 @@ from openai import APIError, OpenAI  # DeepSeek uses the openai SDK
 class DeepSeekProvider:
     name = "deepseek"
 
-    def __init__(self, api_key: str | None = None, model: str = "deepseek-v4-flash"):
+    def __init__(self, api_key: str | None = None, model: str = ""):
         self._client = OpenAI(
             api_key=api_key or os.environ.get("DEEPSEEK_API_KEY"),
             base_url="https://api.deepseek.com",

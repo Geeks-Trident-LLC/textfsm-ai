@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from textfsm_ai.config_loader import ProviderConfig, load_config
+from textfsm_ai.user_config import UserConfig, load_user_config, save_user_config
 
 CONFIG_DIR = Path.home() / ".textfsm-ai"
 
@@ -12,24 +12,28 @@ def ensure_config_dir() -> Path:
     return CONFIG_DIR
 
 
-def save_config(name: str, cfg: ProviderConfig) -> Path:
+def save_config(name: str, cfg: UserConfig) -> Path:
+    """
+    Save a user config (provider, model, api_key) into ~/.textfsm-ai/<name>.config
+    """
     ensure_config_dir()
     path = CONFIG_DIR / f"{name}.config"
-    content = (
-        f'provider = "{cfg.provider}"\n'
-        f'model = "{cfg.model}"\n'
-        f'api_key = "{cfg.api_key}"\n'
-    )
-    path.write_text(content, encoding="utf-8")
+    save_user_config(path, cfg)
     return path
 
 
 def list_configs() -> list[Path]:
+    """
+    List all user config files in ~/.textfsm-ai/
+    """
     if not CONFIG_DIR.exists():
         return []
     return sorted(CONFIG_DIR.glob("*.config"))
 
 
-def load_named_config(name: str) -> ProviderConfig:
+def load_named_config(name: str) -> UserConfig:
+    """
+    Load ~/.textfsm-ai/<name>.config
+    """
     path = CONFIG_DIR / f"{name}.config"
-    return load_config(path)
+    return load_user_config(path)

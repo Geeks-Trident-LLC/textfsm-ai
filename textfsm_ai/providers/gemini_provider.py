@@ -10,7 +10,7 @@ from . import AIResponse
 class GeminiProvider:
     name = "gemini"
 
-    def __init__(self, api_key: str | None = None, model: str = "gemini-1.5-flash"):
+    def __init__(self, api_key: str | None = None, model: str = ""):
         self._client = genai.Client(api_key=api_key)
         self._default_model = model
 

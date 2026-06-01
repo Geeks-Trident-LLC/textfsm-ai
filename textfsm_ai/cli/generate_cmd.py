@@ -3,7 +3,7 @@
 import click
 
 from textfsm_ai.api import ask_ai
-from textfsm_ai.config_loader import load_config
+from textfsm_ai.user_config import load_user_config
 
 
 @click.command("generate")
@@ -17,7 +17,7 @@ def generate(input_file, config_file, config_default):
     if config_default:
         config_file = "default.config"
 
-    cfg = load_config(config_file)
+    cfg = load_user_config(config_file)
 
     with open(input_file, "r", encoding="utf-8") as f:
         raw_text = f.read()

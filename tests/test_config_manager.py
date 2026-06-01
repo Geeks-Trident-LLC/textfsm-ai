@@ -1,13 +1,14 @@
 import tempfile
 
-from textfsm_ai.config_manager import ProviderConfig, load_named_config, save_config
+from textfsm_ai.config_manager import load_named_config, save_config
+from textfsm_ai.user_config import UserConfig
 
 
 def test_save_and_load_named_config(monkeypatch):
     tmp = tempfile.TemporaryDirectory()
     monkeypatch.setenv("HOME", tmp.name)
 
-    cfg = ProviderConfig("deepseek", "deepseek-chat", "abc")
+    cfg = UserConfig("deepseek", "deepseek-chat", "abc")
     path = save_config("deepseek", cfg)
 
     assert path.exists()

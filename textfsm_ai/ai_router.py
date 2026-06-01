@@ -1,6 +1,6 @@
 # textfsm_ai/ai_router.py
 
-from .providers.claude_provider import ClaudeProvider
+from .providers.anthropic_provider import AnthropicProvider
 from .providers.deepseek_provider import DeepSeekProvider
 from .providers.gemini_provider import GeminiProvider
 from .providers.openai_provider import OpenAIProvider
@@ -14,7 +14,7 @@ class AIRouter:
         self._provider_classes = {
             "openai": OpenAIProvider,
             "gemini": GeminiProvider,
-            "claude": ClaudeProvider,
+            "anthropic": AnthropicProvider,
             "deepseek": DeepSeekProvider,
         }
 
@@ -23,7 +23,8 @@ class AIRouter:
     def send(self, prompt, provider, model, api_key, **kwargs):
         if provider not in self._providers:
             self._providers[provider] = self._provider_classes[provider](
-                api_key=api_key
+                api_key=api_key,
+                model=model,
             )
 
         return self._providers[provider].send(prompt, model=model, **kwargs)
