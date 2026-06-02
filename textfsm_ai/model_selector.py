@@ -23,7 +23,7 @@ GEMINI_CHAT_RE = re.compile(
 )
 
 ANTHROPIC_CHAT_RE = re.compile(
-    r"^claude-(opus|sonnet|haiku)-[0-9]+-\d+(-\d{6})?$",
+    r"^claude-(opus|sonnet|haiku)-[0-9]+-\d+(-\d{8})?$",
     re.IGNORECASE,
 )
 

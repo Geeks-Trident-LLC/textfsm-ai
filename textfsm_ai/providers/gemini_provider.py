@@ -1,6 +1,6 @@
 # textfsm_ai/providers/gemini_provider.py
 import time
-from typing import Any
+from typing import Any, Optional
 
 from google import genai
 
@@ -10,7 +10,7 @@ from . import AIResponse
 class GeminiProvider:
     name = "gemini"
 
-    def __init__(self, api_key: str | None = None, model: str = ""):
+    def __init__(self, api_key: Optional[str] = None, model: str = ""):
         self._client = genai.Client(api_key=api_key)
         self._default_model = model
 

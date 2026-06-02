@@ -1,6 +1,6 @@
 # textfsm_ai/providers/openai_provider.py
 import time
-from typing import Any
+from typing import Any, Optional
 
 from openai import OpenAI
 
@@ -10,7 +10,7 @@ from . import AIResponse
 class OpenAIProvider:
     name = "openai"
 
-    def __init__(self, api_key: str | None = None, model: str = ""):
+    def __init__(self, api_key: Optional[str] = None, model: str = ""):
         self._client = OpenAI(api_key=api_key)
         self._default_model = model
 

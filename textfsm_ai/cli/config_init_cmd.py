@@ -99,7 +99,7 @@ def config_init(output, overwrite, empty_path):
         raise click.ClickException(f"Failed to list models: {e}")
 
     all_models = [m.split("/")[-1] for m in all_models]
-    nlp_models = [m for m in all_models if is_chat_model(m)]
+    nlp_models = [m for m in all_models if is_chat_model(provider, m)]
 
     if not nlp_models:
         click.echo("[WARN] No NLP models detected for this provider.")

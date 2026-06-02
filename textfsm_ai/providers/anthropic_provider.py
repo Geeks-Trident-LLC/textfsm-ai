@@ -1,6 +1,6 @@
 # textfsm_ai/providers/anthropic_provider.py
 import time
-from typing import Any
+from typing import Any, Optional
 
 from anthropic import Anthropic
 
@@ -10,7 +10,7 @@ from . import AIResponse
 class AnthropicProvider:
     name = "anthropic"
 
-    def __init__(self, api_key: str | None = None, model: str = ""):
+    def __init__(self, api_key: Optional[str] = None, model: str = ""):
         self._client = Anthropic(api_key=api_key)
         self._default_model = model
 

@@ -10,7 +10,14 @@ from textfsm_ai.user_config import load_user_config
 @click.argument("input_file", type=click.Path(exists=True))
 @click.option("--config", "config_file", type=click.Path(), help="Path to config file")
 @click.option("--config-default", is_flag=True, help="Load default.config from PWD")
-def generate(input_file, config_file, config_default):
+@click.option("--json", "as_json", is_flag=True, help="Return output in JSON format.")
+@click.option(
+    "--lang",
+    default="en",
+    show_default=True,
+    help="Preferred output language (en, zh, vi). Default: en.",
+)
+def generate(input_file, config_file, config_default, as_json, lang):
     if not config_file and not config_default:
         raise click.UsageError("Must specify --config=<file> or --config-default")
 
@@ -27,6 +34,10 @@ def generate(input_file, config_file, config_default):
         provider=cfg.provider,
         model=cfg.model,
         api_key=cfg.api_key,
+        lang=lang,
     )
 
+    if as_json:
+        click.echo(resp.to_json())
+        return
     click.echo(resp)

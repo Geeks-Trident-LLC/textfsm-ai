@@ -1,5 +1,7 @@
 # textfsm_ai/ai_router.py
 
+from typing import Optional
+
 from .providers.anthropic_provider import AnthropicProvider
 from .providers.deepseek_provider import DeepSeekProvider
 from .providers.gemini_provider import GeminiProvider
@@ -20,18 +22,22 @@ class AIRouter:
 
         self._providers = {}
 
-    def send(self, prompt, provider, model, api_key, **kwargs):
+    def send(self, prompt, provider, model, api_key, lang="en", **kwargs):
         if provider not in self._providers:
             self._providers[provider] = self._provider_classes[provider](
                 api_key=api_key,
                 model=model,
             )
 
-        return self._providers[provider].send(prompt, model=model, **kwargs)
+        return self._providers[provider].send(prompt, model=model, lang=lang, **kwargs)
+
+    # Public API used by tests and by your CLI
+    def ask(self, prompt, provider, model, api_key, lang="en", **kwargs):
+        return self.send(prompt, provider, model, api_key, lang="en", **kwargs)
 
 
 # Singleton-ish convenience
-_router: AIRouter | None = None
+_router: Optional[AIRouter] = None
 
 
 def get_router() -> AIRouter:
