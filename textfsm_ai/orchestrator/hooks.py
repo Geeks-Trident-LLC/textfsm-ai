@@ -1,24 +1,21 @@
 # textfsm_ai/orchestrator/hooks.py
 from __future__ import annotations
 
-from typing import Protocol, List, Dict, Any
+from typing import Any, Dict, List, Protocol
 
 from .types import OrchestratorRequest, OrchestratorResponse
 
 
 class PreHook(Protocol):
-    def __call__(self, request: OrchestratorRequest) -> OrchestratorRequest:
-        ...
+    def __call__(self, request: OrchestratorRequest) -> OrchestratorRequest: ...
 
 
 class PostHook(Protocol):
-    def __call__(self, response: OrchestratorResponse) -> OrchestratorResponse:
-        ...
+    def __call__(self, response: OrchestratorResponse) -> OrchestratorResponse: ...
 
 
 class TraceHook(Protocol):
-    def __call__(self, event: str, payload: Dict[str, Any]) -> None:
-        ...
+    def __call__(self, event: str, payload: Dict[str, Any]) -> None: ...
 
 
 def apply_pre_hooks(

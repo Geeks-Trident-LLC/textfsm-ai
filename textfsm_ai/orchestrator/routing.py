@@ -4,9 +4,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
+from .errors import ProviderNotFoundError
 from .provider import Provider
 from .types import OrchestratorRequest
-from .errors import ProviderNotFoundError
 
 
 @dataclass
@@ -14,6 +14,7 @@ class RoutingRule:
     """
     Simple rule: model prefix -> provider name.
     """
+
     model_prefix: str
     provider_name: str
 

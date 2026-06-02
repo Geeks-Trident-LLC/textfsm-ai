@@ -1,48 +1,43 @@
 # textfsm_ai/providers/anthropic_provider.py
-import time
-from typing import Any, Optional
+from __future__ import annotations
 
-from anthropic import Anthropic
+from typing import Any, Dict
 
-from . import AIResponse
+import anthropic
+
+from textfsm_ai.orchestrator.errors import ProviderError
+from textfsm_ai.orchestrator.provider import Provider
 
 
-class AnthropicProvider:
+class AnthropicProvider(Provider):
     name = "anthropic"
 
-    def __init__(self, api_key: Optional[str] = None, model: str = ""):
-        self._client = Anthropic(api_key=api_key)
-        self._default_model = model
+    def __init__(self, api_key: str | None = None):
+        self.client = anthropic.Anthropic(api_key=api_key)
 
-    def send(self, prompt: str, **kwargs: Any) -> AIResponse:
-        model = kwargs.get("model", self._default_model)
-        start = time.perf_counter()
+    def supports(self, model: str) -> bool:
+        return model.startswith("anthropic/")
 
-        resp = self._client.messages.create(
-            model=model,
-            max_tokens=4096,
-            messages=[{"role": "user", "content": prompt}],
-        )
+    def generate(
+        self,
+        prompt: str,
+        *,
+        model: str,
+        temperature: float,
+        max_tokens: int,
+    ) -> Dict[str, Any]:
+        try:
+            model_name = model.replace("anthropic/", "")
+            resp = self.client.messages.create(
+                model=model_name,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                messages=[{"role": "user", "content": prompt}],
+            )
+            content = resp.content[0].text
+            return {"content": content, "raw": resp.model_dump()}
+        except Exception as exc:
+            raise ProviderError(f"Anthropic provider failed: {exc}") from exc
 
-        latency_ms = int((time.perf_counter() - start) * 1000)
-
-        # Claude returns content as a list of blocks
-        text = ""
-        if resp.content and len(resp.content) > 0:
-            block = resp.content[0]
-            if hasattr(block, "text"):
-                text = block.text or ""
-
-        return AIResponse(
-            text=text,
-            provider=self.name,
-            model=model,
-            latency_ms=latency_ms,
-            raw=resp,
-        )
-
-
-def list_anthropic_models(api_key: str) -> list[str]:
-    client = Anthropic(api_key=api_key)
-    models = client.models.list()
-    return [m.id for m in models.data]
+    async def generate_async(self, **kwargs):
+        return self.generate(**kwargs)

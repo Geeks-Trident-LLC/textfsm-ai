@@ -1,40 +1,45 @@
 # textfsm_ai/providers/gemini_provider.py
-import time
-from typing import Any, Optional
+from __future__ import annotations
+
+from typing import Any, Dict
 
 from google import genai
 
-from . import AIResponse
+from textfsm_ai.orchestrator.errors import ProviderError
+from textfsm_ai.orchestrator.provider import Provider
 
 
-class GeminiProvider:
+class GeminiProvider(Provider):
     name = "gemini"
 
-    def __init__(self, api_key: Optional[str] = None, model: str = ""):
-        self._client = genai.Client(api_key=api_key)
-        self._default_model = model
+    def __init__(self, api_key: str | None = None):
+        self.client = genai.Client(api_key=api_key)
 
-    def send(self, prompt: str, **kwargs: Any) -> AIResponse:
-        model = kwargs.get("model", self._default_model)
-        start = time.perf_counter()
+    def supports(self, model: str) -> bool:
+        return model.startswith("gemini/")
 
-        resp = self._client.models.generate_content(
-            model=model,
-            contents=prompt,
-        )
+    def generate(
+        self,
+        prompt: str,
+        *,
+        model: str,
+        temperature: float,
+        max_tokens: int,
+    ) -> Dict[str, Any]:
+        try:
+            model_name = model.replace("gemini/", "")
+            resp = self.client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                generation_config={
+                    "temperature": temperature,
+                    "max_output_tokens": max_tokens,
+                },
+            )
+            content = resp.text
+            return {"content": content, "raw": resp.to_dict()}
+        except Exception as exc:
+            raise ProviderError(f"Gemini provider failed: {exc}") from exc
 
-        latency_ms = int((time.perf_counter() - start) * 1000)
-        text = resp.text or ""
-
-        return AIResponse(
-            text=text,
-            provider=self.name,
-            model=model,
-            latency_ms=latency_ms,
-            raw=resp,
-        )
-
-
-def list_gemini_models(api_key: str) -> list[str]:
-    client = genai.Client(api_key=api_key)
-    return [m.name for m in client.models.list()]
+    async def generate_async(self, **kwargs):
+        return self.generate(**kwargs)

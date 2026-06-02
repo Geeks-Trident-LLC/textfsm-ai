@@ -1,43 +1,47 @@
 # textfsm_ai/cli/generate_cmd.py
 
+from __future__ import annotations
+
 import click
 
 from textfsm_ai.api import ask_ai
-from textfsm_ai.user_config import load_user_config
 
 
 @click.command("generate")
 @click.argument("input_file", type=click.Path(exists=True))
-@click.option("--config", "config_file", type=click.Path(), help="Path to config file")
-@click.option("--config-default", is_flag=True, help="Load default.config from PWD")
-@click.option("--json", "as_json", is_flag=True, help="Return output in JSON format.")
 @click.option(
-    "--lang",
-    default="en",
-    show_default=True,
-    help="Preferred output language (en, zh, vi). Default: en.",
+    "--model",
+    required=True,
+    help="Model name with prefix, e.g. openai/gpt-4o-mini",
 )
-def generate(input_file, config_file, config_default, as_json, lang):
-    if not config_file and not config_default:
-        raise click.UsageError("Must specify --config=<file> or --config-default")
-
-    if config_default:
-        config_file = "default.config"
-
-    cfg = load_user_config(config_file)
+@click.option(
+    "--config",
+    "config_path",
+    type=click.Path(exists=True),
+    required=False,
+    help="Optional YAML config file. If omitted, environment variables are used.",
+)
+@click.option(
+    "--json",
+    "as_json",
+    is_flag=True,
+    help="Return output in JSON format.",
+)
+def generate(input_file, model, config_path, as_json):
+    """
+    Generate a TextFSM template or AI output using the orchestrator.
+    """
 
     with open(input_file, "r", encoding="utf-8") as f:
         raw_text = f.read()
 
     resp = ask_ai(
         raw_text,
-        provider=cfg.provider,
-        model=cfg.model,
-        api_key=cfg.api_key,
-        lang=lang,
+        model=model,
+        config_path=config_path,
     )
 
     if as_json:
         click.echo(resp.to_json())
-        return
-    click.echo(resp)
+    else:
+        click.echo(resp.content)
