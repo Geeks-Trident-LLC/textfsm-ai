@@ -25,12 +25,14 @@ else {
 }
 
 # 3. Create or update GitHub Release
-if (gh release view $tag 2>$null) {
-    Write-Host "GitHub Release for $tag already exists. Updating notes."
+gh release view $tag 2>$null
+
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "GitHub Release $tag already exists. Updating notes."
     gh release edit $tag --generate-notes
 }
 else {
-    Write-Host "Creating GitHub Release for $tag"
+    Write-Host "Creating GitHub Release $tag"
     gh release create $tag --generate-notes
 }
 
