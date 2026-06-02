@@ -29,14 +29,33 @@ release-prod:
         echo "ERROR: Must be on main to release to PyPI."; \
         exit 1; \
     fi
+
+    @echo "Checking local tag v$(VERSION)..."
     @if git rev-parse "v$(VERSION)" >/dev/null 2>&1; then \
-        echo "ERROR: Tag v$(VERSION) already exists."; \
-        exit 1; \
+        echo "Tag v$(VERSION) already exists locally. Skipping tag creation."; \
+    else \
+        echo "Creating local tag v$(VERSION)"; \
+        git tag v$(VERSION); \
     fi
-    @echo "Releasing version $(VERSION) to PyPI"
-    git tag v$(VERSION)
-    git push origin v$(VERSION)
-    gh release create v$(VERSION) --generate-notes
+
+    @echo "Checking remote tag v$(VERSION)..."
+    @if git ls-remote --tags origin "v$(VERSION)" | grep "v$(VERSION)" >/dev/null; then \
+        echo "Tag v$(VERSION) already exists on origin. Skipping push."; \
+    else \
+        echo "Pushing tag v$(VERSION) to origin"; \
+        git push origin v$(VERSION); \
+    fi
+
+    @echo "Checking GitHub Release for v$(VERSION)..."
+    @if gh release view v$(VERSION) >/dev/null 2>&1; then \
+        echo "GitHub Release v$(VERSION) already exists. Updating notes."; \
+        gh release edit v$(VERSION) --generate-notes; \
+    else \
+        echo "Creating GitHub Release v$(VERSION)"; \
+        gh release create v$(VERSION) --generate-notes; \
+    fi
+
+    @echo "release-prod completed successfully."
 
 # Optional alias
 release: release-prod
