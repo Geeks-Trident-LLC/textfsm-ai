@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Any, Dict
 
 
 @dataclass
@@ -14,4 +15,4 @@ class OrchestratorResponse:
     provider: str
     model: str
     content: str
-    raw: dict
+    raw: Dict[str, Any]
