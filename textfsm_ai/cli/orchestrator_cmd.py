@@ -4,16 +4,16 @@ from typing import Optional
 
 import click
 
-from textfsm_ai.providers.config import (
-    load_config_from_file,
-    load_config_from_env,
-    OrchestratorConfig,
-)
 from textfsm_ai.orchestrator.factory import (
-    create_orchestrator_from_config,
     create_default_routing_table,
+    create_orchestrator_from_config,
 )
 from textfsm_ai.orchestrator.types import OrchestratorRequest
+from textfsm_ai.providers.config import (
+    OrchestratorConfig,
+    load_config_from_env,
+    load_config_from_file,
+)
 
 
 def _load_config(config_path: Optional[str]) -> OrchestratorConfig:

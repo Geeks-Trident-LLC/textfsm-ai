@@ -1,26 +1,20 @@
 from __future__ import annotations
 
-import json
 import os
-from click.testing import CliRunner
 
 import pytest
+from click.testing import CliRunner
 
 from textfsm_ai.cli.generate_cmd import generate
 
 
 @pytest.mark.integration
-@pytest.mark.skipif(
-    "OPENAI_API_KEY" not in os.environ,
-    reason="Requires OPENAI_API_KEY in environment",
-)
 def test_generate_real_openai(tmp_path):
-    """
-    Real integration test:
-    - Calls the real generate command
-    - Uses the real orchestrator
-    - Sends a real request to OpenAI
-    """
+    if not os.environ.get("OPENAI_API_KEY"):
+        pytest.skip("Requires OPENAI_API_KEY")
+
+    if os.environ.get("TEST_REAL") != "true":
+        pytest.skip("Requires TEST_REAL=true")
 
     # Create a temporary input file
     input_file = tmp_path / "input.txt"

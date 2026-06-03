@@ -1,15 +1,17 @@
 from __future__ import annotations
 
-from typing import Dict, Type, Iterable
+from typing import Dict, Type
 
 from textfsm_ai.orchestrator.provider import Provider
 
+from .anthropic_provider import AnthropicProvider
+from .azure_provider import AzureOpenAIProvider
+from .gemini_provider import GeminiProvider
+from .openai_compat_provider import OpenAICompatProvider
+from .openai_provider import OpenAIProvider
+
 
 class ProviderRegistry:
-    """
-    Simple in-memory registry of provider classes.
-    """
-
     def __init__(self) -> None:
         self._providers: Dict[str, Type[Provider]] = {}
 
@@ -30,3 +32,9 @@ class ProviderRegistry:
 
 
 registry = ProviderRegistry()
+
+registry.register(OpenAIProvider)
+registry.register(AnthropicProvider)
+registry.register(GeminiProvider)
+registry.register(AzureOpenAIProvider)
+registry.register(OpenAICompatProvider)

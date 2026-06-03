@@ -1,18 +1,17 @@
 from __future__ import annotations
 
-import os
 from typing import Optional
 
 import click
 
-from textfsm_ai.providers.registry import registry
-from textfsm_ai.providers.config import (
-    load_config_from_file,
-    load_config_from_env,
-    OrchestratorConfig,
-)
 from textfsm_ai.orchestrator.factory import create_orchestrator_from_config
 from textfsm_ai.orchestrator.types import OrchestratorRequest
+from textfsm_ai.providers.config import (
+    OrchestratorConfig,
+    load_config_from_env,
+    load_config_from_file,
+)
+from textfsm_ai.providers.registry import registry
 
 
 def _load_config(config_path: Optional[str]) -> OrchestratorConfig:

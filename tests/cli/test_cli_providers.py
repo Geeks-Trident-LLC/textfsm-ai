@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import os
 from click.testing import CliRunner
+
 from textfsm_ai.cli.top import main
 
 

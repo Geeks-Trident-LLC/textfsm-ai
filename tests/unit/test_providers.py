@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import pytest
 
-from textfsm_ai.providers.openai_provider import OpenAIProvider
+from textfsm_ai.orchestrator.errors import ProviderError
 from textfsm_ai.providers.anthropic_provider import AnthropicProvider
 from textfsm_ai.providers.gemini_provider import GeminiProvider
-from textfsm_ai.providers.azure_provider import AzureOpenAIProvider
-from textfsm_ai.orchestrator.errors import ProviderError
+from textfsm_ai.providers.openai_provider import OpenAIProvider
 
 
 @pytest.mark.parametrize(

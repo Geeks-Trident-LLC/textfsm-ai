@@ -18,8 +18,8 @@ mypy
 types-PyYAML
 
 # Documentation
-mkdocs
-mkdocs-material
+mkdocs==1.*
+mkdocs-material==9.*
 mkdocs-minify-plugin
 mkdocs-git-revision-date-localized-plugin
 mkdocstrings
@@ -28,3 +28,6 @@ mike
 
 # Versioning
 bump2version
+
+# http
+respx
