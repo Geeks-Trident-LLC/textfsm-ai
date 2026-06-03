@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Optional
 
 import click
@@ -12,6 +13,14 @@ from textfsm_ai.providers.config import (
     load_config_from_file,
 )
 from textfsm_ai.providers.registry import registry
+
+PROVIDER_DESCRIPTIONS = {
+    "openai": "Native OpenAI API",
+    "openai_compat": "OpenAI-compatible API",
+    "azure": "Azure AI Inference / Azure OpenAI",
+    "anthropic": "Anthropic Claude models",
+    "gemini": "Google Gemini models",
+}
 
 
 def _load_config(config_path: Optional[str]) -> OrchestratorConfig:
@@ -30,15 +39,20 @@ def providers_group() -> None:
 @providers_group.command("list")
 def providers_list() -> None:
     """
-    List all registered provider types.
+    List all registered provider names with descriptions.
     """
+
     providers = registry.all()
     if not providers:
         click.echo("No providers registered.")
         return
 
-    for name, cls in providers.items():
-        click.echo(f"{name:10s} ({cls.__name__})")
+    click.echo("NAME           DESCRIPTION")
+    click.echo("-------------  ----------------------------------------")
+
+    for name in providers:
+        desc = PROVIDER_DESCRIPTIONS.get(name, "")
+        click.echo(f"{name:<13}  {desc}")
 
 
 @providers_group.command("info")
@@ -51,15 +65,20 @@ def providers_info(provider_name: str, config_path: Optional[str]) -> None:
     Show configuration-related info for a provider (safe fields only).
     """
     cfg = _load_config(config_path)
-    matches = [p for p in cfg.providers if p.name == provider_name]
+    matches = [(name, p) for name, p in cfg.providers.items() if name == provider_name]
 
     if not matches:
         click.echo(f"No configured provider with name '{provider_name}'.")
         return
 
-    pcfg = matches[0]
-    click.echo(f"Name: {pcfg.name}")
+    pcfg = cfg.providers.get(provider_name)
+    if pcfg is None:
+        click.echo(f"No configured provider with name '{provider_name}'.")
+        return
+
+    click.echo(f"Name: {provider_name}")
     click.echo(f"Type: {pcfg.type}")
+
     safe_params = {
         k: ("***" if "key" in k.lower() or "token" in k.lower() else v)
         for k, v in pcfg.params.items()
@@ -79,7 +98,7 @@ def providers_test(config_path: Optional[str], model: str, prompt: str) -> None:
     orch = create_orchestrator_from_config(cfg)
 
     req = OrchestratorRequest(model=model, prompt=prompt)
-    resp = orch.run(req)
+    resp = asyncio.run(orch.run(req))
 
     click.echo(f"Provider: {resp.provider}")
     click.echo(f"Model: {resp.model}")

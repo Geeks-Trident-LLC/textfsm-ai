@@ -3,8 +3,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any
 
-from textfsm_ai.orchestrator.types import OrchestratorResponse
-
 
 class Provider(ABC):
     """
@@ -29,7 +27,7 @@ class Provider(ABC):
         temperature: float,
         max_tokens: int,
         **kwargs: Any,
-    ) -> OrchestratorResponse:
+    ) -> dict[str, Any]:
         """
         Async text generation call.
         """

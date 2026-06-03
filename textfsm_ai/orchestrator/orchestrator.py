@@ -1,36 +1,12 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Dict, Optional
 
 from .errors import ProviderRateLimitError, ProviderTimeoutError
 from .provider import Provider
 from .routing import RoutingRule, RoutingTable
-
-
-@dataclass
-class OrchestratorRequest:
-    model: str
-    prompt: str
-    temperature: float = 0.2
-    max_tokens: int = 1024
-
-
-@dataclass
-class OrchestratorResponse:
-    provider: str
-    model: str
-    raw: Dict[str, Any]
-
-    @property
-    def content(self) -> Optional[Any]:
-        return self.raw.get("content")
-
-    def to_json(self) -> str:
-        import json
-
-        return json.dumps(self.raw)
+from .types import OrchestratorRequest, OrchestratorResponse
 
 
 class Orchestrator:
@@ -54,7 +30,7 @@ class Orchestrator:
         provider_name = self._routing_table.route(req.model)
         primary = self._providers[provider_name]
 
-        candidates: List[Provider] = [primary] + [
+        candidates: list[Provider] = [primary] + [
             p
             for name, p in self._providers.items()
             if name != provider_name and p.supports(req.model)
@@ -83,7 +59,7 @@ class Orchestrator:
                     await asyncio.sleep(self._retry_delay)
                 except Exception as exc:
                     last_exc = exc
-                    break
+                    continue
 
         assert last_exc is not None
         raise last_exc

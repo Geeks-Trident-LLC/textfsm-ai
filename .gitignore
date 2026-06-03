@@ -218,6 +218,7 @@ __marimo__/
 .streamlit/secrets.toml
 
 # Local test files
+config.yaml
 default.config
 hello.txt
 search.txt

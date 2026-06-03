@@ -24,7 +24,9 @@ def load_config_from_file(path: str) -> OrchestratorConfig:
 
     providers_cfg: Dict[str, ProviderConfig] = {}
 
-    for name, item in (data.get("providers") or {}).items():
+    raw_providers = data.get("providers") or {}
+
+    for name, item in raw_providers.items():
         providers_cfg[name] = ProviderConfig(
             type=item["type"],
             params=item.get("params", {}),

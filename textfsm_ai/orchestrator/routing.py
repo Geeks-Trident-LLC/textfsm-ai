@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Mapping, Optional
 
 from .errors import ProviderNotFoundError
 from .provider import Provider
@@ -32,7 +32,7 @@ class RoutingTable:
     def select_provider(
         self,
         request: OrchestratorRequest,
-        providers: Dict[str, Provider],
+        providers: Mapping[str, Provider],
     ) -> Provider:
         model = request.model
 
@@ -56,7 +56,7 @@ class RoutingTable:
     def select_fallback_provider(
         self,
         request: OrchestratorRequest,
-        providers: Dict[str, Provider],
+        providers: Mapping[str, Provider],
         primary: Provider,
     ) -> Optional[Provider]:
         # naive: first other provider that supports the model
