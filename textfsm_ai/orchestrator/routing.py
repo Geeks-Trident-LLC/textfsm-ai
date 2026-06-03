@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 from .errors import ProviderNotFoundError
 from .provider import Provider
@@ -20,12 +20,14 @@ class RoutingRule:
 
 
 class RoutingTable:
-    """
-    Routing table that maps models to providers via prefix rules.
-    """
+    def __init__(self, rules):
+        self.rules = rules
 
-    def __init__(self, rules: List[RoutingRule]):
-        self._rules = rules
+    def route(self, model: str) -> str:
+        for rule in self.rules:
+            if model.startswith(rule.model_prefix):
+                return rule.provider_name
+        raise ValueError(f"No routing rule for model: {model}")
 
     def select_provider(
         self,
@@ -35,7 +37,7 @@ class RoutingTable:
         model = request.model
 
         # 1. explicit prefix rules
-        for rule in self._rules:
+        for rule in self.rules:
             if model.startswith(rule.model_prefix):
                 provider = providers.get(rule.provider_name)
                 if provider is None:
@@ -64,3 +66,22 @@ class RoutingTable:
             if provider.supports(request.model):
                 return provider
         return None
+
+
+# ---------------------------------------------------------------------------
+# Default routing table used by the orchestrator factory
+# ---------------------------------------------------------------------------
+
+
+def create_default_routing_table() -> RoutingTable:
+    """
+    Default routing rules mapping model prefixes to provider names.
+    """
+    return RoutingTable(
+        rules=[
+            RoutingRule("openai/", "openai"),
+            RoutingRule("anthropic/", "anthropic"),
+            RoutingRule("gemini/", "gemini"),
+            RoutingRule("azure/", "azure"),
+        ]
+    )

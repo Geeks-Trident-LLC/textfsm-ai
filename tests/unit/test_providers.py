@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from unittest.mock import AsyncMock
+
 import pytest
 
 from textfsm_ai.orchestrator.errors import ProviderError
@@ -9,27 +11,43 @@ from textfsm_ai.providers.openai_provider import OpenAIProvider
 
 
 @pytest.mark.parametrize(
-    "provider_cls, model",
+    "provider_cls, model, default_model",
     [
-        (OpenAIProvider, "openai/gpt-4o-mini"),
-        (AnthropicProvider, "anthropic/claude-3-5-sonnet"),
-        (GeminiProvider, "gemini/gemini-1.5-flash"),
+        (OpenAIProvider, "openai/gpt-4o-mini", "openai/gpt-4o-mini"),
+        (
+            AnthropicProvider,
+            "anthropic/claude-3-5-sonnet",
+            "anthropic/claude-3-5-sonnet",
+        ),
+        (GeminiProvider, "gemini/gemini-1.5-flash", "gemini/gemini-1.5-flash"),
     ],
 )
-def test_provider_supports_prefix(provider_cls, model):
-    p = provider_cls(api_key="dummy")  # will fail on real call, but supports() is local
+def test_provider_supports_prefix(provider_cls, model, default_model):
+    """
+    supports() is synchronous and should not require real API calls.
+    """
+    p = provider_cls(api_key="dummy", default_model=default_model)
     assert p.supports(model)
 
 
-def test_openai_provider_raises_on_failure(monkeypatch):
-    p = OpenAIProvider(api_key="dummy")
+@pytest.mark.asyncio
+async def test_openai_provider_raises_on_failure(monkeypatch):
+    """
+    generate() is async and should wrap underlying client errors into ProviderError.
+    """
+    p = OpenAIProvider(api_key="dummy", default_model="openai/gpt-4o-mini")
 
-    def fake_create(*args, **kwargs):
-        raise RuntimeError("boom")
-
-    p.client.chat.completions.create = fake_create  # type: ignore[attr-defined]
+    fake = AsyncMock(side_effect=RuntimeError("boom"))
+    monkeypatch.setattr(
+        p.client.chat.completions,
+        "create",
+        fake,
+    )
 
     with pytest.raises(ProviderError):
-        p.generate(
-            prompt="hi", model="openai/gpt-4o-mini", temperature=0.0, max_tokens=16
+        await p.generate(
+            prompt="hi",
+            model="openai/gpt-4o-mini",
+            temperature=0.0,
+            max_tokens=16,
         )

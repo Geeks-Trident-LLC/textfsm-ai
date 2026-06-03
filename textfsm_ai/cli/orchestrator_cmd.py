@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Optional
 
 import click
@@ -37,7 +38,7 @@ def orchestrator_route(model: str) -> None:
     Show which provider the orchestrator would route a model to.
     """
     routing_table = create_default_routing_table()
-    # dummy providers dict: only names matter for routing
+
     from textfsm_ai.orchestrator.provider import Provider
 
     class DummyProvider(Provider):
@@ -47,10 +48,7 @@ def orchestrator_route(model: str) -> None:
         def supports(self, model: str) -> bool:
             return True
 
-        def generate(self, *args, **kwargs):
-            raise NotImplementedError
-
-        async def generate_async(self, *args, **kwargs):
+        async def generate(self, *args, **kwargs):
             raise NotImplementedError
 
     providers = {
@@ -60,10 +58,9 @@ def orchestrator_route(model: str) -> None:
         "azure": DummyProvider("azure"),
     }
 
-    from textfsm_ai.orchestrator.types import OrchestratorRequest as OR
-
-    req = OR(model=model, prompt="")
+    req = OrchestratorRequest(model=model, prompt="")
     provider = routing_table.select_provider(req, providers)
+
     click.echo(f"Model: {model}")
     click.echo(f"Routed provider: {provider.name}")
 
@@ -80,9 +77,9 @@ def orchestrator_run(config_path: Optional[str], model: str, prompt: str) -> Non
     orch = create_orchestrator_from_config(cfg)
 
     req = OrchestratorRequest(model=model, prompt=prompt)
-    resp = orch.run(req)
+    resp = asyncio.run(orch.run(req))
 
     click.echo(f"Provider: {resp.provider}")
     click.echo(f"Model: {resp.model}")
     click.echo("-" * 40)
-    click.echo(resp.content)
+    click.echo(resp.raw)

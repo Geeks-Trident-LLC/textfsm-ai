@@ -1,37 +1,52 @@
 from __future__ import annotations
 
-import httpx
+import asyncio
+from typing import Any
 
+from azure.ai.inference import ChatCompletionsClient
+from azure.core.credentials import AzureKeyCredential
+
+from textfsm_ai.orchestrator.errors import ProviderError
 from textfsm_ai.orchestrator.provider import Provider
-from textfsm_ai.orchestrator.types import OrchestratorResponse
 
 
 class AzureOpenAIProvider(Provider):
     name = "azure"
 
-    def __init__(self, api_key: str, endpoint: str, model: str):
-        self.api_key = api_key
-        self.endpoint = endpoint.rstrip("/")
-        self.model = model
-
-    async def run(self, prompt: str, **kwargs) -> OrchestratorResponse:
-        url = (
-            f"{self.endpoint}/openai/deployments/"
-            f"{self.model}/chat/completions?api-version=2024-02-15-preview"
+    def __init__(self, api_key: str, endpoint: str, default_model: str) -> None:
+        self.client = ChatCompletionsClient(
+            endpoint=endpoint,
+            credential=AzureKeyCredential(api_key),
         )
+        self.default_model = default_model
 
-        payload = {
-            "messages": [{"role": "user", "content": prompt}],
-        }
+    def supports(self, model: str) -> bool:
+        return True
 
-        async with httpx.AsyncClient(timeout=30) as client:
-            resp = await client.post(
-                url,
-                json=payload,
-                headers={"api-key": self.api_key},
+    async def generate(
+        self,
+        prompt: str,
+        *,
+        model: str,
+        temperature: float,
+        max_tokens: int,
+        **kwargs: Any,
+    ) -> dict:
+        try:
+            # Azure SDK is synchronous → run in thread
+            result = await asyncio.to_thread(
+                self.client.complete,
+                model=model or self.default_model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=temperature,
+                max_tokens=max_tokens,
+                **kwargs,
             )
-            resp.raise_for_status()
-            data = resp.json()
 
-        content = data["choices"][0]["message"]["content"]
-        return OrchestratorResponse(content=content)
+            # Extract assistant message
+            content = result.choices[0].message["content"]
+
+            return {"content": content}
+
+        except Exception as exc:
+            raise ProviderError(str(exc)) from exc

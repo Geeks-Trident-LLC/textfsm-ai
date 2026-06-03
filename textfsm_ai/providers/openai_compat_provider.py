@@ -1,48 +1,45 @@
 from __future__ import annotations
 
-import httpx
+from typing import Any
 
+from openai import AsyncOpenAI
+
+from textfsm_ai.orchestrator.errors import ProviderError
 from textfsm_ai.orchestrator.provider import Provider
-from textfsm_ai.orchestrator.types import OrchestratorResponse
 
 
 class OpenAICompatProvider(Provider):
     name = "openai_compat"
 
-    def __init__(self, api_key: str, base_url: str, model: str):
-        self.api_key = api_key
-        self.base_url = base_url.rstrip("/")
-        self.model = model
+    def __init__(self, api_key: str, base_url: str, default_model: str) -> None:
+        self.client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+        self.default_model = default_model
 
-    def supports(self, model_name: str) -> bool:
-        return model_name == self.model
+    def supports(self, model: str) -> bool:
+        return True
 
-    async def generate(self, prompt: str, **kwargs) -> OrchestratorResponse:
-        return await self.run(prompt, **kwargs)
-
-    async def run(self, prompt: str, **kwargs) -> OrchestratorResponse:
-        url = f"{self.base_url}/v1/chat/completions"
-
-        payload = {
-            "model": self.model,
-            "messages": [{"role": "user", "content": prompt}],
-        }
-
-        async with httpx.AsyncClient(timeout=30) as client:
-            resp = await client.post(
-                url,
-                json=payload,
-                headers={"Authorization": f"Bearer {self.api_key}"},
+    async def generate(
+        self,
+        prompt: str,
+        *,
+        model: str,
+        temperature: float,
+        max_tokens: int,
+        **kwargs: Any,
+    ) -> dict:
+        try:
+            response = await self.client.chat.completions.create(
+                model=model or self.default_model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=temperature,
+                max_tokens=max_tokens,
+                **kwargs,
             )
-            resp.raise_for_status()
-            data = resp.json()
 
-        content = data["choices"][0]["message"]["content"]
+            # Extract assistant message content
+            content = response.choices[0].message["content"]
 
-        return OrchestratorResponse(
-            content=content,
-            provider=self.name,
-            model=self.model,
-            raw=data,
-        )
+            return {"content": content}
 
+        except Exception as exc:
+            raise ProviderError(str(exc)) from exc

@@ -1,4 +1,5 @@
 # Development tools only (runtime dependencies live in pyproject.toml)
+-r requirements.txt
 
 # Build & publish
 build

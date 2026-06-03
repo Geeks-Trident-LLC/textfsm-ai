@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from click.testing import CliRunner
 
@@ -9,16 +9,15 @@ from textfsm_ai.cli.generate_cmd import generate
 
 
 def test_generate_basic_output(tmp_path):
-    # Create a temporary input file
     input_file = tmp_path / "input.txt"
     input_file.write_text("hello world", encoding="utf-8")
 
-    # Mock ask_ai() to avoid real provider calls
-    with patch("textfsm_ai.cli.generate_cmd.ask_ai") as mock_ask:
-        mock_ask.return_value.content = "mocked output"
-        mock_ask.return_value.to_json.return_value = json.dumps(
-            {"output": "mocked output"}
-        )
+    with patch(
+        "textfsm_ai.cli.generate_cmd.ask_ai", new_callable=AsyncMock
+    ) as mock_ask:
+        resp = mock_ask.return_value
+        resp.content = "mocked output"
+        resp.to_json.return_value = json.dumps({"output": "mocked output"})
 
         runner = CliRunner()
         result = runner.invoke(
@@ -35,15 +34,15 @@ def test_generate_basic_output(tmp_path):
 
 
 def test_generate_json_output(tmp_path):
-    # Create a temporary input file
     input_file = tmp_path / "input.txt"
     input_file.write_text("hello world", encoding="utf-8")
 
-    with patch("textfsm_ai.cli.generate_cmd.ask_ai") as mock_ask:
-        mock_ask.return_value.content = "mocked output"
-        mock_ask.return_value.to_json.return_value = json.dumps(
-            {"output": "mocked output"}
-        )
+    with patch(
+        "textfsm_ai.cli.generate_cmd.ask_ai", new_callable=AsyncMock
+    ) as mock_ask:
+        resp = mock_ask.return_value
+        resp.content = "mocked output"
+        resp.to_json = lambda: json.dumps({"output": "mocked output"})
 
         runner = CliRunner()
         result = runner.invoke(
@@ -58,7 +57,6 @@ def test_generate_json_output(tmp_path):
 
     assert result.exit_code == 0
 
-    # Output should be valid JSON
     parsed = json.loads(result.output)
     assert parsed["output"] == "mocked output"
 
@@ -70,6 +68,5 @@ def test_generate_requires_model(tmp_path):
     runner = CliRunner()
     result = runner.invoke(generate, [str(input_file)])
 
-    # Click should error because --model is required
     assert result.exit_code != 0
     assert "Missing option '--model'" in result.output

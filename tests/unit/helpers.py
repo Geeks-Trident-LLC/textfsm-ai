@@ -1,4 +1,3 @@
-# tests/conftest.py or tests/helpers.py
 from __future__ import annotations
 
 from typing import Any, Dict
@@ -11,6 +10,14 @@ from textfsm_ai.orchestrator.provider import Provider
 
 
 class MockProvider(Provider):
+    """
+    Test provider that simulates different behaviors:
+    - "ok": returns content
+    - "rate_limit": raises ProviderRateLimitError
+    - "timeout": raises ProviderTimeoutError
+    - "error": raises generic RuntimeError
+    """
+
     def __init__(self, name: str, behavior: str = "ok"):
         self.name = name
         self._behavior = behavior
@@ -19,7 +26,7 @@ class MockProvider(Provider):
     def supports(self, model: str) -> bool:
         return True
 
-    def generate(
+    async def generate(
         self,
         prompt: str,
         *,
@@ -27,7 +34,11 @@ class MockProvider(Provider):
         temperature: float,
         max_tokens: int,
     ) -> Dict[str, Any]:
+        """
+        Async generate method used by the async-first orchestrator.
+        """
         self.calls += 1
+
         if self._behavior == "ok":
             return {"content": f"{self.name}:{prompt}"}
         if self._behavior == "rate_limit":
@@ -36,20 +47,5 @@ class MockProvider(Provider):
             raise ProviderTimeoutError("timeout")
         if self._behavior == "error":
             raise RuntimeError("hard failure")
-        raise RuntimeError("unknown behavior")
 
-    async def generate_async(
-        self,
-        prompt: str,
-        *,
-        model: str,
-        temperature: float,
-        max_tokens: int,
-    ) -> Dict[str, Any]:
-        # reuse sync behavior
-        return self.generate(
-            prompt=prompt,
-            model=model,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
+        raise RuntimeError("unknown behavior")

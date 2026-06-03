@@ -1,4 +1,4 @@
-from time import time
+from time import monotonic
 
 
 class QuotaManager:
@@ -9,11 +9,11 @@ class QuotaManager:
 
     def __init__(self, max_requests_per_minute: int = 60):
         self.max_requests = max_requests_per_minute
-        self.window_start = time()
+        self.window_start = monotonic()
         self.count = 0
 
     def allowed(self) -> bool:
-        now = time()
+        now = monotonic()
 
         # Reset window every 60 seconds
         if now - self.window_start >= 60:

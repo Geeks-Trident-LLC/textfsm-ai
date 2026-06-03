@@ -1,4 +1,3 @@
-# textfsm_ai/orchestrator/types.py
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -9,13 +8,12 @@ from typing import Any, Dict
 class OrchestratorRequest:
     model: str
     prompt: str
-    temperature: float = 0.0
-    max_tokens: int = 2048
+    temperature: float = 0.2
+    max_tokens: int = 1024
 
 
 @dataclass
 class OrchestratorResponse:
     provider: str
     model: str
-    content: str
     raw: Dict[str, Any]

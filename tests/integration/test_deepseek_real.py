@@ -1,4 +1,5 @@
 import os
+
 import pytest
 
 from textfsm_ai.providers.openai_compat_provider import OpenAICompatProvider
@@ -7,7 +8,6 @@ from textfsm_ai.providers.openai_compat_provider import OpenAICompatProvider
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_deepseek_real_basic():
-
     if not os.environ.get("DEEPSEEK_API_KEY"):
         pytest.skip("Requires DEEPSEEK_API_KEY")
 

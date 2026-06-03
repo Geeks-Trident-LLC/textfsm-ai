@@ -18,10 +18,19 @@ maintainers = [
     { name = "Tuyen Mathew Duong", email = "tuyen@geekstrident.com" }
 ]
 
+# Runtime dependencies (synced with requirements.txt)
 dependencies = [
     "PyYAML>=6.0",
-    "requests>=2.31",
+    "requests>=2.32",
     "click>=8.1",
+
+    # AI provider SDKs (minimum requirements)
+    "openai>=1.0.0",
+    "google-genai>=0.2.0",
+    "azure-ai-inference>=1.0.0b9",
+    "anthropic>=0.8.0",
+
+    # Python < 3.11
     "tomli; python_version < '3.11'",
 ]
 
@@ -62,7 +71,7 @@ keywords = [
 
 [project.optional-dependencies]
 openai = ["openai>=1.0.0"]
-azure = ["azure-ai-openai>=1.0.0"]
+azure = ["azure-ai-inference>=1.0.0b9"]
 anthropic = ["anthropic>=0.8.0"]
 gemini = ["google-genai>=0.2.0"]
 
@@ -73,14 +82,14 @@ dev = [
     "ruff>=0.4.0",
     "black>=24.0.0",
     "mypy>=1.10.0",
-    "isort>=5.13.0",
+    "respx",
 ]
 
 build = ["build", "twine"]
 
 all = [
     "openai>=1.0.0",
-    "azure-ai-openai>=1.0.0",
+    "azure-ai-inference>=1.0.0b9",
     "anthropic>=0.8.0",
     "google-genai>=0.2.0",
     "pytest>=8.0.0",
@@ -89,7 +98,7 @@ all = [
     "ruff>=0.4.0",
     "black>=24.0.0",
     "mypy>=1.10.0",
-    "isort>=5.13.0",
+    "respx",
 ]
 
 [project.scripts]

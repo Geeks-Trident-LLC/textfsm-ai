@@ -10,6 +10,11 @@ from textfsm_ai.cli.generate_cmd import generate
 
 @pytest.mark.integration
 def test_generate_real_openai(tmp_path):
+    """
+    Real integration test that exercises the full CLI + async orchestrator +
+    OpenAI provider stack. Only runs when OPENAI_API_KEY and TEST_REAL=true
+    are set in the environment.
+    """
     if not os.environ.get("OPENAI_API_KEY"):
         pytest.skip("Requires OPENAI_API_KEY")
 
@@ -19,7 +24,8 @@ def test_generate_real_openai(tmp_path):
     # Create a temporary input file
     input_file = tmp_path / "input.txt"
     input_file.write_text(
-        "Extract hostname from this output:\nhostname Router1", encoding="utf-8"
+        "Extract hostname from this output:\nhostname Router1",
+        encoding="utf-8",
     )
 
     runner = CliRunner()

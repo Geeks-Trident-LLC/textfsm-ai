@@ -1,3 +1,7 @@
+# tests/unit/test_quota_manager.py
+
+from __future__ import annotations
+
 from textfsm_ai.quota_manager import QuotaManager
 
 
@@ -25,8 +29,11 @@ def test_quota_resets_after_60_seconds(monkeypatch):
     assert q.allowed()
     assert not q.allowed()
 
-    # Advance time by 61 seconds
-    monkeypatch.setattr("textfsm_ai.quota_manager.time", lambda: q.window_start + 61)
+    # Patch monotonic() inside the module, not time.time
+    monkeypatch.setattr(
+        "textfsm_ai.quota_manager.monotonic",
+        lambda: q.window_start + 61,
+    )
 
     # Should reset and allow again
     assert q.allowed()

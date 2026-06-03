@@ -1,9 +1,9 @@
-# textfsm_ai/providers/gemini_provider.py
 from __future__ import annotations
 
-from typing import Any, Dict
+import asyncio
+from typing import Any
 
-from google import genai
+import google.genai as genai
 
 from textfsm_ai.orchestrator.errors import ProviderError
 from textfsm_ai.orchestrator.provider import Provider
@@ -12,34 +12,35 @@ from textfsm_ai.orchestrator.provider import Provider
 class GeminiProvider(Provider):
     name = "gemini"
 
-    def __init__(self, api_key: str | None = None):
+    def __init__(self, api_key: str, default_model: str) -> None:
         self.client = genai.Client(api_key=api_key)
+        self.default_model = default_model
 
     def supports(self, model: str) -> bool:
-        return model.startswith("gemini/")
+        return True
 
-    def generate(
+    async def generate(
         self,
         prompt: str,
         *,
         model: str,
         temperature: float,
         max_tokens: int,
-    ) -> Dict[str, Any]:
+        **kwargs: Any,
+    ) -> dict:
         try:
-            model_name = model.replace("gemini/", "")
-            resp = self.client.models.generate_content(
-                model=model_name,
-                contents=prompt,
+            response = await asyncio.to_thread(
+                self.client.models.generate_content,
+                model=model or self.default_model,
+                contents=[{"role": "user", "content": prompt}],
                 generation_config={
                     "temperature": temperature,
                     "max_output_tokens": max_tokens,
                 },
+                **kwargs,
             )
-            content = resp.text
-            return {"content": content, "raw": resp.to_dict()}
-        except Exception as exc:
-            raise ProviderError(f"Gemini provider failed: {exc}") from exc
 
-    async def generate_async(self, **kwargs):
-        return self.generate(**kwargs)
+            return {"content": response.text}
+
+        except Exception as exc:
+            raise ProviderError(str(exc)) from exc

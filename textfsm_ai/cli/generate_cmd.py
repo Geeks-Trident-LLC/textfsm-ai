@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 import click
 
 from textfsm_ai.api import ask_ai
@@ -35,10 +37,12 @@ def generate(input_file, model, config_path, as_json):
     with open(input_file, "r", encoding="utf-8") as f:
         raw_text = f.read()
 
-    resp = ask_ai(
-        raw_text,
-        model=model,
-        config_path=config_path,
+    resp = asyncio.run(
+        ask_ai(
+            raw_text,
+            model=model,
+            config_path=config_path,
+        )
     )
 
     if as_json:

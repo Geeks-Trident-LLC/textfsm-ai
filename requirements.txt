@@ -4,7 +4,7 @@ click>=8.1
 
 openai>=1.0.0
 google-genai>=0.2.0
-azure-ai-openai>=1.0.0
+azure-ai-inference
 anthropic>=0.8.0
 
 # Only if Python < 3.11
