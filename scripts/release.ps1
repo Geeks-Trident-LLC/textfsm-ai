@@ -49,15 +49,26 @@ function Publish-Prod {
     $version = Get-Version
     $tag = "v$version"
 
-    git rev-parse $tag 2>$null
-    if ($LASTEXITCODE -eq 0) {
-        Write-Error "Tag $tag already exists"
+    # Check local tag
+    $localTagExists = git tag --list $tag
+
+    # Check remote tag
+    $remoteTagExists = git ls-remote --tags origin $tag
+
+    if ($localTagExists -and $remoteTagExists) {
+        Write-Error "Tag $tag exists locally AND remotely. Release already completed or inconsistent. Aborting."
         exit 1
     }
 
-    Write-Host "Creating production tag $tag"
+    if ($localTagExists -and -not $remoteTagExists) {
+        Write-Host "Local tag $tag exists but remote tag does not. Deleting local tag and continuing..."
+        git tag -d $tag | Out-Null
+    }
 
+    Write-Host "Creating production tag $tag"
     git tag $tag
+
+    Write-Host "Pushing tag $tag"
     git push origin $tag
 
     Write-Host "Creating GitHub Release for $tag"
