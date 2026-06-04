@@ -11,6 +11,9 @@ class Provider(ABC):
 
     name: str
 
+    # Allow arbitrary constructor signatures
+    def __init__(self, *args: object, **kwargs: object) -> None: ...
+
     @abstractmethod
     def supports(self, model: str) -> bool:
         """
@@ -31,4 +34,8 @@ class Provider(ABC):
         """
         Async text generation call.
         """
+        raise NotImplementedError
+
+    @classmethod
+    def from_env(cls):
         raise NotImplementedError

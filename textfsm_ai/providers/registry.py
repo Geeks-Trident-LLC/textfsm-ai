@@ -5,6 +5,7 @@ from typing import Dict, Type
 from textfsm_ai.orchestrator.provider import Provider
 from textfsm_ai.providers.anthropic_provider import AnthropicProvider
 from textfsm_ai.providers.azure_provider import AzureOpenAIProvider
+from textfsm_ai.providers.deepseek_provider import DeepSeekProvider
 from textfsm_ai.providers.gemini_provider import GeminiProvider
 from textfsm_ai.providers.openai_compat_provider import OpenAICompatProvider
 from textfsm_ai.providers.openai_provider import OpenAIProvider
@@ -30,3 +31,4 @@ registry.register(OpenAICompatProvider)
 registry.register(AzureOpenAIProvider)
 registry.register(AnthropicProvider)
 registry.register(GeminiProvider)
+registry.register(DeepSeekProvider)
