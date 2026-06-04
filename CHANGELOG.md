@@ -1,40 +1,22 @@
+# 📘 **CHANGELOG (v0.3.0)**
 
-# 📘 **CHANGELOG (v0.2.0)**
-
-## **v0.2.0 — Architecture Overhaul, APC Integration, and Language Support**
+## **v0.3.0 — Model Listing, Provider Unification, and Orchestrator Enhancements**
 
 ### 🚀 Features
-- **Add `--lang` support** with default English output across all providers.  
-  Enables consistent language control for OpenAI, Gemini, Anthropic, and DeepSeek.
-- **Introduce tier-based model selection** and update config migration to support `--tier`.
-- **Add `ask_ai()` public API** for programmatic access to the AI pipeline.
-- **Add provider registry to `ai_router`** enabling dynamic provider loading.
-- **Add provider/model configuration support** through the new config system.
-- **Implement new providers**:
-  - `OpenAIProvider`
-  - `GeminiProvider`
-  - `ClaudeProvider`
-  - `DeepSeekProvider`
-- **Improve CLI timing output** and correct DeepSeek provider behavior.
-- **Introduce config-driven architecture** and remove legacy provider/model flags.
-- **Wire CLI `generate` command to `ask_ai()`** for unified execution.
+- **Add `list-models` command** and introduce a shared **ModelListingMixin** across all providers.  
+  Enables consistent model discovery for OpenAI, Gemini, Anthropic, DeepSeek, and future providers.
+- **Add OpenAI‑compatible provider** and update provider registry/factory wiring.
+- **Expand orchestrator architecture** with routing, hooks, and unified provider interface.
 
-### 🔧 Refactors
-- Major **config system rewrite** with strict chat-model selection and updated CLI commands.
-- Improved **config init flow** and updated `UserConfig` typing.
-- Provider cleanup and normalization across all backends.
-- Unified config command structure and removed legacy unit tests.
-- Added model listing for OpenAI, Gemini, Anthropic, and DeepSeek.
+### 🔧 Improvements & Refactors
+- **Unify `ProviderConfig` schema** and align CLI + factory logic with list‑based provider definitions.
+- **Refactor orchestrator** to remove legacy config system and migrate CLI/tests to the new architecture.
+- **Fix async handling, routing table, and provider outputs** across CLI and providers.
+- **Make `release-prod` idempotent** and skip existing tags/releases.
+- **Remove redundant release workflow** (now handled by dedicated publish pipelines).
 
-### 🧪 Tests
-- Added new test suite covering:
-  - router
-  - API
-  - CLI config commands
-  - model selector
-  - provider ping
-  - quota manager
-  - user config
+### 🐛 Fixes
+- Correct PowerShell conditional to use `$LASTEXITCODE`.
 
 ### 🏷 Version
-- **Bump version: `0.1.25 → 0.2.0`**
+- **Bump version: `0.2.12 → 0.3.0`**

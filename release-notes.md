@@ -1,34 +1,23 @@
-
 # 📝 **GitHub Release Notes**
 
-## **v0.2.0 — APC Integration, Language Support, and New Config System**
+## **v0.3.0 — Model Listing & Orchestrator Improvements**
 
-This release introduces a major architectural upgrade to `textfsm-ai`, including a new APC layer, improved provider support, and a fully redesigned configuration system.
+This release introduces model listing support, provider unification, and major orchestrator enhancements.
 
 ### 🚀 New Features
-- Added `--lang` flag with default English output.
-- Introduced `ask_ai()` public API.
-- Added provider registry and model configuration support.
-- Implemented OpenAI, Gemini, Claude, and DeepSeek providers.
-- Added tier-based model selection.
-- Improved CLI timing output.
+- Added `list-models` command with unified model listing mixin.
+- Added OpenAI‑compatible provider and updated provider registry.
+- Expanded orchestrator architecture with routing, hooks, and provider interface.
 
-### 🔧 Improvements & Refactors
-- Complete rewrite of config system.
-- Unified CLI config commands.
-- Provider cleanup and normalization.
-- Added model listing for all providers.
+### 🔧 Improvements
+- Unified provider configuration schema.
+- Refactored orchestrator to remove legacy config system.
+- Improved CLI and provider output consistency.
+- Made release pipeline idempotent and removed redundant workflow.
 
-### 🧪 Testing
-- Added comprehensive test suite for router, API, CLI, config, providers, quota, and model selector.
+### 🐛 Fixes
+- Corrected async handling and routing table logic.
+- Fixed `$LASTEXITCODE` usage in release script.
 
 ### 🏷 Version
-- Bumped version: `0.1.25 → 0.2.0`.
-
----
-
-## **v0.2.0-test — Test Release**
-
-This is the TestPyPI release for validation of packaging, provider integration, and CLI behavior.
-
-Contains the same changes as `v0.2.0`, published for testing purposes only.
+- Bumped version: `0.2.12 → 0.3.0`.

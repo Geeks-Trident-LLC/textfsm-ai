@@ -1,41 +1,29 @@
-
 # 📦 **Pull Request Description**
 
-## **feat: APC integration, language support, new config system, and provider upgrades**
+## **feat: model listing, provider unification, and orchestrator upgrades**
 
-This PR delivers a major architectural upgrade to `textfsm-ai`, introducing a unified APC layer, a new configuration system, language control, and expanded provider support.
+This PR delivers a set of improvements across providers, orchestrator, and release automation.
 
-### **Key Highlights**
+### **Key Additions**
+- Introduced `list-models` CLI command.
+- Added `ModelListingMixin` to unify model discovery across all providers.
+- Added OpenAI‑compatible provider and updated provider registry/factory wiring.
 
-#### **1. Language Support**
-- Added `--lang` flag to CLI (`generate` command).
-- Default output language is now English.
-- DeepSeek provider updated with language-aware system prompts.
+### **Refactors**
+- Unified `ProviderConfig` schema and aligned CLI/factory with list‑based provider definitions.
+- Removed legacy config system and migrated CLI/tests to the new orchestrator architecture.
+- Improved orchestrator routing, hooks, and provider interface consistency.
 
-#### **2. APC Integration**
-- Introduced `ask_ai()` as the unified public API.
-- Wired CLI `generate` command to APC pipeline.
-- Added provider registry and model configuration support.
+### **Fixes**
+- Corrected async handling, routing table, and provider outputs.
+- Fixed PowerShell `$LASTEXITCODE` usage in release script.
 
-#### **3. New Config System**
-- Tier-based model selection.
-- Updated `config init`, `config migrate`, and `config show`.
-- Strong typing for `UserConfig`.
-
-#### **4. Provider Enhancements**
-- Implemented OpenAI, Gemini, Claude, and DeepSeek providers.
-- Added model listing for all providers.
-- Normalized provider interfaces.
-
-#### **5. CLI Improvements**
-- Improved timing output.
-- Removed legacy provider/model flags.
-- Unified config command structure.
-
-#### **6. Test Suite Expansion**
-- Added tests for router, API, CLI, config, providers, quota, and model selector.
+### **Release Pipeline**
+- Removed redundant `release.yml` workflow.
+- Ensured publish pipelines cleanly separate TestPyPI and PyPI releases.
+- Made `release-prod` idempotent and safe to rerun.
 
 ### **Version**
-- Bumped version to `v0.2.0`.
+- Bumped version to `v0.3.0`.
 
-This PR completes the APC feature branch and prepares the project for orchestrator integration in the next phase.
+This PR prepares the project for upcoming orchestrator features and multi‑provider enhancements.
