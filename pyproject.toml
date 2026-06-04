@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "textfsm_ai"
-version = "0.2.12"
+version = "0.2.13"
 description = "AI-powered TextFSM template generator with multi-provider routing"
 readme = "README.md"
 license = { text = "MIT" }

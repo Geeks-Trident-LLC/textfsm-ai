@@ -1,6 +1,6 @@
 # textfsm_ai/__init__.py
 
-__version__ = "0.2.12"
+__version__ = "0.2.13"
 version = __version__
 
 
