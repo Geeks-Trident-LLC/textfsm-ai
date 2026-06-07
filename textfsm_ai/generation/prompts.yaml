@@ -1,0 +1,121 @@
+one_pass_prompt: |
+  Generate a TextFSM template from the sample below.
+
+  You must internally generate the following four sections in this exact order:
+
+  TEXTFSM TEMPLATE SECTION:
+  - The complete TextFSM template, no formatting, no commentary, and all variable in lowercase.
+
+  PARSED RESULT SECTION:
+  - The result of running TextFSM(StringIO(template)).ParseTextToDicts(sample).
+
+  VARIABLE EXPLANATION SECTION:
+  - Explain each Value variable in plain ASCII text only.
+  - Use one bullet per variable.
+  - Do not use Unicode characters, smart quotes, fancy dashes, or non-ASCII punctuation.
+
+  LLM HANDLING TEMPLATE SECTION:
+  - Explain how you derived the template that non-technical user will understand it.
+  - Each sentence must be on its own line and must be plain ASCII text only.
+  - Do not use Unicode characters, smart quotes, fancy dashes, or non-ASCII punctuation.
+
+  Rules:
+  - Do NOT output the four sections.
+  - You must internally test the TextFSM template by compiling it and parsing the sample.
+    The template must compile without any error or exception, and it must successfully
+    parse at least one record from the sample. If it fails, correct it before continuing.
+  - All TextFSM variable names must be lowercase.
+  - Use only the straight ASCII quote character (").
+  - The template must not be wrapped in quotes or any formatting.
+  - Do not add blank sections or rename headers.
+  - Preserve all newlines inside each internal section exactly as they appear.
+
+  Final Output Requirement:
+  - Your final output must be a JSON object with exactly these keys:
+      "textfsm_template",
+      "parsed_result",
+      "variable_explanation",
+      "llm_handling_template"
+  - Plain ASCII rule to forbid code fences
+
+  JSON formatting rules:
+  - "textfsm_template" must be a string containing the full template.
+  - "parsed_result" must be a JSON array.
+  - "variable_explanation" must be a JSON object where:
+      - each key is a variable name
+      - each value is the explanation text for that variable
+  - "llm_handling_template" must be a JSON array of strings, one per sentence.
+  - The final output must be valid JSON and must not contain any text outside the JSON object.
+
+  SAMPLE
+  ==============================
+
+two_pass_prompt_a: |
+  Generate a TextFSM template from the sample below.
+
+  Your output must contain exactly four sections in this exact order:
+
+  TEXTFSM TEMPLATE SECTION:
+  - The complete TextFSM template, no formatting, no commentary, and all variable in lowercase.
+
+  PARSED RESULT SECTION:
+  <The result of running TextFSM(StringIO(template)).ParseTextToDicts(sample)>
+
+  VARIABLE EXPLANATION SECTION:
+  - Explain each Value variable in plain ASCII text only.
+  - Use one bullet per variable.
+  - Do not use Unicode characters, smart quotes, fancy dashes, or non-ASCII punctuation.
+
+  LLM HANDLING TEMPLATE SECTION:
+    - Explain how you derived the template that non-technical user will understand it.
+    - Each sentence must be on its own line and must be plain ASCII text only.
+    - Use one bullet per line.
+    - Do not use Unicode characters, smart quotes, fancy dashes, or non-ASCII punctuation.
+
+  Rules:
+  - Do NOT use Markdown.
+  - Do NOT use code fences.
+  - Do NOT include any sections other than the four listed above.
+  - The TextFSM template must appear immediately after the TEXTFSM TEMPLATE header.
+  - All TextFSM variable names must be lowercase.
+  - Use only the straight ASCII quote character (").
+  - The template must not be wrapped in quotes or any formatting.
+  - Do not add blank sections or rename headers.
+  - Before producing the final output, you must internally test the TextFSM template
+    by compiling it and parsing the sample. The template must compile without any
+    error or exception, and it must successfully parse at least one record from the
+    sample. If the template fails, correct it before producing the final output.
+  - In the PARSED RESULT section:
+    - Use the tested template to parse the sample and show the parsed records.
+  - In the LLM HANDLING TEMPLATE section:
+    - Each sentence must be on its own line.
+
+  SAMPLE
+  ==============================
+
+two_pass_prompt_b: |
+  Extract the sample below into a JSON object with exactly these keys:
+  - store textfsm template section to "textfsm_template" -> string
+  - store parsed result section to "parsed_result" -> JSON array of dict
+  - store variable explanation section to "variable_explanation" -> JSON dict
+  - store llm handling template section to "llm_handling_template" -> JSON array of strings
+
+  Final Output Requirement:
+  - Your final output must be a JSON object with exactly these keys:
+      "textfsm_template",
+      "parsed_result",
+      "variable_explanation",
+      "llm_handling_template"
+  - Plain ASCII rule to forbid code fences
+
+  JSON formatting rules:
+  - "textfsm_template" must be a string containing the full template.
+  - "parsed_result" must be a JSON array.
+  - "variable_explanation" must be a JSON object where:
+      - each key is a variable name
+      - each value is the explanation text for that variable
+  - "llm_handling_template" must be a JSON array of strings, one per sentence.
+  - The final output must be valid JSON and must not contain any text outside the JSON object.
+
+  SAMPLE
+  ==============================

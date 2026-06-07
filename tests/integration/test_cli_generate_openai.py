@@ -1,46 +1,35 @@
-from __future__ import annotations
+# tests/integration/test_cli_generate_openai.py
 
-import os
+from __future__ import annotations
 
 import pytest
 from click.testing import CliRunner
 
 from textfsm_ai.cli.generate_cmd import generate
+from textfsm_ai.models import model as MODEL
 
 
 @pytest.mark.integration
-def test_generate_real_openai(tmp_path):
-    """
-    Real integration test that exercises the full CLI + async orchestrator +
-    OpenAI provider stack. Only runs when OPENAI_API_KEY and TEST_REAL=true
-    are set in the environment.
-    """
-    if not os.environ.get("OPENAI_API_KEY"):
-        pytest.skip("Requires OPENAI_API_KEY")
-
-    if os.environ.get("TEST_REAL") != "true":
-        pytest.skip("Requires TEST_REAL=true")
-
+def test_real_openai(tmp_path, openai_key):
     # Create a temporary input file
     input_file = tmp_path / "input.txt"
     input_file.write_text(
         "Extract hostname from this output:\nhostname Router1",
         encoding="utf-8",
     )
-
     runner = CliRunner()
     result = runner.invoke(
         generate,
         [
             str(input_file),
             "--model",
-            "openai/gpt-4o-mini",
+            MODEL.openai.default,
         ],
     )
 
     # Basic assertions
     assert result.exit_code == 0
-    assert len(result.output.strip()) > 0
+    assert result.output.strip()
 
     # The model should return something TextFSM-like
     assert "Router1" in result.output

@@ -74,14 +74,14 @@ class RoutingTable:
 
 
 def create_default_routing_table() -> RoutingTable:
-    """
-    Default routing rules mapping model prefixes to provider names.
-    """
     return RoutingTable(
         rules=[
-            RoutingRule("openai/", "openai"),
-            RoutingRule("anthropic/", "anthropic"),
-            RoutingRule("gemini/", "gemini"),
-            RoutingRule("azure/", "azure"),
+            RoutingRule("gpt-", "openai"),
+            RoutingRule("o1-", "openai"),  # Omni 1
+            RoutingRule("o3-", "openai"),  # Omni 3
+            RoutingRule("claude-", "anthropic"),
+            RoutingRule("gemini-", "gemini"),
+            RoutingRule("azure-", "azure"),
+            RoutingRule("deepseek-", "deepseek"),
         ]
     )

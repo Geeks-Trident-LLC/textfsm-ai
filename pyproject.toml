@@ -23,14 +23,11 @@ dependencies = [
     "PyYAML>=6.0",
     "requests>=2.32",
     "click>=8.1",
-
-    # AI provider SDKs (minimum requirements)
+    "textfsm>=1.1.0",          # <-- REQUIRED
     "openai>=1.0.0",
     "google-genai>=0.2.0",
     "azure-ai-inference>=1.0.0b9",
     "anthropic>=0.8.0",
-
-    # Python < 3.11
     "tomli; python_version < '3.11'",
 ]
 

@@ -1,5 +1,8 @@
+# tests/unit/helpers.py
+
 from __future__ import annotations
 
+import pathlib
 from typing import Any, Dict
 
 from textfsm_ai.orchestrator.errors import (
@@ -31,8 +34,6 @@ class MockProvider(Provider):
         prompt: str,
         *,
         model: str,
-        temperature: float,
-        max_tokens: int,
     ) -> Dict[str, Any]:
         """
         Async generate method used by the async-first orchestrator.
@@ -49,3 +50,7 @@ class MockProvider(Provider):
             raise RuntimeError("hard failure")
 
         raise RuntimeError("unknown behavior")
+
+
+def read_text(path: str) -> str:
+    return pathlib.Path(path).read_text(encoding="utf-8")

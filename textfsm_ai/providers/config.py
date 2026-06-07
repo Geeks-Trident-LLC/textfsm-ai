@@ -9,6 +9,7 @@ import yaml
 
 @dataclass
 class ProviderConfig:
+    name: str
     type: str
     params: Dict[str, Any]
 
@@ -28,6 +29,7 @@ def load_config_from_file(path: str) -> OrchestratorConfig:
 
     for name, item in raw_providers.items():
         providers_cfg[name] = ProviderConfig(
+            name=name,
             type=item["type"],
             params=item.get("params", {}),
         )
@@ -40,24 +42,35 @@ def load_config_from_env() -> OrchestratorConfig:
 
     if os.getenv("OPENAI_API_KEY"):
         providers_cfg["openai"] = ProviderConfig(
+            name="openai",
             type="openai",
             params={"api_key": os.getenv("OPENAI_API_KEY")},
         )
 
     if os.getenv("ANTHROPIC_API_KEY"):
         providers_cfg["anthropic"] = ProviderConfig(
+            name="anthropic",
             type="anthropic",
             params={"api_key": os.getenv("ANTHROPIC_API_KEY")},
         )
 
     if os.getenv("GEMINI_API_KEY"):
         providers_cfg["gemini"] = ProviderConfig(
+            name="gemini",
             type="gemini",
             params={"api_key": os.getenv("GEMINI_API_KEY")},
         )
 
+    if os.getenv("DEEPSEEK_API_KEY"):
+        providers_cfg["deepseek"] = ProviderConfig(
+            name="deepseek",
+            type="deepseek",
+            params={"api_key": os.getenv("DEEPSEEK_API_KEY")},
+        )
+
     if os.getenv("AZURE_OPENAI_ENDPOINT") and os.getenv("AZURE_OPENAI_API_KEY"):
         providers_cfg["azure"] = ProviderConfig(
+            name="azure",
             type="azure",
             params={
                 "endpoint": os.getenv("AZURE_OPENAI_ENDPOINT"),

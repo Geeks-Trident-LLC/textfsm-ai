@@ -4,6 +4,7 @@ import os
 import re
 from typing import Dict, List, Optional
 
+from textfsm_ai.models import model as MODEL
 from textfsm_ai.providers.model_listing_mixin import ModelListingMixin
 
 from .openai_compat_provider import OpenAICompatProvider
@@ -26,9 +27,9 @@ class DeepSeekProvider(OpenAICompatProvider, ModelListingMixin):
     name = "deepseek"
 
     def __init__(
-        self, api_key: Optional[str] = None, default_model: str = "deepseek-chat"
+        self, api_key: Optional[str] = None, default_model: str = MODEL.deepseek.default
     ):
-        api_key = os.getenv("DEEPSEEK_API_KEY")
+        api_key = api_key or os.getenv("DEEPSEEK_API_KEY")
         if api_key is None:
             raise ValueError("DEEPSEEK_API_KEY is not set")
 
@@ -44,7 +45,7 @@ class DeepSeekProvider(OpenAICompatProvider, ModelListingMixin):
         if not api_key:
             raise RuntimeError("DEEPSEEK_API_KEY is not set")
 
-        return cls(api_key, "deepseek-chat")
+        return cls(api_key, MODEL.deepseek.default)
 
     # ---------------------------------------------------------
     # Fetch latest models from OpenAI API

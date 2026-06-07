@@ -5,7 +5,7 @@ from typing import Dict, Optional
 
 from .errors import ProviderRateLimitError, ProviderTimeoutError
 from .provider import Provider
-from .routing import RoutingRule, RoutingTable
+from .routing import RoutingTable
 from .types import OrchestratorRequest, OrchestratorResponse
 
 
@@ -14,7 +14,7 @@ class Orchestrator:
         self,
         providers: Dict[str, Provider],
         routing_table: RoutingTable,
-        max_retries: int = 2,
+        max_retries: int = 1,
         retry_delay: float = 0.1,
     ) -> None:
         self._providers = providers
@@ -44,8 +44,6 @@ class Orchestrator:
                     raw = await provider.generate(
                         req.prompt,
                         model=req.model,
-                        temperature=req.temperature,
-                        max_tokens=req.max_tokens,
                     )
                     return OrchestratorResponse(
                         provider=provider.name,
@@ -63,14 +61,3 @@ class Orchestrator:
 
         assert last_exc is not None
         raise last_exc
-
-
-def create_default_routing_table() -> RoutingTable:
-    return RoutingTable(
-        rules=[
-            RoutingRule("openai/", "openai"),
-            RoutingRule("anthropic/", "anthropic"),
-            RoutingRule("gemini/", "gemini"),
-            RoutingRule("azure/", "azure"),
-        ]
-    )

@@ -9,6 +9,7 @@ from azure.ai.inference import ChatCompletionsClient
 from azure.core.credentials import AzureKeyCredential
 from openai import AzureOpenAI
 
+from textfsm_ai.models import model as MODEL
 from textfsm_ai.orchestrator.errors import ProviderError
 from textfsm_ai.orchestrator.provider import Provider
 from textfsm_ai.providers.model_listing_mixin import ModelListingMixin
@@ -21,7 +22,13 @@ OPENAI_PATTERN = re.compile(
 class AzureOpenAIProvider(Provider, ModelListingMixin):
     name = "azure"
 
-    def __init__(self, api_key: str, endpoint: str, api_version: str) -> None:
+    def __init__(
+        self,
+        api_key: str,
+        endpoint: str,
+        api_version: str,
+        default_model: str = MODEL.openai.default,
+    ) -> None:
         self.client = ChatCompletionsClient(
             endpoint=endpoint,
             credential=AzureKeyCredential(api_key),
@@ -30,33 +37,38 @@ class AzureOpenAIProvider(Provider, ModelListingMixin):
         self.api_key = api_key
         self.endpoint = endpoint.rstrip("/")
         self.api_version = api_version
+        self.default_model = default_model
 
     def supports(self, model: str) -> bool:
         return True
 
-    async def generate(
-        self,
-        prompt: str,
-        *,
-        model: str,
-        temperature: float,
-        max_tokens: int,
-        **kwargs: Any,
-    ) -> dict:
+    async def generate(self, prompt: str, *, model: str, **kwargs: Any) -> dict:
         try:
             # Azure SDK is synchronous → run in thread
             result = await asyncio.to_thread(
                 self.client.complete,
-                model=model,
+                model=model or self.default_model,
                 messages=[{"role": "user", "content": prompt}],
-                temperature=temperature,
-                max_tokens=max_tokens,
                 **kwargs,
             )
 
             # Extract assistant message
-            content = result.choices[0].message["content"]
+            content = result.choices[0].message.content
 
+            return {"content": content}
+
+        except Exception as exc:
+            raise ProviderError(str(exc)) from exc
+
+    def generate_sync(self, prompt: str, *, model: str, **kwargs: Any) -> dict:
+        try:
+            result = self.client.complete(
+                model=model or self.default_model,
+                messages=[{"role": "user", "content": prompt}],
+                **kwargs,
+            )
+
+            content = result.choices[0].message.content
             return {"content": content}
 
         except Exception as exc:

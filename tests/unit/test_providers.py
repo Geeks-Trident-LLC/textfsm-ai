@@ -48,6 +48,4 @@ async def test_openai_provider_raises_on_failure(monkeypatch):
         await p.generate(
             prompt="hi",
             model="openai/gpt-4o-mini",
-            temperature=0.0,
-            max_tokens=16,
         )

@@ -16,13 +16,13 @@ async def test_routing_selects_correct_provider():
     p2 = MockProvider("azure_openai")
 
     routing = RoutingTable(
-        rules=[RoutingRule(model_prefix="openai/", provider_name="openai")]
+        rules=[RoutingRule(model_prefix="gpt-", provider_name="openai")]
     )
 
     orch = create_orchestrator([p1, p2])
     orch._routing_table = routing  # inject for test
 
-    req = OrchestratorRequest(model="openai/gpt-4o", prompt="hi")
+    req = OrchestratorRequest(model="gpt-4o", prompt="hi")
     resp = await orch.run(req)
 
     assert resp.provider == "openai"
@@ -34,7 +34,7 @@ async def test_retry_on_rate_limit(monkeypatch):
     p = MockProvider("openai", behavior="rate_limit")
 
     routing = RoutingTable(
-        rules=[RoutingRule(model_prefix="openai/", provider_name="openai")]
+        rules=[RoutingRule(model_prefix="gpt-", provider_name="openai")]
     )
 
     orch = create_orchestrator([p])
@@ -51,7 +51,7 @@ async def test_retry_on_rate_limit(monkeypatch):
 
     p.generate = generate_side_effect  # type: ignore[assignment]
 
-    req = OrchestratorRequest(model="openai/gpt-4o", prompt="hi")
+    req = OrchestratorRequest(model="gpt-4o", prompt="hi")
     resp = await orch.run(req)
 
     assert resp.content == "ok"
@@ -63,7 +63,7 @@ async def test_async_orchestrator_basic():
     p = MockProvider("openai")
     orch = create_orchestrator([p])
 
-    req = OrchestratorRequest(model="openai/gpt-4o", prompt="hi")
+    req = OrchestratorRequest(model="gpt-4o", prompt="hi")
     resp = await orch.run(req)
 
     assert resp.content == "openai:hi"

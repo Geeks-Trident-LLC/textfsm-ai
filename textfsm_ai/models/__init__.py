@@ -1,0 +1,91 @@
+from .model_registry import ModelRegistry
+
+
+class model:
+    class openai:
+        class quality:
+            chat = ModelRegistry.get("openai", "quality", "chat")
+
+        class balance:
+            chat = ModelRegistry.get("openai", "balance", "chat")
+
+        class speed:
+            chat = ModelRegistry.get("openai", "speed", "chat")
+
+        class thinking:
+            class quality:
+                chat = ModelRegistry.get("openai", "thinking", "quality", "chat")
+
+            class balance:
+                chat = ModelRegistry.get("openai", "thinking", "balance", "chat")
+
+            class speed:
+                chat = ModelRegistry.get("openai", "thinking", "speed", "chat")
+
+        default = ModelRegistry.alias("openai_default")
+
+    class anthropic:
+        class quality:
+            chat = ModelRegistry.get("anthropic", "quality", "chat")
+
+        class balance:
+            chat = ModelRegistry.get("anthropic", "balance", "chat")
+
+        class speed:
+            chat = ModelRegistry.get("anthropic", "speed", "chat")
+
+        class thinking:
+            class quality:
+                chat = ModelRegistry.get("anthropic", "thinking", "quality", "chat")
+
+            class balance:
+                chat = ModelRegistry.get("anthropic", "thinking", "balance", "chat")
+
+            class speed:
+                chat = ModelRegistry.get("anthropic", "thinking", "speed", "chat")
+
+        default = ModelRegistry.alias("anthropic_default")
+
+    class gemini:
+        class quality:
+            chat = ModelRegistry.get("gemini", "quality", "chat")
+
+        class balance:
+            chat = ModelRegistry.get("gemini", "balance", "chat")
+
+        class speed:
+            chat = ModelRegistry.get("gemini", "speed", "chat")
+
+        class thinking:
+            class quality:
+                chat = ModelRegistry.get("gemini", "thinking", "quality", "chat")
+
+            class balance:
+                chat = ModelRegistry.get("gemini", "thinking", "balance", "chat")
+
+            class speed:
+                chat = ModelRegistry.get("gemini", "thinking", "speed", "chat")
+
+        default = ModelRegistry.alias("gemini_default")
+
+    class deepseek:
+        class quality:
+            chat = ModelRegistry.get("deepseek", "quality", "chat")
+
+        class balance:
+            chat = ModelRegistry.get("deepseek", "balance", "chat")
+
+        class speed:
+            chat = ModelRegistry.get("deepseek", "speed", "chat")
+
+        class thinking:
+            class quality:
+                chat = ModelRegistry.get("deepseek", "thinking", "quality", "chat")
+
+            class balance:
+                chat = ModelRegistry.get("deepseek", "thinking", "balance", "chat")
+
+            class speed:
+                chat = ModelRegistry.get("deepseek", "thinking", "speed", "chat")
+
+        default = ModelRegistry.alias("deepseek_default")

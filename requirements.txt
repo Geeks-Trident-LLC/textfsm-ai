@@ -1,4 +1,5 @@
 PyYAML>=6.0
+textfsm
 requests>=2.32
 click>=8.1
 

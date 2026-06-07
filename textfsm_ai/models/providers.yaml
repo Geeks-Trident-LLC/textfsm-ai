@@ -1,0 +1,91 @@
+openai:
+  quality:
+    chat:
+      - gpt-4.1
+      - gpt-4o
+  balance:
+    chat:
+      - gpt-4o-mini
+  speed:
+    chat:
+      - gpt-4o-mini
+  thinking:
+    quality:
+      chat:
+        - o1
+        - o1-mini
+    balance:
+      chat:
+        - o1-mini
+    speed:
+      chat:
+        - o1-mini
+
+anthropic:
+  quality:
+    chat:
+      - claude-opus-4-5-20251001
+  balance:
+    chat:
+      - claude-sonnet-4-5-20251001
+  speed:
+    chat:
+      - claude-haiku-4-5-20251001
+  thinking:
+    quality:
+      chat:
+        - claude-opus-4-5-20251001
+    balance:
+      chat:
+        - claude-sonnet-4-5-20251001
+    speed:
+      chat:
+        - claude-haiku-4-5-20251001
+
+gemini:
+  quality:
+    chat:
+      - gemini-2.5-pro
+  balance:
+    chat:
+      - gemini-2.5-flash
+  speed:
+    chat:
+      - gemini-2.5-flash-lite
+  thinking:
+    quality:
+      chat:
+        - gemini-2.5-pro
+    balance:
+      chat:
+        - gemini-2.5-flash
+    speed:
+      chat:
+        - gemini-2.5-flash-lite
+
+deepseek:
+  quality:
+    chat:
+      - deepseek-reasoner
+  balance:
+    chat:
+      - deepseek-chat
+  speed:
+    chat:
+      - deepseek-chat
+  thinking:
+    quality:
+      chat:
+        - deepseek-reasoner
+    balance:
+      chat:
+        - deepseek-chat
+    speed:
+      chat:
+        - deepseek-chat
+
+aliases:
+  openai_default: gpt-4o
+  anthropic_default: claude-haiku-4-5-20251001
+  gemini_default: gemini-2.5-flash
+  deepseek_default: deepseek-chat

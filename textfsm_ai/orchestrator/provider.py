@@ -22,15 +22,7 @@ class Provider(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def generate(
-        self,
-        prompt: str,
-        *,
-        model: str,
-        temperature: float,
-        max_tokens: int,
-        **kwargs: Any,
-    ) -> dict[str, Any]:
+    async def generate(self, prompt: str, *, model: str, **kwargs: Any) -> dict:
         """
         Async text generation call.
         """
