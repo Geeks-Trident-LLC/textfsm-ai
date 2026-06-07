@@ -1,3 +1,5 @@
+# textfsm_ai/cli/list_models_cmd.py
+
 import click
 
 from textfsm_ai.providers.model_listing_mixin import ModelListingMixin
@@ -16,7 +18,41 @@ from textfsm_ai.providers.registry import registry
     is_flag=True,
     help="Fetch latest models from provider API but DO NOT classify with LLM.",
 )
-def list_models(provider: str, latest: bool, latest_raw: bool) -> None:
+@click.option(
+    "--premium",
+    is_flag=True,
+    help="Show premium reasoning models (thinking-chat).",
+)
+@click.option(
+    "--no-premium",
+    is_flag=True,
+    help="Hide premium reasoning models (thinking-chat).",
+)
+@click.option(
+    "--quality",
+    is_flag=True,
+    help="Show quality-chat models.",
+)
+@click.option(
+    "--balance",
+    is_flag=True,
+    help="Show balance-chat models.",
+)
+@click.option(
+    "--speed",
+    is_flag=True,
+    help="Show speed-chat models.",
+)
+def list_models(
+    provider: str,
+    latest: bool,
+    latest_raw: bool,
+    premium: bool,
+    no_premium: bool,
+    quality: bool,
+    balance: bool,
+    speed: bool,
+) -> None:
     """
     List available models for a provider.
 
@@ -43,26 +79,31 @@ def list_models(provider: str, latest: bool, latest_raw: bool) -> None:
     # -----------------------------------------
     if latest:
         click.echo(f"Fetching latest models from provider: {provider} ...\n")
-
-        # Lazy instantiation — only now we need API key + default model
         prov = provider_cls.from_env()
 
         try:
-            raw_models = prov.fetch_latest_models()
-            groups = prov.classify_models_with_llm(raw_models)
+            groups = prov.classify_models()
         except Exception as e:
             click.echo(f"Error: {e}")
             return
 
-        _print_model_groups(provider, groups, latest=True)
+        _print_model_groups(
+            provider,
+            groups,
+            latest=True,
+            no_premium=no_premium,
+            premium=premium,
+            quality=quality,
+            balance=balance,
+            speed=speed,
+        )
         return
 
     # -----------------------------------------
-    # MODE 2: LATEST-RAW(API only)
+    # MODE 2: LATEST-RAW (API only)
     # -----------------------------------------
     if latest_raw:
-        click.echo(f"Fetching latest models (dry-run) from provider: {provider} ...\n")
-
+        click.echo(f"Fetching latest models from provider: {provider} ...\n")
         prov = provider_cls.from_env()
 
         try:
@@ -81,10 +122,53 @@ def list_models(provider: str, latest: bool, latest_raw: bool) -> None:
     # MODE 3: DEFAULT (hardcoded curated list)
     # -----------------------------------------
     groups = provider_cls.list_models_curated()
-    _print_model_groups(provider, groups, latest=False)
+    _print_model_groups(
+        provider,
+        groups,
+        latest=False,
+        no_premium=no_premium,
+        premium=premium,
+        quality=quality,
+        balance=balance,
+        speed=speed,
+    )
 
 
-def _print_model_groups(provider: str, groups: dict, latest: bool) -> None:
+def _print_model_groups(
+    provider: str,
+    groups: dict,
+    latest: bool,
+    no_premium: bool,
+    premium: bool,
+    quality: bool,
+    balance: bool,
+    speed: bool,
+) -> None:
+    groups = groups.copy()
+
+    s = set()
+    pairs = (
+        (no_premium, ["quality-chat", "balance-chat", "speed-chat"]),
+        (premium, ["thinking-chat"]),
+        (quality, ["quality-chat"]),
+        (balance, ["balance-chat"]),
+        (speed, ["speed-chat"]),
+    )
+    for option, value in pairs:
+        if option:
+            s.update(value)
+
+    filtered = list(s)
+    if not filtered:
+        filtered = [
+            "quality-chat",
+            "balance-chat",
+            "speed-chat",
+            "thinking-chat",
+            "other",
+        ]
+
+    # Print
     title = f"Models for provider: {provider}"
     if latest:
         title += " (latest)"
@@ -92,13 +176,7 @@ def _print_model_groups(provider: str, groups: dict, latest: bool) -> None:
     click.echo(title)
     click.echo("----------------------------------------\n")
 
-    for group in [
-        "quality",
-        "balance",
-        "fast",
-        "thinking",
-        "other",
-    ]:
+    for group in filtered:
         models = groups.get(group)
         if not models:
             continue

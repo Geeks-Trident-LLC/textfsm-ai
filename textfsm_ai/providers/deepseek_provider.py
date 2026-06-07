@@ -1,15 +1,12 @@
 # textfsm_ai/providers/deepseek_provider.py
 
 import os
-import re
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from textfsm_ai.models import model as MODEL
 from textfsm_ai.providers.model_listing_mixin import ModelListingMixin
 
 from .openai_compat_provider import OpenAICompatProvider
-
-DEEPSEEK_PATTERN = re.compile(r"^deepseek-v[0-9]+-?(pro|flash)?$")
 
 
 class DeepSeekProvider(OpenAICompatProvider, ModelListingMixin):
@@ -51,48 +48,5 @@ class DeepSeekProvider(OpenAICompatProvider, ModelListingMixin):
     # Fetch latest models from OpenAI API
     # ---------------------------------------------------------
     def fetch_latest_models(self) -> List[str]:
-        from openai import OpenAI
-
-        client = OpenAI(
-            api_key=os.environ.get("DEEPSEEK_API_KEY"),
-            base_url="https://api.deepseek.com",
-        )
-        return [m.id for m in client.models.list().data]  # OpenAI uses "id", not "name"
-
-    # ---------------------------------------------------------
-    # Deterministic classifier (no LLM)
-    # ---------------------------------------------------------
-    def classify_models_with_llm(self, raw_models: List[str]) -> Dict[str, List[str]]:
-        groups: dict[str, list[str]] = {
-            "quality": [],
-            "balance": [],
-            "fast": [],
-            "thinking": [],
-            "other": [],
-        }
-
-        for m in raw_models:
-            # Match official OpenAI tiers
-            match = DEEPSEEK_PATTERN.match(m)
-            if not match:
-                groups["other"].append(m)
-                continue
-
-            tier = match.group(1)
-
-            if tier == "pro":
-                groups["quality"].append(m)
-                groups["thinking"].append(m)
-            elif tier == "flash":
-                groups["balance"].append(m)
-                groups["fast"].append(m)
-                groups["thinking"].append(m)
-            else:
-                groups["other"].append(m)
-
-        # Sort each group alphabetically
-        for key in groups:
-            if key in ["quality", "balance", "fast"]:
-                groups[key].sort(reverse=True)
-
-        return groups
+        models = self.sync_client.models.list().data
+        return [m.id for m in models]

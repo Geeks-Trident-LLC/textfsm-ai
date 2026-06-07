@@ -1,3 +1,5 @@
+# textfsm_ai/cli/orchestrator_cmd.py
+
 from __future__ import annotations
 
 import asyncio
@@ -28,9 +30,7 @@ def orchestrator_group() -> None:
 
 
 @orchestrator_group.command("route")
-@click.option(
-    "--model", required=True, help="Model name, e.g. anthropic/claude-3-5-sonnet"
-)
+@click.option("--model", required=True, help="Model name, e.g. claude-3-5-sonnet")
 def orchestrator_route(model: str) -> None:
     """
     Show which provider the orchestrator would route a model to.
@@ -54,6 +54,7 @@ def orchestrator_route(model: str) -> None:
         "anthropic": DummyProvider("anthropic"),
         "gemini": DummyProvider("gemini"),
         "azure": DummyProvider("azure"),
+        "deepseek": DummyProvider("deepseek"),
     }
 
     req = OrchestratorRequest(model=model, prompt="")
@@ -65,7 +66,7 @@ def orchestrator_route(model: str) -> None:
 
 @orchestrator_group.command("run")
 @click.option("--config", "config_path", type=click.Path(exists=True), required=False)
-@click.option("--model", required=True, help="Model name, e.g. gemini/gemini-1.5-flash")
+@click.option("--model", required=True, help="Model name, e.g. gemini-2.5-flash")
 @click.option("--prompt", required=True, help="Prompt to send through the orchestrator")
 def orchestrator_run(config_path: Optional[str], model: str, prompt: str) -> None:
     """
@@ -80,4 +81,6 @@ def orchestrator_run(config_path: Optional[str], model: str, prompt: str) -> Non
     click.echo(f"Provider: {resp.provider}")
     click.echo(f"Model: {resp.model}")
     click.echo("-" * 40)
-    click.echo(resp.raw)
+
+    # Print the actual content, not the raw dict
+    click.echo(resp.content)

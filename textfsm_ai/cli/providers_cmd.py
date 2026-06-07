@@ -16,7 +16,7 @@ from textfsm_ai.providers.registry import registry
 
 PROVIDER_DESCRIPTIONS = {
     "openai": "Native OpenAI API",
-    "openai_compat": "OpenAI-compatible API",
+    "deepseek": "DeepSeek (OpenAI-compatible API)",
     "azure": "Azure AI Inference / Azure OpenAI",
     "anthropic": "Anthropic Claude models",
     "gemini": "Google Gemini models",
@@ -32,7 +32,6 @@ def _load_config(config_path: Optional[str]) -> OrchestratorConfig:
 @click.group(name="providers")
 def providers_group() -> None:
     """Provider-related commands."""
-    # group only
     return
 
 
@@ -41,7 +40,6 @@ def providers_list() -> None:
     """
     List all registered provider names with descriptions.
     """
-
     providers = registry.all()
     if not providers:
         click.echo("No providers registered.")
@@ -50,7 +48,7 @@ def providers_list() -> None:
     click.echo("NAME           DESCRIPTION")
     click.echo("-------------  ----------------------------------------")
 
-    for name in providers:
+    for name in sorted(providers):
         desc = PROVIDER_DESCRIPTIONS.get(name, "")
         click.echo(f"{name:<13}  {desc}")
 
@@ -65,11 +63,6 @@ def providers_info(provider_name: str, config_path: Optional[str]) -> None:
     Show configuration-related info for a provider (safe fields only).
     """
     cfg = _load_config(config_path)
-    matches = [(name, p) for name, p in cfg.providers.items() if name == provider_name]
-
-    if not matches:
-        click.echo(f"No configured provider with name '{provider_name}'.")
-        return
 
     pcfg = cfg.providers.get(provider_name)
     if pcfg is None:
@@ -80,9 +73,14 @@ def providers_info(provider_name: str, config_path: Optional[str]) -> None:
     click.echo(f"Type: {pcfg.type}")
 
     safe_params = {
-        k: ("***" if "key" in k.lower() or "token" in k.lower() else v)
+        k: (
+            "***"
+            if any(s in k.lower() for s in ("key", "token", "secret", "password"))
+            else v
+        )
         for k, v in pcfg.params.items()
     }
+
     click.echo(f"Params: {safe_params}")
 
 

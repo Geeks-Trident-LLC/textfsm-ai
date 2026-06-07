@@ -24,20 +24,20 @@ openai:
 anthropic:
   quality:
     chat:
-      - claude-opus-4-5-20251001
+      - claude-opus-4-8
   balance:
     chat:
-      - claude-sonnet-4-5-20251001
+      - claude-sonnet-4-6
   speed:
     chat:
       - claude-haiku-4-5-20251001
   thinking:
     quality:
       chat:
-        - claude-opus-4-5-20251001
+        - claude-opus-4-8
     balance:
       chat:
-        - claude-sonnet-4-5-20251001
+        - claude-sonnet-4-6
     speed:
       chat:
         - claude-haiku-4-5-20251001
@@ -66,13 +66,13 @@ gemini:
 deepseek:
   quality:
     chat:
-      - deepseek-reasoner
+      - deepseek-v4-pro
   balance:
     chat:
-      - deepseek-chat
+      - deepseek-v4-flash
   speed:
     chat:
-      - deepseek-chat
+      - deepseek-v4-flash
   thinking:
     quality:
       chat:
@@ -88,4 +88,4 @@ aliases:
   openai_default: gpt-4o
   anthropic_default: claude-haiku-4-5-20251001
   gemini_default: gemini-2.5-flash
-  deepseek_default: deepseek-chat
+  deepseek_default: deepseek-v4-flash

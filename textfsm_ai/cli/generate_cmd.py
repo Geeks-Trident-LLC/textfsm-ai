@@ -14,7 +14,7 @@ from textfsm_ai.api import ask_ai
 @click.option(
     "--model",
     required=True,
-    help="Model name with prefix, e.g. openai/gpt-4o-mini",
+    help="Model name e.g. gpt-4o-mini",
 )
 @click.option(
     "--config",
@@ -37,6 +37,7 @@ def generate(input_file, model, config_path, as_json):
     with open(input_file, "r", encoding="utf-8") as f:
         raw_text = f.read()
 
+    # ask_ai is async → run it properly
     resp = asyncio.run(
         ask_ai(
             raw_text,
@@ -45,6 +46,7 @@ def generate(input_file, model, config_path, as_json):
         )
     )
 
+    # Output formatting
     if as_json:
         click.echo(resp.to_json())
     else:

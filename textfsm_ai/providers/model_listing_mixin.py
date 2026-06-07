@@ -1,24 +1,33 @@
-# textfsm_ai/providers/base.py
-from pathlib import Path
+# textfsm_ai/providers/model_listing_mixin.py
+
 from typing import Dict, List
 
 import yaml
 
+from textfsm_ai import BASE_DIR
+from textfsm_ai.models.classifier import classify_models
+from textfsm_ai.models.tiers import TierGroups
+
 
 class ModelListingMixin:
     """
-    Provides curated model listing for all providers using a single YAML file.
+    Shared model listing utilities for all providers.
+
+    Responsibilities:
+    - Load curated model groups from a central YAML file.
+    - Provide a unified classification entry point that delegates to the
+      global classifier.
     """
 
-    CURATED_PATH = Path(__file__).resolve().parent / "curated-models.yaml"
+    CURATED_PATH = BASE_DIR / "models" / "curated-models.yaml"
 
+    # ---------------------------------------------
+    # Curated model listing
+    # ---------------------------------------------
     @classmethod
     def list_models_curated(cls) -> Dict[str, List[str]]:
         """
-        Load curated model groups for this provider from a central YAML file.
-
-        Returns:
-            Dict[str, List[str]]: Curated model groups for the provider.
+        Load curated model groups for this provider from the central YAML file.
         """
         if not cls.CURATED_PATH.exists():
             raise FileNotFoundError(f"Curated model file not found: {cls.CURATED_PATH}")
@@ -28,13 +37,28 @@ class ModelListingMixin:
 
         provider_name = getattr(cls, "name")
         provider_models = data.get(provider_name)
-        if not provider_models:
+
+        if provider_models is None:
             raise KeyError(f"No curated models found for provider '{provider_name}'")
 
         return provider_models
 
+    # ---------------------------------------------
+    # Providers MUST implement this
+    # ---------------------------------------------
     def fetch_latest_models(self) -> List[str]:
+        """
+        Providers must return a flat list of raw model names from their API.
+        """
         raise NotImplementedError
 
-    def classify_models_with_llm(self, raw_models: List[str]) -> Dict[str, List[str]]:
-        raise NotImplementedError
+    # ---------------------------------------------
+    # Unified classifier entry point
+    # ---------------------------------------------
+    def classify_models(self) -> TierGroups:
+        """
+        Classify this provider's models into tier groups using the unified classifier.
+        """
+        raw = self.fetch_latest_models()
+        provider_name = getattr(self, "name")
+        return classify_models(provider_name, raw)
