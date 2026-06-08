@@ -1,16 +1,10 @@
-# textfsm_ai/dsl/patterns.py
-
 from collections import OrderedDict
 
 from .categories import BaseCategory
 
 # ------------------------------------------------------------
-# Primitive building blocks
+# Primitive building blocks (DSL-visible)
 # ------------------------------------------------------------
-SPACE = " "
-SPACES = " +"
-WS = r"\s"
-WSS = r"\s+"
 DIGIT = r"[0-9]"
 DIGITS = r"[0-9]+"
 LETTER = r"[A-Za-z]"
@@ -19,11 +13,9 @@ PUNCT = r"[!-/:-@\[-`{-~]"
 PUNCTS = f"{PUNCT}+"
 NON_WS = r"\S"
 NON_WSS = r"\S+"
-DOT = r"."
-DOTS = r".+"
 
 # ------------------------------------------------------------
-# Higher-level semantic primitives
+# Higher-level semantic primitives (DSL-visible)
 # ------------------------------------------------------------
 
 # number: 123, 0.1, .1, 1.
@@ -39,22 +31,21 @@ NUMBER = (
     r")"
 )
 
+# mixed-number: signed, comma-grouped, parenthesized
 MIXED_NUMBER = (
     r"(?:"
-    r"[+-]?"  # optional sign
-    r"(?:\(\d{1,3}(?:,\d{3})*(?:\.\d+)?\)"  # (1,234.56)
+    r"[+-]?"
+    r"(?:\(\d{1,3}(?:,\d{3})*(?:\.\d+)?\)"
     r"|"
-    r"\d{1,3}(?:,\d{3})*(?:\.\d+)?"  # 1,234.56
+    r"\d{1,3}(?:,\d{3})*(?:\.\d+)?"
     r")"
     r")"
 )
 
-
 # word: must contain at least one letter
 WORD = r"(?=.*[A-Za-z])[0-9A-Za-z_]+"
 
-# mixed-word: must contain at least one alnum, rest can be graph chars (IPv4 or IPv6)
-# graph = [!-~] = all visible ASCII except space
+# mixed-word: must contain at least one alnum, rest can be graph chars
 MIXED_WORD = r"(?=.*[0-9A-Za-z])[!-~]+"
 
 # ------------------------------------------------------------
@@ -63,20 +54,12 @@ MIXED_WORD = r"(?=.*[0-9A-Za-z])[!-~]+"
 
 PATTERNS_MAPPING = OrderedDict(
     [
-        # whitespace
-        ("space", SPACE),
-        ("ws", WS),
-        ("whitespace", WS),
-        ("spaces", SPACES),
-        ("wss", WSS),
-        ("whitespaces", WSS),
         # single-char primitives
         ("letter", LETTER),
         ("digit", DIGIT),
         ("alnum", ALNUM),
         ("punct", PUNCT),
         ("non-ws", NON_WS),
-        ("dot", DOT),
         # multi-char primitives
         ("digits", DIGITS),
         ("number", NUMBER),
@@ -88,70 +71,59 @@ PATTERNS_MAPPING = OrderedDict(
         ("mixed-word", MIXED_WORD),
         ("non-wss", NON_WSS),
         # plural / item / group variants
-        ("word-group", f"{WORD}(?:{WS}+{WORD})+"),
-        ("words", f"{WORD}(?:{WS}+{WORD})*"),
-        ("word-item", f"{WORD}(?:{WS}+{WORD})*"),
-        ("mixed-number-group", f"{MIXED_NUMBER}(?:{WS}+{MIXED_NUMBER})+"),
-        ("mixed-numbers", f"{MIXED_NUMBER}(?:{WS}+{MIXED_NUMBER})*"),
-        ("mixed-number-item", f"{MIXED_NUMBER}(?:{WS}+{MIXED_NUMBER})*"),
-        ("mixed-word-group", f"{MIXED_WORD}(?:{WS}+{MIXED_WORD})+"),
-        ("mixed-words", f"{MIXED_WORD}(?:{WS}+{MIXED_WORD})*"),
-        ("mixed-word-item", f"{MIXED_WORD}(?:{WS}+{MIXED_WORD})*"),
-        ("puncts-group", f"{PUNCTS}(?:{WS}+{PUNCTS})+"),
-        ("puncts-item", f"{PUNCTS}(?:{WS}+{PUNCTS})*"),
-        ("non-wss-group", f"{NON_WSS}(?:{WS}+{NON_WSS})+"),
-        ("non-wss-item", f"{NON_WSS}(?:{WS}+{NON_WSS})*"),
-        ("dots", DOTS),
+        ("word-group", f"{WORD}(?:\\s+{WORD})+"),
+        ("words", f"{WORD}(?:\\s+{WORD})*"),
+        ("word-item", f"{WORD}(?:\\s+{WORD})*"),
+        ("mixed-number-group", f"{MIXED_NUMBER}(?:\\s+{MIXED_NUMBER})+"),
+        ("mixed-numbers", f"{MIXED_NUMBER}(?:\\s+{MIXED_NUMBER})*"),
+        ("mixed-number-item", f"{MIXED_NUMBER}(?:\\s+{MIXED_NUMBER})*"),
+        ("mixed-word-group", f"{MIXED_WORD}(?:\\s+{MIXED_WORD})+"),
+        ("mixed-words", f"{MIXED_WORD}(?:\\s+{MIXED_WORD})*"),
+        ("mixed-word-item", f"{MIXED_WORD}(?:\\s+{MIXED_WORD})*"),
+        ("puncts-group", f"{PUNCTS}(?:\\s+{PUNCTS})+"),
+        ("puncts-item", f"{PUNCTS}(?:\\s+{PUNCTS})*"),
+        ("non-wss-group", f"{NON_WSS}(?:\\s+{NON_WSS})+"),
+        ("non-wss-item", f"{NON_WSS}(?:\\s+{NON_WSS})*"),
     ]
 )
 
 # ------------------------------------------------------------
-# Map keyword → BaseCategory
+# Map keyword → BaseCategory (DSL-visible only)
 # ------------------------------------------------------------
 
 KEYWORD_TO_BASE = {
-    # whitespace
-    "space": BaseCategory.SPACE,
-    "whitespace": BaseCategory.WS,
-    "spaces": BaseCategory.WS,
-    "whitespaces": BaseCategory.WS,
-    "ws": BaseCategory.WS,
-    "wss": BaseCategory.WS,
-    # letter
     "letter": BaseCategory.LETTER,
-    # digit
     "digit": BaseCategory.DIGIT,
     "digits": BaseCategory.DIGIT,
-    # alnum
     "alnum": BaseCategory.ALNUM,
-    # punct
     "punct": BaseCategory.PUNCT,
     "puncts": BaseCategory.PUNCT,
     "puncts-item": BaseCategory.PUNCT,
     "puncts-group": BaseCategory.PUNCT,
-    # non-ws
     "non-ws": BaseCategory.NON_WS,
     "non-wss": BaseCategory.NON_WS,
     "non-wss-item": BaseCategory.NON_WS,
     "non-wss-group": BaseCategory.NON_WS,
-    # dot
-    "dot": BaseCategory.DOT,
-    "dots": BaseCategory.DOT,
-    # number
     "number": BaseCategory.NUMBER,
-    # mixed-number
     "mixed-number": BaseCategory.MIXED_NUMBER,
     "mixed-numbers": BaseCategory.MIXED_NUMBER,
     "mixed-number-item": BaseCategory.MIXED_NUMBER,
     "mixed-number-group": BaseCategory.MIXED_NUMBER,
-    # word
     "word": BaseCategory.WORD,
     "words": BaseCategory.WORD,
     "word-item": BaseCategory.WORD,
     "word-group": BaseCategory.WORD,
-    # mixed-word
     "mixed-word": BaseCategory.MIXED_WORD,
     "mixed-words": BaseCategory.MIXED_WORD,
     "mixed-word-item": BaseCategory.MIXED_WORD,
     "mixed-word-group": BaseCategory.MIXED_WORD,
 }
+
+
+class Pattern:
+    def __init__(self, name: str, regex: str):
+        self.name = name
+        self.regex = regex
+
+
+PATTERNS = {key: Pattern(key, pat) for key, pat in PATTERNS_MAPPING.items()}

@@ -2,7 +2,7 @@
 
 
 class BaseNode:
-    generalize: bool = False
+    name: str  # keyword name, e.g. "mixed-word", "digits", "puncts"
 
     def to_expression(self) -> str:
         raise NotImplementedError
@@ -14,6 +14,7 @@ class BaseNode:
 class LiteralNode(BaseNode):
     def __init__(self, text: str):
         self.text = text
+        self.name = "literal"  # or None if you prefer
 
     def to_expression(self) -> str:
         return self.text
@@ -23,12 +24,12 @@ class KeywordNode(BaseNode):
     def __init__(self, keyword: str, generalize: bool = False):
         self.keyword = keyword
         self.generalize = generalize
+        self.name = self._generalized_keyword()
 
     def _generalized_keyword(self) -> str:
         if not self.generalize:
             return self.keyword
 
-        # singular → plural mapping
         if self.keyword == "digit":
             return "digits"
         if self.keyword == "letter":
@@ -38,11 +39,10 @@ class KeywordNode(BaseNode):
         if self.keyword == "space":
             return "spaces"
 
-        # default: unchanged
         return self.keyword
 
     def to_expression(self) -> str:
-        return f"{self._generalized_keyword()}()"
+        return f"{self.name}()"
 
 
 class VariableKeywordNode(BaseNode):
@@ -50,6 +50,7 @@ class VariableKeywordNode(BaseNode):
         self.keyword = keyword
         self.varname = varname
         self.generalize = generalize
+        self.name = self._generalized_keyword()
 
     def _generalized_keyword(self) -> str:
         if not self.generalize:
@@ -67,4 +68,4 @@ class VariableKeywordNode(BaseNode):
         return self.keyword
 
     def to_expression(self) -> str:
-        return f"{self._generalized_keyword()}(var-{self.varname})"
+        return f"{self.name}(var-{self.varname})"
