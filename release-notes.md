@@ -1,23 +1,31 @@
-# 📝 **GitHub Release Notes**
+## 🚀 v0.3.2 — LLM Extraction & Generation Refactor
 
-## **v0.3.0 — Model Listing & Orchestrator Improvements**
+This release introduces a major refactor of the model classification system, curated model registry, and provider integrations.
 
-This release introduces model listing support, provider unification, and major orchestrator enhancements.
-
-### 🚀 New Features
-- Added `list-models` command with unified model listing mixin.
-- Added OpenAI‑compatible provider and updated provider registry.
-- Expanded orchestrator architecture with routing, hooks, and provider interface.
+### ✨ Highlights
+- New unified model classifier (OpenAI, Gemini, Anthropic, DeepSeek)
+- Updated regex patterns for Claude 4.x, Gemini 2.5/3.x, GPT‑4o/5.x
+- New curated model registry under `textfsm_ai/models/curated-models.yaml`
+- Unified provider API with consistent config mapping
+- Improved CLI commands for model listing and generation
+- Fixed Gemini provider (`config=` instead of deprecated `generation_config`)
 
 ### 🔧 Improvements
-- Unified provider configuration schema.
-- Refactored orchestrator to remove legacy config system.
-- Improved CLI and provider output consistency.
-- Made release pipeline idempotent and removed redundant workflow.
+- Better error handling across providers
+- Cleaner model normalization
+- Updated curated model lists for all providers
+- Improved orchestrator routing logic
 
-### 🐛 Fixes
-- Corrected async handling and routing table logic.
-- Fixed `$LASTEXITCODE` usage in release script.
+### 🧪 Tests
+- Added new tests for classifier, patterns, curated models
+- Updated provider tests to reflect new API
 
-### 🏷 Version
-- Bumped version: `0.2.12 → 0.3.0`.
+### 🛠 Fixes
+- Improved release-prod tag handling logic
+
+### 🛠 Breaking Changes
+- Removed old curated-models file under `providers/`
+- Provider interfaces updated; older configs may need adjustments
+
+### 📦 Release Status
+This version has passed **release-test** and is ready for **release-prod**.

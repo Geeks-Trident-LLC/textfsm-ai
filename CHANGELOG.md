@@ -1,22 +1,30 @@
-# 📘 **CHANGELOG (v0.3.0)**
+## [0.3.2] - 2026-06-07
 
-## **v0.3.0 — Model Listing, Provider Unification, and Orchestrator Enhancements**
+### Refactor
+- Rewrote LLM model classification system (OpenAI, Gemini, Anthropic, DeepSeek)
+- Added new `patterns.py` with updated regex for Claude 4.x, Gemini 2.5/3.x, GPT‑4o/5.x, DeepSeek v4/R1
+- Introduced new curated model registry under `textfsm_ai/models/curated-models.yaml`
+- Removed outdated `providers/curated-models.yaml`
+- Unified provider API across OpenAI, Gemini, Anthropic, Azure, DeepSeek
+- Updated provider implementations to use consistent config mapping (`temperature`, `max_tokens`, etc.)
+- Fixed Gemini provider to use correct `config=` parameter
+- Improved model listing logic via updated `model_listing_mixin.py`
+- Updated CLI commands (`generate`, `list-models`, `providers`, `orchestrator`) to use new model registry
 
-### 🚀 Features
-- **Add `list-models` command** and introduce a shared **ModelListingMixin** across all providers.  
-  Enables consistent model discovery for OpenAI, Gemini, Anthropic, DeepSeek, and future providers.
-- **Add OpenAI‑compatible provider** and update provider registry/factory wiring.
-- **Expand orchestrator architecture** with routing, hooks, and unified provider interface.
+### Improvements
+- Better error normalization across providers
+- More consistent model naming and tier grouping
+- Updated curated model lists for all providers
+- Improved routing logic in orchestrator
 
-### 🔧 Improvements & Refactors
-- **Unify `ProviderConfig` schema** and align CLI + factory logic with list‑based provider definitions.
-- **Refactor orchestrator** to remove legacy config system and migrate CLI/tests to the new architecture.
-- **Fix async handling, routing table, and provider outputs** across CLI and providers.
-- **Make `release-prod` idempotent** and skip existing tags/releases.
-- **Remove redundant release workflow** (now handled by dedicated publish pipelines).
+### Tests
+- Added new unit tests for classifier, patterns, curated models
+- Updated provider tests to reflect new API and naming
+- Synced tests with new provider behavior
 
-### 🐛 Fixes
-- Correct PowerShell conditional to use `$LASTEXITCODE`.
+### Fixes
+- Improved release-prod tag handling logic
 
-### 🏷 Version
-- **Bump version: `0.2.12 → 0.3.0`**
+### Breaking Changes
+- Removed old curated-models file under `providers/`
+- Provider interfaces updated; older configs may require adjustments
