@@ -3,12 +3,7 @@
 import re
 
 from textfsm_ai.dsl.infer import infer_base_keyword
-from textfsm_ai.dsl.nodes import (
-    BaseNode,
-    KeywordNode,
-    LiteralNode,
-    VariableKeywordNode,
-)
+from textfsm_ai.dsl.nodes import BaseNode, create_node
 
 VAR_PATTERN = re.compile(r"\$\{([A-Za-z0-9_]+)\}")
 
@@ -23,20 +18,20 @@ class ExpressionNodeFactory:
         if m:
             varname = m.group(1)
             kw = self._infer_var_keyword(varname)
-            return VariableKeywordNode(kw, varname, generalize=self.generalize)
+            return create_node(kw, varname, generalize=self.generalize)
 
         kw = infer_base_keyword([token])
         if kw is None:
-            return LiteralNode(token)
+            return create_node(token, literal=True)
 
-        return KeywordNode(kw, generalize=self.generalize)
+        return create_node(kw, generalize=self.generalize)
 
     def _infer_var_keyword(self, varname: str) -> str:
         samples = self.var_samples.get(varname)
         if not samples:
-            return "optional-dots"  # maps to r".*" in patterns.py
+            return "any"  # maps to r".*" in patterns.py
         kw = infer_base_keyword(samples)
-        return kw or "optional-dots"
+        return kw or "any"
 
 
 class ExpressionNormalizer:

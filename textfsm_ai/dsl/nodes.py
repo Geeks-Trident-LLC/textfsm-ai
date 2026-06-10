@@ -8,6 +8,7 @@ from textfsm_ai.dsl.patterns import PATTERNS
 # Keyword semantic groups
 # ------------------------------------------------------------
 
+WS = r"\s"
 WSS = r"\s+"
 
 
@@ -19,6 +20,16 @@ class KeywordGroup(Enum):
     GROUP = auto()  # word-group, mixed-word-group, puncts-group, etc.
 
 
+CUSTOM_KEYWORD_MAPPING = {
+    "char": ".",
+    "any": ".*",
+    "some": ".+",
+    "ws": WS,
+    "wss": WSS,
+    "whitespace": WS,
+    "whitespaces": WSS,
+}
+
 KEYWORD_GROUP = {
     # -------------------------
     # atomic-group
@@ -28,12 +39,19 @@ KEYWORD_GROUP = {
     "alnum": KeywordGroup.ATOMIC,
     "punct": KeywordGroup.ATOMIC,
     "non-ws": KeywordGroup.ATOMIC,
+    "char": KeywordGroup.ATOMIC,
+    "ws": KeywordGroup.ATOMIC,
+    "whitespace": KeywordGroup.ATOMIC,
     # -------------------------
     # atomic-plus-group
     # -------------------------
     "digits": KeywordGroup.ATOMIC_PLUS,
     "puncts": KeywordGroup.ATOMIC_PLUS,
     "non-wss": KeywordGroup.ATOMIC_PLUS,
+    "any": KeywordGroup.ATOMIC_PLUS,
+    "some": KeywordGroup.ATOMIC_PLUS,
+    "wss": KeywordGroup.ATOMIC_PLUS,
+    "whitespaces": KeywordGroup.ATOMIC_PLUS,
     # -------------------------
     # word-like-group
     # -------------------------
@@ -196,6 +214,52 @@ class VariableKeywordNode(BaseNode):
 
     def to_expression(self):
         return f"{self.name}(var-{self.varname})"
+
+    def to_expression_regex(self):
+        return self.regex
+
+
+def check_custom_keyword(keyword):
+    return keyword in CUSTOM_KEYWORD_MAPPING
+
+
+class CustomKeywordNode(BaseNode):
+    def __init__(
+        self, keyword: str, varname: Optional[str] = None, generalize: bool = False
+    ):
+        if not check_custom_keyword(keyword):
+            custom_keywords = list(CUSTOM_KEYWORD_MAPPING)
+            raise ValueError(
+                f"Unknown custom keyword: {keyword}.  Must be {custom_keywords}"
+            )
+        self.keyword = keyword
+        self.varname = varname
+        self.generalize = generalize
+        self.name = self._generalized_keyword()
+        self.regex = CUSTOM_KEYWORD_MAPPING[self.name]
+
+    def _generalized_keyword(self):
+        if not self.generalize:
+            return self.keyword
+
+        if self.keyword == "char":
+            return "any"
+        if self.keyword == "ws":
+            return "wss"
+        if self.keyword == "whitespace":
+            return "whitespaces"
+
+        return self.keyword
+
+    def to_regex(self, include_var=False):
+        if self.varname and include_var:
+            return f"(?P<{self.varname}>{self.regex})"
+        return self.regex
+
+    def to_expression(self):
+        if self.varname:
+            return f"{self.name}(var-{self.varname})"
+        return f"{self.name}()"
 
     def to_expression_regex(self):
         return self.regex
@@ -684,8 +748,17 @@ class RangeQuantityNode(BaseNode):
 
 
 def create_node(
-    keyword: str, varname: Optional[str] = None, generalize: bool = False
+    keyword: str,
+    varname: Optional[str] = None,
+    generalize: bool = False,
+    literal: bool = False,
 ) -> BaseNode:
+    if literal:
+        return LiteralNode(keyword)
+
+    if check_custom_keyword(keyword):
+        return CustomKeywordNode(keyword, varname=varname, generalize=generalize)
+
     # ------------------------------------------------------------
     # range-lo-hi-keyword
     # range-lo-inf-keyword

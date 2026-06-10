@@ -1,3 +1,5 @@
+# tests/unit/dsl/test_template_canonicalizer.py
+
 from textfsm_ai.dsl.patterns import PATTERNS
 from textfsm_ai.dsl.template_canonicalizer import TemplateCanonicalizer
 

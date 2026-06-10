@@ -18,4 +18,4 @@ def test_normalize_with_variable_and_samples():
 def test_normalize_with_variable_no_samples():
     norm = ExpressionNormalizer()
     line_expression = norm.normalize("collected ${v0} items")
-    assert line_expression == "word() optional-dots(var-v0) word()"
+    assert line_expression == "word() any(var-v0) word()"
