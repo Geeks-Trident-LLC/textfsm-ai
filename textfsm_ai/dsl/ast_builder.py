@@ -3,6 +3,7 @@
 from textfsm_ai.dsl.ast import KeywordCall, SequenceExpression
 from textfsm_ai.dsl.nodes import (
     BaseNode,
+    CustomKeywordNode,
     KeywordNode,
     LiteralNode,
     VariableKeywordNode,
@@ -19,6 +20,8 @@ def build_ast_from_nodes(nodes: list[BaseNode]) -> SequenceExpression:
         elif isinstance(node, KeywordNode):
             items.append(KeywordCall(name=node.keyword, varname=None))
         elif isinstance(node, VariableKeywordNode):
+            items.append(KeywordCall(name=node.keyword, varname=node.varname))
+        elif isinstance(node, CustomKeywordNode):
             items.append(KeywordCall(name=node.keyword, varname=node.varname))
         else:
             raise TypeError(f"Unsupported node type: {type(node)}")
