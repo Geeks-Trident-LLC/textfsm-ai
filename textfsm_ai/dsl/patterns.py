@@ -1,3 +1,5 @@
+# textfsm_ai/dsl/patterns.py
+
 from collections import OrderedDict
 
 from .categories import BaseCategory
@@ -21,13 +23,13 @@ NON_WSS = r"\S+"
 # number: 123, 0.1, .1, 1.
 NUMBER = (
     r"(?:"
-    r"\d+\.\d+"  # 1.23
+    r"[0-9]+\.[0-9]+"  # 1.23
     r"|"
-    r"\d+\."  # 1.
+    r"[0-9]+\."  # 1.
     r"|"
-    r"\.\d+"  # .1
+    r"\.[0-9]+"  # .1
     r"|"
-    r"\d+"  # 123
+    r"[0-9]+"  # 123
     r")"
 )
 
@@ -35,18 +37,18 @@ NUMBER = (
 MIXED_NUMBER = (
     r"(?:"
     r"[+-]?"
-    r"(?:\(\d{1,3}(?:,\d{3})*(?:\.\d+)?\)"
+    r"(?:\([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]+)?\)"
     r"|"
-    r"\d{1,3}(?:,\d{3})*(?:\.\d+)?"
+    r"[0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]+)?"
     r")"
     r")"
 )
 
 # word: must contain at least one letter
-WORD = r"(?=.*[A-Za-z])[0-9A-Za-z_]+"
+WORD = r"[A-Za-z0-9_]*[A-Za-z][A-Za-z0-9_]*"
 
 # mixed-word: must contain at least one alnum, rest can be graph chars
-MIXED_WORD = r"(?=.*[0-9A-Za-z])[!-~]+"
+MIXED_WORD = r"[!-~]*[0-9A-Za-z][!-~]*"
 
 # ------------------------------------------------------------
 # Ordered patterns (most specific → more general)

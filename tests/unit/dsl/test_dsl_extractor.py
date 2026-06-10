@@ -2,7 +2,7 @@ from textfsm_ai.dsl.dsl_extractor import extract_machine_dsl
 
 
 def test_extract_machine_dsl_basic():
-    template = """Value interface ((?=.*[0-9A-Za-z])[!-~]+)
+    template = """Value interface ([!-~]*[0-9A-Za-z][!-~]*)
 Value mtu ([0-9]+)
 
 Start
