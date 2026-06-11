@@ -1,4 +1,4 @@
-# tests/unit/dsl/test_anynode.py
+# tests/unit/dsl/test_node_any.py
 
 from textfsm_ai.dsl.nodes import AnyNode, create_node
 

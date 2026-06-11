@@ -1,4 +1,4 @@
-# tests/unit/dsl/test_custom_keyword_node.py
+# tests/unit/dsl/test_node_custom_keyword.py
 
 import pytest
 

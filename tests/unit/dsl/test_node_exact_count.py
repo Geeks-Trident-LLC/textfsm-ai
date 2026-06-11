@@ -1,4 +1,4 @@
-# tests/unit/dsl/test_exact_count_node.py
+# tests/unit/dsl/test_node_exact_count.py
 
 from textfsm_ai.dsl.nodes import ExactCountNode, create_node
 

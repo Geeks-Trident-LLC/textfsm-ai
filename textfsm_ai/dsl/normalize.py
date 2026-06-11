@@ -29,7 +29,7 @@ class ExpressionNodeFactory:
     def _infer_var_keyword(self, varname: str) -> str:
         samples = self.var_samples.get(varname)
         if not samples:
-            return "any"  # maps to r".*" in patterns.py
+            return "any"  # maps to r".*"
         kw = infer_base_keyword(samples)
         return kw or "any"
 

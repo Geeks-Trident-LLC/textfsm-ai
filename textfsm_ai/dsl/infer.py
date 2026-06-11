@@ -2,9 +2,9 @@
 
 from typing import Iterable
 
+from .category_matcher import match_token_categories
 from .expression import KeywordExpression
 from .patterns import KEYWORD_TO_BASE, PATTERNS_MAPPING
-from .regex_matcher import match_token_categories
 
 
 def infer_base_keyword(tokens):

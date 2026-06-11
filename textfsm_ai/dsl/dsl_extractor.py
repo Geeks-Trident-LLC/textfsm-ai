@@ -3,7 +3,7 @@
 import re
 from typing import Any, Optional
 
-from textfsm_ai.dsl.nodes import VariableKeywordNode
+from textfsm_ai.dsl.nodes import create_node
 from textfsm_ai.dsl.patterns import KEYWORD_TO_BASE, PATTERNS
 
 VALUE_RE = re.compile(
@@ -40,7 +40,7 @@ def extract_machine_dsl(canonical_template: str):
             if keyword is None:
                 raise ValueError(f"Unknown regex pattern: {regex!r}")
 
-            node = VariableKeywordNode(keyword, varname)
+            node = create_node(keyword, varname, generalize=True)
 
             variables.append(
                 {

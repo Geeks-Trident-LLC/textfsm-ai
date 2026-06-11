@@ -4,10 +4,7 @@ from enum import Enum, auto
 
 
 class BaseCategory(Enum):
-    DOT = auto()
-
     # whitespace categories
-    SPACE = auto()  # literal " "
     WS = auto()  # general whitespace: \s, \s+
 
     # punctuation
@@ -40,8 +37,6 @@ SPECIFICITY_ORDER = [
     BaseCategory.WORD,  # pure word
     BaseCategory.MIXED_WORD,  # word+punct (IPv4/IPv6/etc)
     BaseCategory.PUNCT,  # punctuation-only tokens
-    BaseCategory.SPACE,  # literal " "
     BaseCategory.WS,  # general whitespace (\t, \n, etc)
     BaseCategory.NON_WS,  # any non-whitespace
-    BaseCategory.DOT,  # catch-all
 ]

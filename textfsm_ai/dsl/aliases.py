@@ -3,14 +3,10 @@
 from .categories import BaseCategory
 
 ALIASES = {
-    "dot": BaseCategory.DOT,
-    "dots": BaseCategory.DOT,
-    "space": BaseCategory.SPACE,
-    "spaces": BaseCategory.SPACE,
-    "whitespace": BaseCategory.SPACE,
-    "whitespaces": BaseCategory.SPACE,
-    "ws": BaseCategory.SPACE,
-    "wss": BaseCategory.SPACE,
+    "whitespace": BaseCategory.WS,
+    "whitespaces": BaseCategory.WS,
+    "ws": BaseCategory.WS,
+    "wss": BaseCategory.WS,
     "punct": BaseCategory.PUNCT,
     "puncts": BaseCategory.PUNCT,
     "puncts-item": BaseCategory.PUNCT,
@@ -20,9 +16,7 @@ ALIASES = {
     "number": BaseCategory.NUMBER,
     "mixed-number": BaseCategory.MIXED_NUMBER,
     "letter": BaseCategory.LETTER,
-    "letters": BaseCategory.LETTER,
     "alnum": BaseCategory.ALNUM,
-    "alnums": BaseCategory.ALNUM,
     "word": BaseCategory.WORD,
     "words": BaseCategory.WORD,
     "mixed-word": BaseCategory.MIXED_WORD,

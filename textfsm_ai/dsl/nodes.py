@@ -167,8 +167,6 @@ class KeywordNode(BaseNode):
             return "word"
         if self.keyword == "punct":
             return "puncts"
-        if self.keyword == "space":
-            return "spaces"
 
         return self.keyword
 
@@ -202,8 +200,6 @@ class VariableKeywordNode(BaseNode):
             return "word"
         if self.keyword == "punct":
             return "puncts"
-        if self.keyword == "space":
-            return "spaces"
 
         return self.keyword
 

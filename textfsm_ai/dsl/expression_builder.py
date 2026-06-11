@@ -1,24 +1,22 @@
 # textfsm_ai/dsl/expression_builder.py
 
-from textfsm_ai.dsl.ast import KeywordCall
 from textfsm_ai.dsl.expression import KeywordExpression
-from textfsm_ai.dsl.patterns import KEYWORD_TO_BASE
+from textfsm_ai.dsl.nodes import create_node
 
 
-def keyword_call_to_expression(call: KeywordCall) -> KeywordExpression:
-    base = KEYWORD_TO_BASE.get(call.name)
-    if base is None:
-        raise ValueError(f"Unknown keyword: {call.name}")
-
-    return KeywordExpression(
-        base=base,
-        min_count=1,
-        max_count=1,
-        optional=False,
-        is_group=False,
-        varname=call.varname,
-    )
+def keyword_call_to_expression(call) -> KeywordExpression:
+    """
+    Convert a KeywordCall into a KeywordExpression by routing through
+    the node system. This ensures consistent handling of generalization,
+    grouping, and variable semantics.
+    """
+    node = create_node(call.name, call.varname, generalize=True)
+    return node.to_expression()
 
 
 def sequence_to_expressions(seq) -> list[KeywordExpression]:
+    """
+    Convert a SequenceExpression (or any object with .items) into a list
+    of KeywordExpressions.
+    """
     return [keyword_call_to_expression(c) for c in seq.items]

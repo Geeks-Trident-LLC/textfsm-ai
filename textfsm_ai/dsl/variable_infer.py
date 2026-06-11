@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 
-from textfsm_ai.dsl.nodes import KeywordNode, VariableKeywordNode
+from textfsm_ai.dsl.infer import infer_base_keyword
 from textfsm_ai.dsl.normalize import ExpressionNodeFactory
 from textfsm_ai.dsl.patterns import PATTERNS
 
@@ -15,19 +15,15 @@ def infer_variable_mapping(records):
             if v:
                 values_by_var[k].append(v)
 
-    factory = ExpressionNodeFactory()
+    ExpressionNodeFactory()
     result = {}
 
     for varname, values in values_by_var.items():
         names = []
 
         for v in values:
-            node = factory.create(v)
-
-            if isinstance(node, (KeywordNode, VariableKeywordNode)):
-                names.append(node.name)
-            else:
-                names.append("mixed-word")
+            kw = infer_base_keyword([v])
+            names.append(kw or "non-wss")
 
         keyword = max(set(names), key=names.count)
         pattern = PATTERNS[keyword].regex

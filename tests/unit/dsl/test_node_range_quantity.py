@@ -1,4 +1,4 @@
-# tests/unit/dsl/test_range_quantity_node.py
+# tests/unit/dsl/test_node_range_quantity.py
 
 import re
 
