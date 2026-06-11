@@ -51,24 +51,20 @@ def test_basic_dsl_render():
         ],
     }
 
-    template = _strip(
-        """
+    template = _strip("""
         Value interface ([!-~]*[0-9A-Za-z][!-~]*)
         Value mtu ([0-9]+)
         Start
           ^abc\\s+. \\. \\. \\. \\.\\s+123\\s+connection:
           ^interface\\s+${interface} -> Continue.Record
           ^\\s+mtu\\s+${mtu}
-        """
-    )
+        """)
 
-    sample = _strip(
-        """
+    sample = _strip("""
         abc   . . . . .   123 connection:
         interface    Ethernet1
           mtu 1500
-        """
-    )
+        """)
 
     out = render_dsl(dsl, template, sample)
 

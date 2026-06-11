@@ -71,12 +71,10 @@ def test_parse_keyword_call(token, expected):
 
 
 def test_variable_extraction_with_options():
-    human = _strip(
-        """
+    human = _strip("""
         Start
           start() interface mixed-word(var-interface, options-Required,List)
-        """
-    )
+        """)
 
     dsl = human_dsl_to_machine_dsl(human)
     vars_ = {v["name"]: v for v in dsl["variables"]}
@@ -92,12 +90,10 @@ def test_variable_extraction_with_options():
 
 
 def test_variable_extraction_without_options():
-    human = _strip(
-        """
+    human = _strip("""
         Start
           start() mtu digits(var-mtu)
-        """
-    )
+        """)
 
     dsl = human_dsl_to_machine_dsl(human)
     vars_ = {v["name"]: v for v in dsl["variables"]}
@@ -115,12 +111,10 @@ def test_variable_extraction_without_options():
 
 
 def test_pattern_generation_with_options():
-    human = _strip(
-        """
+    human = _strip("""
         Start
           start() interface mixed-word(var-interface, options-Required,List)
-        """
-    )
+        """)
 
     dsl = human_dsl_to_machine_dsl(human)
     t = dsl["states"][0]["transitions"][0]
@@ -129,12 +123,10 @@ def test_pattern_generation_with_options():
 
 
 def test_pattern_generation_literal_and_keyword():
-    human = _strip(
-        """
+    human = _strip("""
         Start
           start() abc   . . . . .   digits() connection:
-        """
-    )
+        """)
 
     dsl = human_dsl_to_machine_dsl(human)
     t = dsl["states"][0]["transitions"][0]
@@ -150,12 +142,10 @@ def test_pattern_generation_literal_and_keyword():
 
 
 def test_action_extraction():
-    human = _strip(
-        """
+    human = _strip("""
         Start
           start() interface mixed-word(var-interface) -> Continue.Record
-        """
-    )
+        """)
 
     dsl = human_dsl_to_machine_dsl(human)
     t = dsl["states"][0]["transitions"][0]
@@ -169,14 +159,12 @@ def test_action_extraction():
 
 
 def test_multiple_transitions_order_preserved():
-    human = _strip(
-        """
+    human = _strip("""
         Start
           start() a digits()
           start() b digits()
           start() c digits()
-        """
-    )
+        """)
 
     dsl = human_dsl_to_machine_dsl(human)
     transitions = dsl["states"][0]["transitions"]
