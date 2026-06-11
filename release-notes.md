@@ -1,31 +1,27 @@
-## 🚀 v0.3.2 — LLM Extraction & Generation Refactor
+## What’s new in v0.3.4
 
-This release introduces a major refactor of the model classification system, curated model registry, and provider integrations.
+### 🚀 DSL Subsystem (Major Feature)
+This release introduces the full TextFSM-AI DSL subsystem, providing a canonical,
+machine-friendly, and human-friendly representation of generated templates.
 
-### ✨ Highlights
-- New unified model classifier (OpenAI, Gemini, Anthropic, DeepSeek)
-- Updated regex patterns for Claude 4.x, Gemini 2.5/3.x, GPT‑4o/5.x
-- New curated model registry under `textfsm_ai/models/curated-models.yaml`
-- Unified provider API with consistent config mapping
-- Improved CLI commands for model listing and generation
-- Fixed Gemini provider (`config=` instead of deprecated `generation_config`)
+Included components:
+- DSL node model (KeywordNode, QuantityNode, SequenceNode, etc.)
+- Canonicalization pipeline for stabilizing LLM-generated templates
+- DSL extractor for converting templates → DSL AST
+- DSL renderer for producing human-readable DSL
+- DSL reverse parser with tokenizer-aware reconstruction
+- DSL inference for variable generalization and structural normalization
 
-### 🔧 Improvements
-- Better error handling across providers
-- Cleaner model normalization
-- Updated curated model lists for all providers
-- Improved orchestrator routing logic
+### 🧹 Refactoring & Cleanup
+- Removed legacy DSL implementations
+- Improved type annotations for full mypy compliance
+- Applied ruff + black formatting across the DSL modules
 
-### 🧪 Tests
-- Added new tests for classifier, patterns, curated models
-- Updated provider tests to reflect new API
+### 🛠 Internal Improvements
+- Strengthened normalization logic for literal-only transitions
+- Added support for char/any/some/ws/wss keyword families
+- Improved quantity-node semantics and generalization rules
 
-### 🛠 Fixes
-- Improved release-prod tag handling logic
-
-### 🛠 Breaking Changes
-- Removed old curated-models file under `providers/`
-- Provider interfaces updated; older configs may need adjustments
-
-### 📦 Release Status
-This version has passed **release-test** and is ready for **release-prod**.
+### 📦 No breaking changes
+The engine and controller remain unchanged. DSL integration into the controller
+will arrive in the next release.
