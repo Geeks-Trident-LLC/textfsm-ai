@@ -1,13 +1,13 @@
 """
-High‑level TextFSM Template Generation Engine.
+High-level TextFSM Template Generation Engine.
 
 This module exposes a single entry point:
 
     generate_template(api_key, model, sample)
 
 It orchestrates the full generation pipeline:
-  - one‑pass
-  - two‑pass
+  - one-pass
+  - two-pass
   - fallback
   - cleaning + validation
   - structured extraction
@@ -20,7 +20,7 @@ from textfsm_ai.generation.generator import GenerationResult
 
 def generate_template(api_key: str, model: str, sample: str) -> GenerationResult:
     """
-    Runs the full template‑generation pipeline on a single sample.
+    Runs the full template-generation pipeline on a single sample.
 
     Parameters
     ----------

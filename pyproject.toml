@@ -61,6 +61,7 @@ keywords = [
     "openai",
     "claude",
     "gemini",
+    "azure-ai-inference",
     "deepseek",
     "router",
     "quota manager",
