@@ -41,6 +41,7 @@ def infer_keyword_expression_from_tokens(tokens: Iterable[str]):
     is_group = count >= 2
 
     return KeywordExpression(
+        expression=f"{base}()",
         base=base,
         min_count=count,
         max_count=count,

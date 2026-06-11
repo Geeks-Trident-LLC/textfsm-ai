@@ -1,6 +1,6 @@
 # textfsm_ai/dsl/expression_builder.py
 
-from textfsm_ai.dsl.expression import KeywordExpression
+from textfsm_ai.dsl.expression import KeywordExpression, keyword_expression_from
 from textfsm_ai.dsl.nodes import create_node
 
 
@@ -11,7 +11,7 @@ def keyword_call_to_expression(call) -> KeywordExpression:
     grouping, and variable semantics.
     """
     node = create_node(call.name, call.varname, generalize=True)
-    return node.to_expression()
+    return keyword_expression_from(node.to_expression())
 
 
 def sequence_to_expressions(seq) -> list[KeywordExpression]:

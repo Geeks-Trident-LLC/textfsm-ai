@@ -2,6 +2,7 @@ import re
 from enum import Enum, auto
 from typing import Optional
 
+# from textfsm_ai.dsl.expression import keyword_expression_from
 from textfsm_ai.dsl.patterns import PATTERNS
 
 # ------------------------------------------------------------
@@ -122,6 +123,9 @@ class BaseNode:
 
     def to_expression_regex(self) -> str:
         return self.to_regex(include_var=False)
+
+    # def as_keyword_expression(self):
+    #     return keyword_expression_from(self.to_expression())
 
     def __str__(self):
         return self.to_expression()
