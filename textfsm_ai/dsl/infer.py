@@ -8,6 +8,8 @@ from .patterns import KEYWORD_TO_BASE, PATTERNS_MAPPING
 
 
 def infer_base_keyword(tokens):
+    if isinstance(tokens, str):
+        tokens = [tokens]
     toks = [t for t in tokens if t != ""]
     if not toks:
         return None
