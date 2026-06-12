@@ -1,0 +1,4 @@
+openapi: 3.1.0
+info:
+  title: textfsm-ai Delivery API
+  version: 0.3.7
