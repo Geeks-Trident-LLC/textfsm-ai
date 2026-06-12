@@ -1,27 +1,24 @@
-## What’s new in v0.3.4
+## textfsm-ai v0.3.7
 
-### 🚀 DSL Subsystem (Major Feature)
-This release introduces the full TextFSM-AI DSL subsystem, providing a canonical,
-machine-friendly, and human-friendly representation of generated templates.
+This release introduces the new **DSL Recognizer** subsystem, significantly improving the engine’s ability to infer generalized regex patterns from literal matched text.
 
-Included components:
-- DSL node model (KeywordNode, QuantityNode, SequenceNode, etc.)
-- Canonicalization pipeline for stabilizing LLM-generated templates
-- DSL extractor for converting templates → DSL AST
-- DSL renderer for producing human-readable DSL
-- DSL reverse parser with tokenizer-aware reconstruction
-- DSL inference for variable generalization and structural normalization
+### 🚀 New Features
+- Added `_build_literal_regex()` with:
+  - puncts‑group detection and recursion
+  - improved tokenization rules
+  - keyword‑aware literal generalization
+  - fallback NUMBER pattern handling
+- Added full test coverage:
+  - literal regex builder tests
+  - DSL recognizer tests
+  - golden‑file snapshot tests
 
-### 🧹 Refactoring & Cleanup
-- Removed legacy DSL implementations
-- Improved type annotations for full mypy compliance
-- Applied ruff + black formatting across the DSL modules
+### 🧹 Maintenance
+- Normalized line endings across the project
+- Removed `.vscode/` from the repository and updated `.gitignore`
 
-### 🛠 Internal Improvements
-- Strengthened normalization logic for literal-only transitions
-- Added support for char/any/some/ws/wss keyword families
-- Improved quantity-node semantics and generalization rules
+### 🔧 Internal
+- Merged `feature/dsl-recognizer` into `develop`
+- Version bump to `0.3.7`
 
-### 📦 No breaking changes
-The engine and controller remain unchanged. DSL integration into the controller
-will arrive in the next release.
+This release lays the foundation for future DSL inference and recognizer improvements.

@@ -1,24 +1,18 @@
-## [0.3.4] - 2026-06-11
+## [0.3.7] - 2026-06-12
+
 ### Added
-- Full DSL subsystem:
-  - DSL node model (KeywordNode, QuantityNode, SequenceNode, etc.)
-  - Canonicalization pipeline for stabilizing LLM-generated templates
-  - DSL extractor for converting templates into DSL AST
-  - DSL renderer for human-readable DSL output
-  - DSL reverse parser with tokenizer-aware reconstruction
-  - DSL inference for variable generalization and structural normalization
+- Introduced the new DSL Recognizer subsystem:
+  - Literal regex builder with puncts‑group recursion
+  - Tokenizer improvements for whitespace, literal `\s+`, digits, punctuation, and fallback patterns
+  - Full unit test suite for literal recognizer and DSL recognizer
+  - Golden‑file tests for recognizer stability
 
-### Improved
-- Added support for char/any/some/ws/wss keyword families
-- Enhanced quantity-node semantics and generalization logic
-- Improved literal-only transition handling in DSL renderer
+### Changed
+- Normalized line endings across the repository for consistency
 
-### Refactored
-- Removed unused and legacy DSL implementations
-- Improved type annotations for full mypy compliance
-- Applied ruff and black formatting across DSL modules
+### Removed
+- Removed `.vscode/` directory from version control and added it to `.gitignore`
 
-### Notes
-- No breaking changes
-- Engine and controller remain unchanged
-- DSL integration into controller will be part of the next release
+### Internal
+- Merged `feature/dsl-recognizer` into `develop`
+- Version bump: `0.3.6` → `0.3.7`

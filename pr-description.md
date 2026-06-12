@@ -1,42 +1,30 @@
 ## Summary
 
-This PR promotes the v0.3.4 release from `develop` to `main`.  
-The release introduces the complete DSL subsystem, enabling canonical template
-generation, machine-DLS extraction, human-DLS rendering, and reverse parsing.
+This PR introduces the new **DSL Recognizer** subsystem, including the literal regex builder, improved tokenization logic, and a comprehensive test suite. This feature enables the engine to generalize literal matched text into stable, reusable regex patterns.
 
-All release-test checks have passed, including:
-- lint (ruff)
-- format (black)
-- typecheck (mypy)
-- unit tests
-- integration tests
+## Key Changes
 
-## What’s Included in v0.3.4
+### ✨ New: DSL Recognizer
+- Implemented `_build_literal_regex()` with:
+  - puncts‑group recursion
+  - whitespace normalization
+  - literal `\s+` handling
+  - digit and punctuation classification
+  - fallback NUMBER pattern
+- Added `_build_variable_pattern()` integration
+- Added visualizers for literal → regex and pattern → match previews
 
-### DSL Subsystem (Major Feature)
-- Canonicalization pipeline for stabilizing LLM-generated templates
-- DSL node model (KeywordNode, QuantityNode, SequenceNode, etc.)
-- DSL extractor for template → DSL AST conversion
-- DSL renderer for human-readable DSL output
-- DSL reverse parser with tokenizer-aware reconstruction
-- DSL inference for variable generalization and structural normalization
+### 🧪 Test Coverage
+- Added `test_literal_regex.py` (unit tests)
+- Added `test_dsl_recognizer.py` (integration tests)
+- Added golden‑file snapshot tests for recognizer output
 
-### Refactoring & Cleanup
-- Removed unused and legacy DSL code
-- Improved type annotations for mypy compliance
-- Applied ruff + black formatting
+### 🧹 Cleanup
+- Normalized line endings
+- Removed `.vscode/` from repo and updated `.gitignore`
 
-### Internal Enhancements
-- Literal-only transition support in renderer
-- Expanded keyword families (char/any/some/ws/wss)
-- Improved quantity-node semantics and generalization logic
+## Versioning
+- Bumped version: `0.3.6` → `0.3.7`
 
-## Release Notes
-See `CHANGELOG.md` entry for v0.3.4.
-
-## Version
-Bumped version: `0.3.3 → 0.3.4`.
-
-## Next Steps
-- Integrate DSL canonicalization into the controller pipeline
-- Prepare v0.3.5-dev branch after merge
+## Notes
+This PR is foundational for upcoming DSL inference improvements and recognizer stability work.
