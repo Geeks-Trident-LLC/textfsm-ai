@@ -18,12 +18,11 @@ maintainers = [
     { name = "Tuyen Mathew Duong", email = "tuyen@geekstrident.com" }
 ]
 
-# Runtime dependencies (synced with requirements.txt)
 dependencies = [
     "PyYAML>=6.0",
     "requests>=2.32",
     "click>=8.1",
-    "textfsm>=1.1.0",          # <-- REQUIRED
+    "textfsm>=1.1.0",
     "openai>=1.0.0",
     "google-genai>=0.2.0",
     "azure-ai-inference>=1.0.0b9",
@@ -114,7 +113,7 @@ include-package-data = true
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["textfsm_ai*"]
-exclude = ["tests*", "docs*", "examples*"]
+exclude = ["tests*", "docs*", "examples*", "scripts*"]
 
 [tool.pytest.ini_options]
 addopts = "-ra --cov=textfsm_ai --cov-report=term-missing"
@@ -126,9 +125,16 @@ target-version = ["py39"]
 
 [tool.ruff]
 line-length = 88
+fix = true
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I"]
+select = [
+    "E",
+    "F",
+    "W",
+    "I",
+    "T100",
+]
 
 [tool.ruff.format]
 quote-style = "double"

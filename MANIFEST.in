@@ -1,3 +1,17 @@
 include LICENSE
 include README.md
+
+# Include YAML files inside the package
 recursive-include textfsm_ai *.yaml
+
+# Include any JSON files (if you add them later)
+recursive-include textfsm_ai *.json
+
+# Include any template files (future-proof)
+recursive-include textfsm_ai *.txt
+
+# Exclude tests, docs, examples from source distribution
+prune tests
+prune docs
+prune examples
+prune scripts
