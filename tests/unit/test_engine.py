@@ -1,7 +1,9 @@
+# tests/unit/test_engine.py
+
 from unittest.mock import MagicMock, patch
 
 from textfsm_ai.engine import generate_template
-from textfsm_ai.generation.generator import GenerationResult
+from textfsm_ai.generation.support.generator import GenerationResult
 
 
 @patch("textfsm_ai.engine.Controller")

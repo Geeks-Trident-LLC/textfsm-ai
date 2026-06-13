@@ -1,3 +1,5 @@
+# tests/unit/test_providers_openai_compat.py
+
 from __future__ import annotations
 
 import pytest

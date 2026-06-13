@@ -41,7 +41,6 @@ def build_delivery_package(
     debug_canonicalization_log: Optional[List[str]] = None,
     debug_literal_regex_trace: Optional[List[str]] = None,
 ) -> DeliveryPackage:
-
     created_at = datetime.now(timezone.utc).isoformat()
 
     general = None

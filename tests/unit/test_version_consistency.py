@@ -1,9 +1,4 @@
-"""
-Ensures version is consistent across:
-- pyproject.toml
-- textfsm_ai/__init__.py
-- .bumpversion.cfg
-"""
+# tests/unit/test_version_consistency.py
 
 import re
 from pathlib import Path

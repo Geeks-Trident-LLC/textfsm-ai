@@ -1,6 +1,6 @@
 # tests/integration/test_controller_deepseek.py
 
-from textfsm_ai.generation.controller import Controller
+from textfsm_ai.generation.controller.controller import Controller
 from textfsm_ai.models import model as MODEL
 
 
