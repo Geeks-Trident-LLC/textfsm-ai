@@ -12,7 +12,6 @@ class GenerationResult(Serializable):
         self.template = template  # final template (raw or cleaned)
         self.status = status  # "valid_raw", "cleaned", "invalid"
         self.structured = structured  # StructuredResult
-        #    includes llm_run_result + data
 
     def is_success(self) -> bool:
         return self.status in ("valid_raw", "cleaned")
@@ -24,7 +23,7 @@ class GenerationResult(Serializable):
         return {
             "template": self.template,
             "status": self.status,
-            "structured": self.structured,
+            "structured": self.structured.to_dict(),  # FIXED
         }
 
 
@@ -49,6 +48,7 @@ def generate(structured: StructuredResult) -> GenerationResult:
 
     # 2. Clean template
     cleaned = clean_template(raw_template)
+
     # 3. Validate cleaned template
     if validate_template(cleaned):
         return GenerationResult(
@@ -56,6 +56,7 @@ def generate(structured: StructuredResult) -> GenerationResult:
             status="cleaned",
             structured=structured,
         )
+
     # 4. Still invalid → deliver failure
     return GenerationResult(
         template=cleaned,

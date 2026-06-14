@@ -1,18 +1,19 @@
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from textfsm_ai.dsl.controller.dsl_controller import DSLController
 from textfsm_ai.dsl.core.models import (
     CanonicalTemplate,
-    MachineDSL,
     HumanDSL,
+    MachineDSL,
     RecognizerPatterns,
 )
-
 
 # ------------------------------------------------------------
 # canonicalize
 # ------------------------------------------------------------
+
 
 @patch("textfsm_ai.dsl.controller.dsl_controller.canonicalize_template")
 def test_canonicalize(mock_canon):
@@ -39,6 +40,7 @@ def test_canonicalize_empty_template():
 # to_machine_dsl
 # ------------------------------------------------------------
 
+
 @patch("textfsm_ai.dsl.controller.dsl_controller.build_machine_dsl")
 def test_to_machine_dsl(mock_build):
     canon = CanonicalTemplate("RAW", "CANON", [])
@@ -60,6 +62,7 @@ def test_to_machine_dsl_invalid_type():
 # ------------------------------------------------------------
 # to_human_dsl
 # ------------------------------------------------------------
+
 
 @patch("textfsm_ai.dsl.controller.dsl_controller.render_human_dsl")
 def test_to_human_dsl_with_dsl(mock_render):
@@ -103,6 +106,7 @@ def test_to_human_dsl_missing_inputs():
 # ------------------------------------------------------------
 # recognize
 # ------------------------------------------------------------
+
 
 @patch("textfsm_ai.dsl.controller.dsl_controller.recognize_patterns")
 def test_recognize_with_dsl(mock_rec):

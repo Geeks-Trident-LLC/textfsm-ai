@@ -1,51 +1,44 @@
-# textfsm_ai/generation/engine/fallback.py
+from textfsm_ai.generation.core.models import OnePassResult, TwoPassResult
+from textfsm_ai.generation.support.cleaner import clean_template
+from textfsm_ai.generation.support.structured_extractor import (
+    StructuredResult,
+    parse_from_response,
+)
 
-from typing import Optional
 
-from ..support.cleaner import clean_template
-from ..support.extractor import LLMRunResult
-from ..support.structured_extractor import StructuredResult, parse_from_response
-
-
-def run(
-    one_pass_result: Optional[LLMRunResult], two_pass_result: Optional[LLMRunResult]
-) -> StructuredResult:
+def run(one: OnePassResult, two: TwoPassResult) -> StructuredResult:
     """
     Fallback strategy:
-    - Prefer Two-Pass next_response
-    - Then Two-Pass response
-    - Then One-Pass response
-    - Clean aggressively, then parse
+    1. Prefer Two-Pass structured response (response_structured)
+    2. Then Two-Pass free response (response_free)
+    3. Then One-Pass response
     """
 
-    candidate_raw = None
-    base = None
+    # -------------------------
+    # 1. Choose best raw text
+    # -------------------------
+    if two.response_structured:
+        candidate_raw = two.response_structured
+        base = two
 
-    if two_pass_result and two_pass_result.next_response:
-        candidate_raw = two_pass_result.next_response
-        base = two_pass_result
+    elif two.response_free:
+        candidate_raw = two.response_free
+        base = two
 
-    elif one_pass_result and one_pass_result.response:
-        candidate_raw = one_pass_result.response
-        base = one_pass_result
+    elif one.response:
+        candidate_raw = one.response
+        base = one
 
     else:
-        # Nothing usable; synthesize empty
         candidate_raw = ""
-        base = (
-            one_pass_result
-            or two_pass_result
-            or LLMRunResult(
-                provider="unknown",
-                model="unknown",
-                sample="",
-                prompt="fallback",
-                response="",
-            )
-        )
+        base = one or two
 
-    # Clean aggressively
-    cleaned_raw = clean_template(candidate_raw)
+    # -------------------------
+    # 2. Clean aggressively
+    # -------------------------
+    cleaned = clean_template(candidate_raw)
 
-    # Parse into structured result
-    return parse_from_response(cleaned_raw, base)
+    # -------------------------
+    # 3. Parse into StructuredResult
+    # -------------------------
+    return parse_from_response(cleaned, base)

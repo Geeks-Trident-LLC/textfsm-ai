@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+from textfsm_ai.generation.core.models import TwoPassResult
 from textfsm_ai.generation.engine import two_pass
 
 
@@ -52,7 +53,7 @@ def test_two_pass_run(
     # ------------------------------------------------------------
     # Run two_pass
     # ------------------------------------------------------------
-    result = two_pass.run(api_key, model, sample)
+    result: TwoPassResult = two_pass.run(api_key, model, sample)
 
     # ------------------------------------------------------------
     # Assertions
@@ -89,5 +90,20 @@ def test_two_pass_run(
         response="RESPONSE_B",
     )
 
-    # Final result is the same LLMRunResult from first pass
-    assert result is llm_run_result
+    # ------------------------------------------------------------
+    # Validate TwoPassResult fields
+    # ------------------------------------------------------------
+    assert isinstance(result, TwoPassResult)
+
+    assert result.prompt_free == "PROMPT_A"
+    assert result.response_free == "RESPONSE_A"
+
+    assert result.prompt_structured == "PROMPT_B"
+    assert result.response_structured == "RESPONSE_B"
+
+    assert result.model == model
+    assert result.provider == "MockProvider"
+
+    # metadata contains llm_run
+    assert "llm_run" in result.metadata
+    assert result.metadata["llm_run"] is llm_run_result

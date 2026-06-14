@@ -1,13 +1,21 @@
-# textfsm_ai/generation/controller/controller.py
+from textfsm_ai.generation.core.models import (
+    OnePassResult,
+    TwoPassResult,
+)
+from textfsm_ai.generation.engine import (
+    fallback,
+    one_pass,
+    two_pass,
+)
+from textfsm_ai.generation.support import generator
+from textfsm_ai.generation.support.structured_extractor import parse_from_response
+from textfsm_ai.generation.support.validator import validate_template
 
-from ..engine import fallback, one_pass, two_pass
-from ..support import generator
-from ..support.structured_extractor import parse_from_response
-from ..support.validator import validate_template
 
+class GenerationController:
+    """Stateless orchestrator for generation pipeline."""
 
-class Controller:
-    def __init__(self, api_key: str, model: str, max_retries: int = 2):
+    def __init__(self, api_key: str, model: str, max_retries: int = 1):
         self.api_key = api_key
         self.model = model
         self.max_retries = max_retries
@@ -20,10 +28,10 @@ class Controller:
         # 1. ONE-PASS
         # -------------------------
         for _ in range(self.max_retries):
-            one = one_pass.run(self.api_key, self.model, sample)
+            one: OnePassResult = one_pass.run(self.api_key, self.model, sample)
             last_one = one
 
-            raw = one.next_response or one.response
+            raw = one.response
             structured = parse_from_response(raw, one)
 
             if validate_template(structured.template):
@@ -33,10 +41,10 @@ class Controller:
         # 2. TWO-PASS
         # -------------------------
         for _ in range(self.max_retries):
-            two = two_pass.run(self.api_key, self.model, sample)
+            two: TwoPassResult = two_pass.run(self.api_key, self.model, sample)
             last_two = two
 
-            raw = two.next_response or two.response
+            raw = two.response_structured
             structured = parse_from_response(raw, two)
 
             if validate_template(structured.template):

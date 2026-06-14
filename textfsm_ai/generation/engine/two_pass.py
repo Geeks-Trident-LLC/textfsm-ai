@@ -1,37 +1,49 @@
 # textfsm_ai/generation/engine/two_pass.py
 
-from textfsm_ai.generation.support import prompt_builder
+from textfsm_ai.generation.core.models import TwoPassResult
+from textfsm_ai.generation.support import extractor, llm_extractor, prompt_builder
 from textfsm_ai.providers.registry import get_provider_for_model
 
-from ..support import extractor, llm_extractor
 
-
-def run(api_key: str, model: str, sample: str):
+def run(api_key: str, model: str, sample: str) -> TwoPassResult:
     provider = get_provider_for_model(model)(api_key, model)
     builder = prompt_builder.PromptBuilder()
 
+    # -------------------------
     # PASS 1 — Free Generation
-    prompt1 = builder.two_pass_prompt_a(sample)
-    response1 = llm_extractor.extract(provider, model, prompt1)
+    # -------------------------
+    prompt_free = builder.two_pass_prompt_a(sample)
+    response_free = llm_extractor.extract(provider, model, prompt_free)
 
-    # Wrap first pass result
-    llm_run_result = extractor.extract(
+    llm_run = extractor.extract(
         provider_name=provider.name,
         model=model,
         sample=sample,
-        prompt=prompt1,
-        response=response1,
+        prompt=prompt_free,
+        response=response_free,
     )
 
+    # -------------------------
     # PASS 2 — Structured Extraction
-    prompt2 = builder.two_pass_prompt_b(response1)
-    response2 = llm_extractor.extract(provider, model, prompt2)
+    # -------------------------
+    prompt_structured = builder.two_pass_prompt_b(response_free)
+    response_structured = llm_extractor.extract(provider, model, prompt_structured)
 
-    # Attach second pass result
     extractor.next_extract(
-        llm_run_result=llm_run_result,
-        prompt=prompt2,
-        response=response2,
+        llm_run_result=llm_run,
+        prompt=prompt_structured,
+        response=response_structured,
     )
 
-    return llm_run_result
+    # -------------------------
+    # Wrap in new dataclass
+    # -------------------------
+    return TwoPassResult(
+        prompt_free=prompt_free,
+        response_free=response_free,
+        prompt_structured=prompt_structured,
+        response_structured=response_structured,
+        model=model,
+        provider=provider.name,
+        metadata={"llm_run": llm_run},
+    )

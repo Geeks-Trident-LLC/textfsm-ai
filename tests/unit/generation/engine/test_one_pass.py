@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from textfsm_ai.generation.core.models import OnePassResult
 from textfsm_ai.generation.engine import one_pass
 
 # ------------------------------------------------------------
@@ -26,15 +27,12 @@ def prompt_builder_instance():
 
 
 @pytest.fixture
-def llm_result():
-    r = MagicMock()
-    r.response = "RAW_LLM"
-    r.next_response = None
-    return r
+def llm_raw_response():
+    return "RAW_LLM_RESPONSE"
 
 
 @pytest.fixture
-def final_result():
+def llm_run_result():
     return MagicMock()
 
 
@@ -54,8 +52,8 @@ def test_one_pass_run(
     mock_extractor_extract,
     provider_instance,
     prompt_builder_instance,
-    llm_result,
-    final_result,
+    llm_raw_response,
+    llm_run_result,
 ):
     # -----------------------------
     # Arrange
@@ -64,22 +62,22 @@ def test_one_pass_run(
     model = "MODEL"
     sample = "interface Gi0/1"
 
-    # provider factory returns a provider instance
+    # provider factory returns provider instance
     mock_get_provider.return_value = lambda api_key, model: provider_instance
 
     # PromptBuilder instance
     mock_prompt_builder.return_value = prompt_builder_instance
 
-    # LLM extractor returns raw LLM output
-    mock_llm_extract.return_value = llm_result
+    # LLM extractor returns raw LLM text
+    mock_llm_extract.return_value = llm_raw_response
 
-    # extractor.extract returns final structured result
-    mock_extractor_extract.return_value = final_result
+    # extractor.extract returns old-style llm_run_result
+    mock_extractor_extract.return_value = llm_run_result
 
     # -----------------------------
     # Act
     # -----------------------------
-    result = one_pass.run(api_key, model, sample)
+    result: OnePassResult = one_pass.run(api_key, model, sample)
 
     # -----------------------------
     # Assert
@@ -88,9 +86,9 @@ def test_one_pass_run(
     # Provider factory called correctly
     mock_get_provider.assert_called_once_with(model)
 
-    # Provider instantiated with API key
-    provider_instance_created = mock_get_provider.return_value(api_key, model)
-    assert provider_instance_created is provider_instance
+    # Provider instantiated with API key + model
+    provider_created = mock_get_provider.return_value(api_key, model)
+    assert provider_created is provider_instance
 
     # PromptBuilder.one_pass_prompt called correctly
     prompt_builder_instance.one_pass_prompt.assert_called_once_with(sample)
@@ -104,12 +102,22 @@ def test_one_pass_run(
 
     # extractor.extract called with correct args
     mock_extractor_extract.assert_called_once_with(
-        provider_instance.name,
-        model,
-        sample,
-        "PROMPT_TEXT",
-        llm_result,
+        provider_name=provider_instance.name,
+        model=model,
+        sample=sample,
+        prompt="PROMPT_TEXT",
+        response=llm_raw_response,
     )
 
-    # Final result is returned
-    assert result is final_result
+    # -----------------------------
+    # Validate OnePassResult fields
+    # -----------------------------
+    assert isinstance(result, OnePassResult)
+    assert result.prompt == "PROMPT_TEXT"
+    assert result.response == llm_raw_response
+    assert result.model == model
+    assert result.provider == provider_instance.name
+
+    # metadata contains llm_run
+    assert "llm_run" in result.metadata
+    assert result.metadata["llm_run"] is llm_run_result
