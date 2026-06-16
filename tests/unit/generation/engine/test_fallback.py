@@ -4,9 +4,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from textfsm_ai.generation.core.models import OnePassResult, TwoPassResult
+from textfsm_ai.generation.core.models import (
+    OnePassResult,
+    StructuredResult,
+    TwoPassResult,
+)
 from textfsm_ai.generation.engine import fallback
-from textfsm_ai.generation.support.structured_extractor import StructuredResult
 
 # ------------------------------------------------------------
 # Helpers to build fake dataclasses

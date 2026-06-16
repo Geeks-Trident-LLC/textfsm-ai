@@ -3,27 +3,29 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
+from ...core.serializable import Serializable
+
 
 @dataclass(frozen=True)
-class CanonicalTemplate:
+class CanonicalTemplate(Serializable):
     """Canonical, normalized representation of a TextFSM template."""
 
     raw_template: str
-    canonical_template: str
-    records_sample: Optional[List[Dict[str, Any]]] = None
+    template: str
+    records: Optional[List[Dict[str, Any]]] = None
 
 
 @dataclass(frozen=True)
-class MachineDSL:
+class MachineDSL(Serializable):
     """Machine-readable DSL structure derived from a canonical template."""
 
-    canonical_template: CanonicalTemplate
+    canonical: CanonicalTemplate
     ast: Any  # replace with concrete AST type when available
     version: str = "1.0"
 
 
 @dataclass(frozen=True)
-class HumanDSL:
+class HumanDSL(Serializable):
     """Human-readable DSL text plus optional context."""
 
     dsl_text: str
@@ -32,7 +34,7 @@ class HumanDSL:
 
 
 @dataclass(frozen=True)
-class RecognizerPatterns:
+class RecognizerPatterns(Serializable):
     """Patterns recognized from DSL/template/sample for classification or routing."""
 
     dsl: Optional[MachineDSL]

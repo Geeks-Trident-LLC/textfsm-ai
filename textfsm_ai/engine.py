@@ -15,7 +15,7 @@ It orchestrates the full generation pipeline:
 """
 
 from textfsm_ai.generation.controller.controller import Controller
-from textfsm_ai.generation.support.generator import GenerationResult
+from textfsm_ai.generation.core.models import GenerationResult
 
 
 def generate_template(api_key: str, model: str, sample: str) -> GenerationResult:

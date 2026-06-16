@@ -2,9 +2,8 @@
 
 import json
 
-from textfsm_ai.generation.support.extractor import LLMRunResult
+from textfsm_ai.generation.core.models import LLMRunResult, StructuredResult
 from textfsm_ai.generation.support.structured_extractor import (
-    StructuredResult,
     _extract_json_block,
     _strip_code_fence,
     parse_from_response,

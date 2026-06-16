@@ -1,6 +1,5 @@
 # textfsm_ai/dsl/engine/dsl_engine.py
 
-from typing import Optional
 
 from textfsm_ai.dsl.core.models import (
     CanonicalTemplate,
@@ -27,47 +26,59 @@ def canonicalize_template(template: str, records: list) -> CanonicalTemplate:
     canonical_template = TemplateCanonicalizer().canonicalize(template, records)
     return CanonicalTemplate(
         raw_template=template,
-        canonical_template=canonical_template,
-        records_sample=records,
+        template=canonical_template,
+        records=records,
     )
 
 
-def build_machine_dsl(template: CanonicalTemplate) -> MachineDSL:
+def build_machine_dsl(canonical: CanonicalTemplate) -> MachineDSL:
     """Build a machine-readable DSL model from a canonical template."""
-    ast = _extract_machine_dsl(template.canonical_template)
-    return MachineDSL(canonical_template=template, ast=ast)
+    ast = _extract_machine_dsl(canonical.template)
+    return MachineDSL(canonical=canonical, ast=ast)
 
 
-def render_human_dsl(
-    dsl: Optional[MachineDSL] = None,
-    template: Optional[CanonicalTemplate] = None,
-    sample: str = "",
-) -> HumanDSL:
+def render_human_dsl(machine: MachineDSL, sample: str = "") -> HumanDSL:
     """Render a human-readable DSL representation from DSL/template/sample."""
-    text = _render_dsl(dsl=dsl.ast, template=template.canonical_template, sample=sample)
+    if machine.ast is None and machine.canonical.template is None:
+        raise ValueError("Either ast or canonical-template must be provided")
+
+    # If only canonical is provided, build machine DSL first
+    ast = machine.ast
+    if ast is None:
+        ast = build_machine_dsl(machine.canonical)
+
+    template = machine.canonical.template
+    text = _render_dsl(ast, template, sample)
     return HumanDSL(
         dsl_text=text,
-        template_preview=template.canonical_template if template else None,
+        template_preview=template or None,
         sample=sample or None,
     )
 
 
 def recognize_patterns(
-    dsl: Optional[MachineDSL] = None,
-    template: Optional[CanonicalTemplate] = None,
+    machine: MachineDSL,
     sample: str = "",
     debug: bool = False,
 ) -> RecognizerPatterns:
     """Recognize DSL-related patterns from DSL/template/sample."""
+    if machine.ast is None and machine.canonical.template is None:
+        raise ValueError("Either ast or canonical-template must be provided")
+
+    # If only canonical is provided, build machine DSL first
+    ast = machine.ast
+    if ast is None:
+        ast = build_machine_dsl(machine.canonical.template)
+
     patterns, debug_info = _recognize_dsl_patterns(
-        dsl=dsl.ast,
-        template=template.canonical_template,
+        ast=ast,
+        template=machine.canonical.template,
         sample=sample,
         debug=debug,
     )
     return RecognizerPatterns(
-        dsl=dsl,
-        template=template,
+        dsl=machine,
+        template=machine.canonical,
         sample=sample or None,
         patterns=patterns,
         debug_info=debug_info if debug else None,

@@ -1,31 +1,7 @@
 # textfsm_ai/generation/engine/extractor.py
 
-from dataclasses import dataclass
-from typing import Optional
 
-from textfsm_ai.core.serializable import Serializable
-
-
-@dataclass
-class LLMRunResult(Serializable):
-    provider: str
-    model: str
-    sample: str
-    prompt: str
-    response: str
-    next_prompt: Optional[str] = None
-    next_response: Optional[str] = None
-
-    def to_dict(self):
-        return {
-            "provider": self.provider,
-            "model": self.model,
-            "sample": self.sample,
-            "prompt": self.prompt,
-            "response": self.response,
-            "next_prompt": self.next_prompt,
-            "next_response": self.next_response,
-        }
+from textfsm_ai.generation.core.models import LLMRunResult
 
 
 def extract(provider_name: str, model: str, sample: str, prompt: str, response: str):

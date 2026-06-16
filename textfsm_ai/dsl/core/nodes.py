@@ -2,7 +2,6 @@ import re
 from enum import Enum, auto
 from typing import Optional
 
-# from textfsm_ai.dsl.expression import keyword_expression_from
 from textfsm_ai.dsl.core.patterns import PATTERNS
 
 # ------------------------------------------------------------

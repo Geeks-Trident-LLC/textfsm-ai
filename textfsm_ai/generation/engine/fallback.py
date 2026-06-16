@@ -1,7 +1,10 @@
-from textfsm_ai.generation.core.models import OnePassResult, TwoPassResult
+from textfsm_ai.generation.core.models import (
+    OnePassResult,
+    StructuredResult,
+    TwoPassResult,
+)
 from textfsm_ai.generation.support.cleaner import clean_template
 from textfsm_ai.generation.support.structured_extractor import (
-    StructuredResult,
     parse_from_response,
 )
 

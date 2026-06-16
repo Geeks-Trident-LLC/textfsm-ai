@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 from typing import Any, Dict, List, Optional
 
@@ -146,8 +147,8 @@ def _build_variable_pattern(
     return final
 
 
-def _build_variable_map(dsl: Dict[str, Any]) -> Dict[str, str]:
-    return {v["name"]: v["expression_regex"] for v in dsl.get("variables", [])}
+def _build_variable_map(ast: Dict[str, Any]) -> Dict[str, str]:
+    return {v["name"]: v["expression_regex"] for v in ast.get("variables", [])}
 
 
 def visualize_pattern_matches(pattern: str, sample: str, max_matches: int = 3) -> str:
@@ -178,34 +179,27 @@ def visualize_literal_transformation(txt: str, regex: str) -> str:
 
 
 def recognize_dsl_patterns(
-    dsl: Optional[Dict[str, Any]],
+    ast: Optional[Dict[str, Any]],
     template: Optional[str],
     sample: str,
     *,
     debug: bool = False,
-) -> str:
-    """
-    DSL recognizer:
-
-    - Inputs: dsl, template, sample
-    - If dsl is None: dsl = extract_machine_dsl(template)
-    - For each transition.pattern:
-        * if contains ${var}: variable case (no sample needed)
-        * else: literal case (must match sample; use matched text)
-    - Returns newline-joined unique recognizer patterns.
-    """
-    if dsl is None:
+):
+    if ast is None:
         if template is None:
             raise ValueError("Either 'dsl' or 'template' must be provided.")
-        dsl = extract_machine_dsl(template)
+        ast = extract_machine_dsl(template)
 
-    var_map = _build_variable_map(dsl)
+    var_map = _build_variable_map(ast)
     seen: List[str] = []
     out: List[str] = []
 
-    for state in dsl.get("states", []):
+    all_debug = []
+
+    for state in ast.get("states", []):
         state_name = state.get("name", "<unknown>")
 
+        debug_lst = []
         for trans in state.get("transitions", []):
             pattern = trans["pattern"]
 
@@ -250,12 +244,28 @@ def recognize_dsl_patterns(
 
             final = f"{prefix}{body}{suffix}"
 
+            debug_info = {}
             if debug:
-                print(visualize_literal_transformation(matched_text, final))
-                print(visualize_pattern_matches(final, sample, max_matches=2))
+                literal_trans = visualize_literal_transformation(matched_text, final)
+                pat_matches = visualize_pattern_matches(final, sample, max_matches=2)
+                debug_info.update(
+                    literal_transformation=literal_trans, pattern_matches=pat_matches
+                )
+                debug_lst.append(debug_info)
+                print(literal_trans)
+                print(pat_matches)
 
             if final not in seen:
                 seen.append(final)
                 out.append(final)
 
-    return "\n".join(out)
+        if debug_lst:
+            all_debug.append({state_name: debug_lst})
+
+    debug_msg = (
+        json.dumps(all_debug, indent=2, sort_keys=True, ensure_ascii=False)
+        if all_debug
+        else ""
+    )
+
+    return "\n".join(out), debug_msg if debug else ""

@@ -19,8 +19,8 @@ from textfsm_ai.dsl.core.models import (
 def test_canonicalize(mock_canon):
     mock_canon.return_value = CanonicalTemplate(
         raw_template="RAW",
-        canonical_template="CANON",
-        records_sample=["REC"],
+        template="CANON",
+        records=["REC"],
     )
 
     controller = DSLController()
@@ -44,7 +44,7 @@ def test_canonicalize_empty_template():
 @patch("textfsm_ai.dsl.controller.dsl_controller.build_machine_dsl")
 def test_to_machine_dsl(mock_build):
     canon = CanonicalTemplate("RAW", "CANON", [])
-    mock_build.return_value = MachineDSL(canonical_template=canon, ast={"x": 1})
+    mock_build.return_value = MachineDSL(canonical=canon, ast={"x": 1})
 
     controller = DSLController()
     result = controller.to_machine_dsl(canon)
@@ -67,7 +67,7 @@ def test_to_machine_dsl_invalid_type():
 @patch("textfsm_ai.dsl.controller.dsl_controller.render_human_dsl")
 def test_to_human_dsl_with_dsl(mock_render):
     canon = CanonicalTemplate("RAW", "CANON", [])
-    dsl = MachineDSL(canonical_template=canon, ast={"x": 1})
+    dsl = MachineDSL(canonical=canon, ast={"x": 1})
 
     mock_render.return_value = HumanDSL("DSL", "CANON", "SAMP")
 
@@ -86,7 +86,7 @@ def test_to_human_dsl_with_dsl(mock_render):
 @patch("textfsm_ai.dsl.controller.dsl_controller.build_machine_dsl")
 def test_to_human_dsl_auto_build_machine(mock_build, mock_render):
     canon = CanonicalTemplate("RAW", "CANON", [])
-    mock_build.return_value = MachineDSL(canonical_template=canon, ast={"x": 1})
+    mock_build.return_value = MachineDSL(canonical=canon, ast={"x": 1})
     mock_render.return_value = HumanDSL("DSL", "CANON", "SAMP")
 
     controller = DSLController()
@@ -111,7 +111,7 @@ def test_to_human_dsl_missing_inputs():
 @patch("textfsm_ai.dsl.controller.dsl_controller.recognize_patterns")
 def test_recognize_with_dsl(mock_rec):
     canon = CanonicalTemplate("RAW", "CANON", [])
-    dsl = MachineDSL(canonical_template=canon, ast={"x": 1})
+    dsl = MachineDSL(canonical=canon, ast={"x": 1})
 
     mock_rec.return_value = RecognizerPatterns(
         dsl=dsl,
@@ -137,7 +137,7 @@ def test_recognize_with_dsl(mock_rec):
 @patch("textfsm_ai.dsl.controller.dsl_controller.build_machine_dsl")
 def test_recognize_auto_build_machine(mock_build, mock_rec):
     canon = CanonicalTemplate("RAW", "CANON", [])
-    mock_build.return_value = MachineDSL(canonical_template=canon, ast={"x": 1})
+    mock_build.return_value = MachineDSL(canonical=canon, ast={"x": 1})
     mock_rec.return_value = RecognizerPatterns(
         dsl=mock_build.return_value,
         template=canon,

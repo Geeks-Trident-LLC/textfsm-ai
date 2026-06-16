@@ -8,20 +8,20 @@ from textfsm_ai.generation.support.validator import TemplateValidator
 CAPTURE_RE = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
 
 
-def render_dsl(dsl: Dict[str, Any], template_text: str, sample: str) -> str:
+def render_dsl(ast: Dict[str, Any], template: str, sample: str) -> str:
     """
     Render human-readable DSL aligned with:
     - TextFSM template indentation
     - literal spacing from sample text
     """
 
-    if TemplateValidator.is_valid_template(template_text):
-        raise ValueError(f"Invalid template\n{template_text}")
+    if not TemplateValidator.is_valid_template(template):
+        raise ValueError(f"Invalid template\n{template}")
 
-    var_lookup = {v["name"]: v for v in dsl["variables"]}
+    var_lookup = {v["name"]: v for v in ast["variables"]}
     rendered: List[str] = []
 
-    for state in dsl["states"]:
+    for state in ast["states"]:
         rendered.append(state["name"])
 
         for trans in state["transitions"]:

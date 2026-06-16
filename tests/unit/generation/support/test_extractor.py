@@ -1,7 +1,7 @@
 # tests/unit/generation/support/test_extractor.py
 
+from textfsm_ai.generation.core.models import LLMRunResult
 from textfsm_ai.generation.support.extractor import (
-    LLMRunResult,
     extract,
     next_extract,
 )

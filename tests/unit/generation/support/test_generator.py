@@ -2,7 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
-from textfsm_ai.generation.support.generator import GenerationResult, generate
+from textfsm_ai.generation.core.models import GenerationResult
+from textfsm_ai.generation.support.generator import generate
 
 
 def make_structured(template="RAW"):

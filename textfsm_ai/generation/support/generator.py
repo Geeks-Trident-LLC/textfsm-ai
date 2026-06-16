@@ -1,30 +1,10 @@
 # textfsm_ai/generation/support/generator.py
 
-from textfsm_ai.core.serializable import Serializable
+from textfsm_ai.generation.core.models import GenerationResult
 
+from ..core.models import StructuredResult
 from .cleaner import clean_template
-from .structured_extractor import StructuredResult
 from .validator import validate_template
-
-
-class GenerationResult(Serializable):
-    def __init__(self, template: str, status: str, structured: StructuredResult):
-        self.template = template  # final template (raw or cleaned)
-        self.status = status  # "valid_raw", "cleaned", "invalid"
-        self.structured = structured  # StructuredResult
-
-    def is_success(self) -> bool:
-        return self.status in ("valid_raw", "cleaned")
-
-    def is_failure(self) -> bool:
-        return self.status == "invalid"
-
-    def to_dict(self):
-        return {
-            "template": self.template,
-            "status": self.status,
-            "structured": self.structured.to_dict(),  # FIXED
-        }
 
 
 def generate(structured: StructuredResult) -> GenerationResult:

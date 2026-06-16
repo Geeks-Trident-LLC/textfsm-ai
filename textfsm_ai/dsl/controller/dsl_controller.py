@@ -18,8 +18,6 @@ The controller delegates all logic to the DSL engine and handles:
 
 from __future__ import annotations
 
-from typing import Optional
-
 from textfsm_ai.dsl.core.models import (
     CanonicalTemplate,
     HumanDSL,
@@ -32,12 +30,15 @@ from textfsm_ai.dsl.engine import (
     recognize_patterns,
     render_human_dsl,
 )
+from textfsm_ai.generation.core.models import GenerationResult
 
 
 class DSLController:
     """High-level orchestrator for DSL operations."""
 
-    def canonicalize(self, template: str, records: list) -> CanonicalTemplate:
+    def canonicalize(self, gen: GenerationResult) -> CanonicalTemplate:
+        template = gen.template
+        records = gen.structured.data.get("parsed_result")
         if not template:
             raise ValueError("template must not be empty")
         return canonicalize_template(template, records)
@@ -47,38 +48,13 @@ class DSLController:
             raise TypeError("canonical must be a CanonicalTemplate instance")
         return build_machine_dsl(canonical)
 
-    def to_human_dsl(
-        self,
-        dsl: Optional[MachineDSL] = None,
-        canonical: Optional[CanonicalTemplate] = None,
-        sample: str = "",
-    ) -> HumanDSL:
-        if dsl is None and canonical is None:
-            raise ValueError("Either dsl or canonical must be provided")
-
-        # If only canonical is provided, build machine DSL first
-        if dsl is None:
-            dsl = self.to_machine_dsl(canonical)
-
-        return render_human_dsl(dsl=dsl, template=canonical, sample=sample)
+    def to_human_dsl(self, machine: MachineDSL, sample: str) -> HumanDSL:
+        return render_human_dsl(machine, sample)
 
     def recognize(
         self,
-        dsl: Optional[MachineDSL] = None,
-        canonical: CanonicalTemplate | None = None,
-        sample: str = "",
+        machine: MachineDSL,
+        sample: str,
         debug: bool = False,
     ) -> RecognizerPatterns:
-        if dsl is None and canonical is None:
-            raise ValueError("Either dsl or canonical must be provided")
-
-        # If only canonical is provided, build machine DSL first
-        if dsl is None:
-            dsl = self.to_machine_dsl(canonical)
-
-        return recognize_patterns(
-            dsl=dsl,
-            template=canonical,
-            sample=sample,
-            debug=debug,
-        )
+        return recognize_patterns(machine, sample, debug=debug)

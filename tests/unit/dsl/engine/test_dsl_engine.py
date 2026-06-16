@@ -27,8 +27,8 @@ def test_canonicalize_template(mock_canon_cls):
 
     assert isinstance(result, CanonicalTemplate)
     assert result.raw_template == "RAW"
-    assert result.canonical_template == "CANONICAL"
-    assert result.records_sample == ["REC"]
+    assert result.template == "CANONICAL"
+    assert result.records == ["REC"]
 
 
 # ------------------------------------------------------------
@@ -42,8 +42,8 @@ def test_build_machine_dsl(mock_extract):
 
     canon = CanonicalTemplate(
         raw_template="RAW",
-        canonical_template="CANON",
-        records_sample=[],
+        template="CANON",
+        records=[],
     )
 
     result = dsl_engine.build_machine_dsl(canon)
@@ -51,7 +51,7 @@ def test_build_machine_dsl(mock_extract):
     mock_extract.assert_called_once_with("CANON")
 
     assert isinstance(result, MachineDSL)
-    assert result.canonical_template is canon
+    assert result.canonical is canon
     assert result.ast == {"ast": "X"}
 
 
@@ -66,10 +66,10 @@ def test_render_human_dsl(mock_render):
 
     canon = CanonicalTemplate(
         raw_template="RAW",
-        canonical_template="CANON",
-        records_sample=[],
+        template="CANON",
+        records=[],
     )
-    dsl = MachineDSL(canonical_template=canon, ast={"ast": "X"})
+    dsl = MachineDSL(canonical=canon, ast={"ast": "X"})
 
     result = dsl_engine.render_human_dsl(dsl=dsl, template=canon, sample="SAMP")
 
@@ -96,13 +96,13 @@ def test_recognize_patterns(mock_recognize):
 
     canon = CanonicalTemplate(
         raw_template="RAW",
-        canonical_template="CANON",
-        records_sample=[],
+        template="CANON",
+        records=[],
     )
-    dsl = MachineDSL(canonical_template=canon, ast={"ast": "X"})
+    dsl = MachineDSL(canonical=canon, ast={"ast": "X"})
 
     result = dsl_engine.recognize_patterns(
-        dsl=dsl,
+        machine=dsl,
         template=canon,
         sample="SAMP",
         debug=True,
@@ -134,13 +134,13 @@ def test_recognize_patterns_no_debug(mock_recognize):
 
     canon = CanonicalTemplate(
         raw_template="RAW",
-        canonical_template="CANON",
-        records_sample=[],
+        template="CANON",
+        records=[],
     )
-    dsl = MachineDSL(canonical_template=canon, ast={"ast": "X"})
+    dsl = MachineDSL(canonical=canon, ast={"ast": "X"})
 
     result = dsl_engine.recognize_patterns(
-        dsl=dsl,
+        machine=dsl,
         template=canon,
         sample="SAMP",
         debug=False,

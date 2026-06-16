@@ -23,7 +23,6 @@ class GenerationController:
     def run(self, sample: str):
         last_one = None
         last_two = None
-
         # -------------------------
         # 1. ONE-PASS
         # -------------------------

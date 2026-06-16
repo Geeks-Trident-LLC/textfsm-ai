@@ -1,12 +1,5 @@
 # textfsm_ai/dsl/category_matcher.py
 
-"""
-Token → keyword-category matching based on PATTERNS_MAPPING.
-
-This module replaces the old regex_matcher.py and provides the minimal
-functionality required by infer.py and DSL reverse parsing.
-"""
-
 import re
 
 from .patterns import PATTERNS_MAPPING

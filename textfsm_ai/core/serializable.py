@@ -3,7 +3,9 @@
 import json
 from dataclasses import asdict, fields, is_dataclass
 from enum import Enum
-from typing import Any, Dict, Type, TypeVar, cast
+from typing import Any, Dict, List, Type, TypeVar, cast
+
+from .dotdict import DotDict
 
 T = TypeVar("T", bound="Serializable")
 
@@ -18,11 +20,18 @@ class Serializable:
         # Tell mypy: self is a dataclass instance
         d = asdict(cast(Any, self))
 
+        # Convert Enums to their name
         for k, v in d.items():
             if isinstance(v, Enum):
                 d[k] = v.name
 
         return d
+
+    def to_dot_dict(self) -> DotDict:
+        return DotDict(self.to_dict())
+
+    def list(self) -> List[str]:
+        return list(self.to_dict().keys())
 
     def to_json(self: T) -> str:
         return json.dumps(
@@ -43,11 +52,10 @@ class Serializable:
             name = f.name
             value = data.get(name)
 
-            ftype = cast(Any, f.type)  # Tell mypy: f.type is a real type
+            ftype = cast(Any, f.type)
 
             # Nested dataclass
             if is_dataclass(ftype) and isinstance(value, dict):
-                # Narrow the type for mypy
                 nested_cls = cast(Type[Any], ftype)
                 init_kwargs[name] = nested_cls.from_dict(value)
 

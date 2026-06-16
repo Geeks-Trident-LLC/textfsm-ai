@@ -61,7 +61,7 @@ def _sample_template():
 def test_recognizer_literal_and_variables_using_dsl():
     dsl = _sample_dsl()
     sample = "abc   . . . . .   123 connection:\ninterface Gi0/1\n  mtu 1500\n"
-    result = recognize_dsl_patterns(dsl=dsl, template=None, sample=sample, debug=False)
+    result = recognize_dsl_patterns(ast=dsl, template=None, sample=sample, debug=False)
     lines = result.splitlines()
 
     # literal recognizer: has markers and generalized middle
@@ -78,7 +78,7 @@ def test_recognizer_literal_and_variables_using_template():
     template = _sample_template()
     sample = "abc   . . . . .   123 connection:\ninterface Gi0/1\n  mtu 1500\n"
     result = recognize_dsl_patterns(
-        dsl=None, template=template, sample=sample, debug=False
+        ast=None, template=template, sample=sample, debug=False
     )
     lines = result.splitlines()
 

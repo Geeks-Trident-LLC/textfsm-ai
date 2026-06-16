@@ -1,5 +1,14 @@
+# textfsm_ai/delivery/assembly/builder.py
+
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+
+from textfsm_ai.dsl.core.models import (
+    CanonicalTemplate,
+    HumanDSL,
+    MachineDSL,
+    RecognizerPatterns,
+)
+from textfsm_ai.generation.core.models import GenerationResult
 
 from ..core.modes import DeliveryMode
 from ..core.package import (
@@ -13,87 +22,96 @@ from ..core.package import (
 )
 
 
+def _or_empty(value, default):
+    return value if value is not None else default
+
+
 def build_delivery_package(
     *,
     mode: DeliveryMode,
-    textfsm_version: str,
-    textfsm_ai_version: str,
     model: str,
-    canonical_template: str,
-    human_template_dsl: str,
-    status_state: str,
-    status_warnings: Optional[List[str]] = None,
-    status_errors: Optional[List[str]] = None,
-    explanation_variable_definitions: Optional[str] = None,
-    explanation_llm_parsing: Optional[str] = None,
-    explanation_template_generation: Optional[str] = None,
-    usage_input_tokens: Optional[int] = None,
-    usage_output_tokens: Optional[int] = None,
-    usage_estimated_cost: Optional[float] = None,
-    usage_duration_ms: Optional[int] = None,
-    debug_raw_llm_output: Optional[str] = None,
-    debug_cleaned_template: Optional[str] = None,
-    debug_canonical_template_internal: Optional[str] = None,
-    debug_machine_dsl: Optional[Dict[str, Any]] = None,
-    debug_human_template_dsl_internal: Optional[str] = None,
-    debug_recognizer_dsl: Optional[List[str]] = None,
-    debug_validation_log: Optional[List[str]] = None,
-    debug_canonicalization_log: Optional[List[str]] = None,
-    debug_literal_regex_trace: Optional[List[str]] = None,
+    generation: GenerationResult,
+    canonical: CanonicalTemplate,
+    machine_dsl: MachineDSL,
+    human_dsl: HumanDSL,
+    recognizer: RecognizerPatterns,
+    duration_ms: int = 0,
 ) -> DeliveryPackage:
+
     created_at = datetime.now(timezone.utc).isoformat()
+
+    # ------------------------------------------------------------
+    # Template + Status (always included)
+    # ------------------------------------------------------------
+    template = DeliveryTemplate(
+        canonical_template=canonical.template,
+        human_template_dsl=human_dsl.dsl_text,
+    )
+
+    status = DeliveryStatus(
+        state=generation.status,
+        warnings="",
+        errors="",
+        # warnings=_or_empty(status_warnings, []),
+        # errors=_or_empty(status_errors, []),
+    )
 
     general = None
     explanation = None
     usage = None
     debug = None
 
-    template = DeliveryTemplate(
-        canonical_template=canonical_template,
-        human_template_dsl=human_template_dsl,
-    )
+    # ------------------------------------------------------------
+    # DEFAULT, INFO, DEBUG
+    # ------------------------------------------------------------
+    if mode >= DeliveryMode.DEFAULT:
+        import textfsm
 
-    status = DeliveryStatus(
-        state=status_state,
-        warnings=status_warnings or [],
-        errors=status_errors or [],
-    )
+        import textfsm_ai
 
-    if mode in ("default", "info", "debug"):
         general = DeliveryGeneral(
-            textfsm_version=textfsm_version,
-            textfsm_ai_version=textfsm_ai_version,
+            textfsm_version=textfsm.__version__,
+            textfsm_ai_version=textfsm_ai.__version__,
             model=model,
             created_at=created_at,
         )
 
-    if mode in ("default", "info", "debug"):
         explanation = DeliveryExplanation(
-            variable_definitions=explanation_variable_definitions or "",
-            llm_parsing_explanation=explanation_llm_parsing or "",
-            template_generation_explanation=explanation_template_generation or "",
+            variable_definitions=_or_empty("", ""),
+            llm_parsing_explanation=_or_empty("", ""),
+            template_generation_explanation=_or_empty("", ""),
         )
 
-    if mode in ("info", "debug") and usage_input_tokens is not None:
+    # ------------------------------------------------------------
+    # INFO, DEBUG
+    # ------------------------------------------------------------
+    usage_input_tokens = None
+    usage_output_tokens = None
+    usage_estimated_cost = None
+    usage_duration_ms = None
+    if mode >= DeliveryMode.INFO and usage_input_tokens is not None:
         usage = DeliveryUsage(
-            input_tokens=usage_input_tokens,
-            output_tokens=usage_output_tokens or 0,
-            total_tokens=(usage_input_tokens + (usage_output_tokens or 0)),
+            input_tokens=0,
+            output_tokens=0 or 0,
+            total_tokens=usage_input_tokens + (usage_output_tokens or 0),
             estimated_cost=usage_estimated_cost,
             duration_ms=usage_duration_ms,
         )
 
-    if mode == "debug":
+    # ------------------------------------------------------------
+    # DEBUG
+    # ------------------------------------------------------------
+    if mode == DeliveryMode.DEBUG:
         debug = DeliveryDebug(
-            raw_llm_output=debug_raw_llm_output,
-            cleaned_template=debug_cleaned_template,
-            canonical_template_internal=debug_canonical_template_internal,
-            machine_dsl=debug_machine_dsl,
-            human_template_dsl_internal=debug_human_template_dsl_internal,
-            recognizer_dsl=debug_recognizer_dsl,
-            validation_log=debug_validation_log,
-            canonicalization_log=debug_canonicalization_log,
-            literal_regex_trace=debug_literal_regex_trace,
+            raw_llm_output="",
+            cleaned_template="",
+            canonical_template_internal="",
+            machine_dsl=_or_empty("", {}),
+            human_template_dsl_internal="",
+            recognizer_dsl=_or_empty("", []),
+            validation_log=_or_empty("", []),
+            canonicalization_log=_or_empty("", []),
+            literal_regex_trace=_or_empty("", []),
         )
 
     return DeliveryPackage(

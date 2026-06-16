@@ -2,26 +2,8 @@
 
 import json
 import re
-from dataclasses import dataclass
 
-from textfsm_ai.core.serializable import Serializable
-
-from .extractor import LLMRunResult
-
-
-@dataclass
-class StructuredResult(Serializable):
-    template: str  # extracted textfsm_template
-    data: dict  # full parsed JSON dict
-    llm_run_result: LLMRunResult
-
-    def to_dict(self):
-        return {
-            "template": self.template,
-            "data": self.data,
-            "llm_run_result": self.llm_run_result,
-        }
-
+from textfsm_ai.generation.core.models import LLMRunResult, StructuredResult
 
 # ------------------------------------------------------------
 # Helpers
