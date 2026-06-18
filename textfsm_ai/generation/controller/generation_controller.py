@@ -1,15 +1,9 @@
-from textfsm_ai.generation.core.models import (
-    OnePassResult,
-    TwoPassResult,
-)
+# textfsm_ai/generation/controller/generation_controller.py
+
+from textfsm_ai.generation.core.models import GenerationControllerResult
 from textfsm_ai.generation.engine import (
-    fallback,
-    one_pass,
-    two_pass,
+    generation_engine as engine,
 )
-from textfsm_ai.generation.support import generator
-from textfsm_ai.generation.support.structured_extractor import parse_from_response
-from textfsm_ai.generation.support.validator import validate_template
 
 
 class GenerationController:
@@ -21,36 +15,70 @@ class GenerationController:
         self.max_retries = max_retries
 
     def run(self, sample: str):
-        last_one = None
-        last_two = None
-        # -------------------------
-        # 1. ONE-PASS
-        # -------------------------
-        for _ in range(self.max_retries):
-            one: OnePassResult = one_pass.run(self.api_key, self.model, sample)
-            last_one = one
 
-            raw = one.response
-            structured = parse_from_response(raw, one)
+        stages = []
+        last_result = None
 
-            if validate_template(structured.template):
-                return generator.generate(structured)
+        for attempt in range(self.max_retries):
+            # ----------------------------------------
+            # Attempt 0 → base generation
+            # ----------------------------------------
+            if attempt == 0:
+                result = engine.run(
+                    api_key=self.api_key,
+                    model=self.model,
+                    sample=sample,
+                )
+                last_result = result
+                stages.append(result)
 
-        # -------------------------
-        # 2. TWO-PASS
-        # -------------------------
-        for _ in range(self.max_retries):
-            two: TwoPassResult = two_pass.run(self.api_key, self.model, sample)
-            last_two = two
+                if result.ready:
+                    return GenerationControllerResult(
+                        model=self.model,
+                        stages=stages,
+                        last_stage=result,
+                        sample=sample,
+                        attempts=attempt + 1,
+                        max_retries=self.max_retries,
+                        ready=True,
+                    )
 
-            raw = two.response_structured
-            structured = parse_from_response(raw, two)
+                continue
 
-            if validate_template(structured.template):
-                return generator.generate(structured)
+            # ----------------------------------------
+            # Attempt > 0 → correction prompt
+            # ----------------------------------------
+            result = engine.run_correction_prompt(
+                api_key=self.api_key,
+                model=self.model,
+                sample=sample,
+                prev_result=last_result,
+            )
 
-        # -------------------------
-        # 3. FALLBACK
-        # -------------------------
-        fb_structured = fallback.run(last_one, last_two)
-        return generator.generate(fb_structured)
+            last_result = result
+            stages.append(result)
+
+            if result.ready:
+                return GenerationControllerResult(
+                    model=self.model,
+                    stages=stages,
+                    last_stage=result,
+                    sample=sample,
+                    attempts=attempt + 1,
+                    max_retries=self.max_retries,
+                    ready=True,
+                )
+
+        # ----------------------------------------
+        # All attempts exhausted
+        # ----------------------------------------
+        return GenerationControllerResult(
+            model=self.model,
+            stages=stages,
+            last_stage=last_result,
+            sample=sample,
+            attempts=self.max_retries,
+            max_retries=self.max_retries,
+            reason=last_result.reason if last_result else "",
+            ready=last_result.ready if last_result else False,
+        )

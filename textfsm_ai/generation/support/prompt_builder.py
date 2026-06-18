@@ -10,15 +10,6 @@ PROMPTS_PATH = BASE_DIR / "generation" / "core" / "prompts.yaml"
 
 
 class PromptBuilder:
-    """
-    Loads prompt templates from prompts.yaml and formats them with runtime values.
-
-    Expected YAML keys:
-      - one_pass_prompt
-      - two_pass_prompt_a
-      - two_pass_prompt_b
-    """
-
     def __init__(self, prompts_path: Path = PROMPTS_PATH):
         self.prompts_path = prompts_path
         self.prompts = self._load_yaml(prompts_path)
@@ -36,23 +27,16 @@ class PromptBuilder:
         except KeyError:
             raise KeyError(f"Prompt '{key}' not found in {self.prompts_path}")
 
-    def one_pass_prompt(self, sample: str) -> str:
-        """
-        Returns the one-pass prompt with the sample appended safely.
-        """
-        base = self._get("one_pass_prompt")
-        return f"{base}\n{sample}"
+    def base_prompt(self, sample: str) -> str:
+        base = self._get("base")
+        return f"{base}\n\nSample\n=============================\n{sample}"
 
-    def two_pass_prompt_a(self, sample: str) -> str:
-        """
-        Returns the first-pass prompt with the sample appended safely.
-        """
-        base = self._get("two_pass_prompt_a")
-        return f"{base}\n{sample}"
+    def correction_prompt(self, sample: str, prev_response: str, finding: list) -> str:
+        correction_prompt = self._get("correction").format(
+            base=self._get("base"),
+            prev_response=prev_response,
+            finding=finding,
+            sample=sample,
+        )
 
-    def two_pass_prompt_b(self, sections_text: str) -> str:
-        """
-        Returns the second-pass prompt with the four-section text appended safely.
-        """
-        base = self._get("two_pass_prompt_b")
-        return f"{base}\n{sections_text}"
+        return correction_prompt

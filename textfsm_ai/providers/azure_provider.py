@@ -46,10 +46,18 @@ class AzureOpenAIProvider(Provider, ModelListingMixin):
                 **kwargs,
             )
 
-            # Extract assistant message
             content = result.choices[0].message.content
+            usage = getattr(result, "usage", None)
 
-            return {"content": content}
+            return {
+                "content": content,
+                "usage": {
+                    "prompt_tokens": getattr(usage, "input_tokens", None),
+                    "completion_tokens": getattr(usage, "output_tokens", None),
+                    "total_tokens": getattr(usage, "total_tokens", None),
+                },
+                "raw": result,
+            }
 
         except Exception as exc:
             raise ProviderError(str(exc)) from exc
@@ -63,7 +71,17 @@ class AzureOpenAIProvider(Provider, ModelListingMixin):
             )
 
             content = result.choices[0].message.content
-            return {"content": content}
+            usage = getattr(result, "usage", None)
+
+            return {
+                "content": content,
+                "usage": {
+                    "prompt_tokens": getattr(usage, "input_tokens", None),
+                    "completion_tokens": getattr(usage, "output_tokens", None),
+                    "total_tokens": getattr(usage, "total_tokens", None),
+                },
+                "raw": result,
+            }
 
         except Exception as exc:
             raise ProviderError(str(exc)) from exc

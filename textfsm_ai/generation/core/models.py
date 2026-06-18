@@ -6,69 +6,80 @@ from typing import Any, Optional
 from textfsm_ai.core.serializable import Serializable
 
 
+# ----------------------------------
+# Response
+# ----------------------------------
 @dataclass(frozen=True)
-class OnePassResult(Serializable):
-    """Result of the one-pass generation engine."""
+class LLMRawResponse(Serializable):
+    raw: dict[str, Any]
+    reason: str = ""
+    ready: bool = True
 
+
+@dataclass(frozen=True)
+class LLMResponse(Serializable):
+    content: str
     prompt: str
-    response: str
-    model: str
     provider: str
-    metadata: Optional[dict] = None
-
-
-@dataclass(frozen=True)
-class TwoPassResult(Serializable):
-    """Result of the two-pass generation engine."""
-
-    prompt_free: str
-    response_free: str
-    prompt_structured: str
-    response_structured: str
     model: str
-    provider: str
-    metadata: Optional[dict] = None
 
+    input_tokens: Optional[int] = None
+    output_tokens: Optional[int] = None
+    total_tokens: Optional[int] = None
 
-@dataclass(frozen=True)
-class FallbackResult(Serializable):
-    """Result of fallback selection between one-pass and two-pass."""
+    duration_ms: Optional[int] = None
+    sent_at: Optional[str] = None
+    received_at: Optional[str] = None
 
-    winner: str  # "one_pass" or "two_pass"
-    reason: str
-    result: Any  # OnePassResult or TwoPassResult
+    raw: Optional[Any] = None
+    reason: str = ""
+    ready: bool = False
 
 
 @dataclass
-class LLMRunResult(Serializable):
-    provider: str
-    model: str
+class StructuredResponse(Serializable):
+    template: str
+    records: list
+    variables: dict
+    handling: list
+    response: LLMResponse
+    reason: str = ""
+    ready: bool = False
+
+
+@dataclass(frozen=True)
+class TemplateValidationResult(Serializable):
+    template: str
+    reason: str = ""
+    ready: bool = False
+
+
+@dataclass(frozen=True)
+class TemplateFindingResult(Serializable):
+    template: str
+    records: list
     sample: str
-    prompt: str
-    response: str
-    next_prompt: Optional[str] = None
-    next_response: Optional[str] = None
-
-
-@dataclass
-class StructuredResult(Serializable):
-    template: str  # extracted textfsm_template
-    data: dict  # full parsed JSON dict
-    llm_run_result: LLMRunResult
+    findings: list[str]
+    reason: str = ""
+    ready: bool = False
 
 
 @dataclass
 class GenerationResult(Serializable):
     template: str
-    status: str
-    structured: StructuredResult
-    # def __init__(self, template: str, status: str, structured: StructuredResult):
-    #     self.template = template  # final template (raw or cleaned)
-    #     self.status = status  # "valid_raw", "cleaned", "invalid"
-    #     self.structured = structured  # StructuredResult
+    records: list
+    metadata: StructuredResponse
+    reason: str = ""
+    ready: bool = False
 
-    def is_success(self) -> bool:
-        return self.status in ("valid_raw", "cleaned")
 
-    def is_failure(self) -> bool:
-        return self.status == "invalid"
+@dataclass
+class GenerationControllerResult(Serializable):
+    model: str
+    stages: list
+    last_stage: GenerationResult
+    sample: str
+    attempts: int = 0
+    max_retries: int = 1
+    reason: str = ""
+    ready: bool = False

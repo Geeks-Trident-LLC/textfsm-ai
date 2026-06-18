@@ -1,45 +1,72 @@
 # tests/unit/generation/support/test_llm_extractor.py
 
-from textfsm_ai.generation.support import llm_extractor
+
+from textfsm_ai.generation.core.models import LLMRawResponse
+from textfsm_ai.generation.support.llm_extractor import extract
 
 
-class DummyProvider:
-    def __init__(self, response_dict):
-        self.response_dict = response_dict
-        self.called_with = None
+# ---------------------------------------------------------
+# Mock Provider
+# ---------------------------------------------------------
+class MockProvider:
+    def __init__(self, behavior):
+        """
+        behavior: dict controlling provider behavior
+          - {"return": {...}} → return this dict
+          - {"return": None} → return None
+          - {"raise": Exception("msg")} → raise exception
+        """
+        self.behavior = behavior
 
     def generate_sync(self, prompt, model):
-        # record call for assertion
-        self.called_with = (prompt, model)
-        return self.response_dict
+        if "raise" in self.behavior:
+            raise self.behavior["raise"]
+        return self.behavior.get("return")
 
 
-def test_llm_extractor_returns_content():
-    provider = DummyProvider({"content": "hello world"})
-    model = "dummy-model"
-    prompt = "test prompt"
+# ---------------------------------------------------------
+# Tests
+# ---------------------------------------------------------
+def test_extract_success_nonempty():
+    provider = MockProvider({"return": {"content": "hello"}})
 
-    result = llm_extractor.extract(provider, model, prompt)
+    result = extract(provider, model="x", prompt="test")
 
-    assert result == "hello world"
-    assert provider.called_with == (prompt, model)
-
-
-def test_llm_extractor_missing_content_returns_empty_string():
-    provider = DummyProvider({"other_key": "ignored"})
-    model = "dummy-model"
-    prompt = "test prompt"
-
-    result = llm_extractor.extract(provider, model, prompt)
-
-    assert result == ""
+    assert isinstance(result, LLMRawResponse)
+    assert result.ready is True
+    assert result.raw == {"content": "hello"}
+    assert result.reason == ""
 
 
-def test_llm_extractor_content_none_returns_empty_string():
-    provider = DummyProvider({"content": None})
-    model = "dummy-model"
-    prompt = "test prompt"
+def test_extract_success_empty_dict():
+    provider = MockProvider({"return": {}})
 
-    result = llm_extractor.extract(provider, model, prompt)
+    result = extract(provider, model="x", prompt="test")
 
-    assert result == ""
+    assert isinstance(result, LLMRawResponse)
+    assert result.ready is False
+    assert result.raw == {}
+    assert "empty" in result.reason.lower()
+
+
+def test_extract_success_none():
+    provider = MockProvider({"return": None})
+
+    result = extract(provider, model="x", prompt="test")
+
+    assert isinstance(result, LLMRawResponse)
+    assert result.ready is False
+    assert result.raw == {}
+    assert "empty" in result.reason.lower()
+
+
+def test_extract_exception():
+    provider = MockProvider({"raise": RuntimeError("boom")})
+
+    result = extract(provider, model="x", prompt="test")
+
+    assert isinstance(result, LLMRawResponse)
+    assert result.ready is False
+    assert result.raw == {}
+    assert "RuntimeError" in result.reason
+    assert "boom" in result.reason

@@ -1,132 +1,100 @@
 # tests/unit/generation/support/test_prompt_builder.py
 
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 
 from textfsm_ai.generation.support.prompt_builder import PromptBuilder
 
-# ------------------------------------------------------------
-# Fixtures
-# ------------------------------------------------------------
 
-
+# ---------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------
 @pytest.fixture
-def fake_yaml():
-    return {
-        "one_pass_prompt": "ONE_PASS_BASE",
-        "two_pass_prompt_a": "TWO_PASS_A_BASE",
-        "two_pass_prompt_b": "TWO_PASS_B_BASE",
-    }
+def tmp_prompts(tmp_path: Path):
+    """
+    Creates a temporary prompts.yaml file with minimal valid content.
+    """
+    yaml_content = """
+base: |
+  BASE_PROMPT
+
+correction: |
+  {base}
+
+  PREV:
+  {prev_response}
+
+  FINDINGS:
+  {finding}
+
+  SAMPLE:
+  {sample}
+"""
+    p = tmp_path / "prompts.yaml"
+    p.write_text(yaml_content)
+    return p
 
 
-@pytest.fixture
-def builder(fake_yaml):
-    with patch(
-        "textfsm_ai.generation.support.prompt_builder.PromptBuilder._load_yaml",
-        return_value=fake_yaml,
-    ):
-        yield PromptBuilder(prompts_path=Path("fake.yaml"))
+# ---------------------------------------------------------
+# Tests
+# ---------------------------------------------------------
+def test_load_yaml_success(tmp_prompts):
+    builder = PromptBuilder(prompts_path=tmp_prompts)
+    assert "base" in builder.prompts
+    assert "correction" in builder.prompts
 
 
-# ------------------------------------------------------------
-# _load_yaml tests
-# ------------------------------------------------------------
-
-
-@patch("textfsm_ai.generation.support.prompt_builder.yaml.safe_load")
-@patch("textfsm_ai.generation.support.prompt_builder.Path.read_text")
-@patch("textfsm_ai.generation.support.prompt_builder.Path.exists")
-def test_load_yaml_success(mock_exists, mock_read, mock_yaml, fake_yaml):
-    # Arrange
-    mock_exists.return_value = True
-    mock_read.return_value = "yaml content"
-    mock_yaml.return_value = fake_yaml
-
-    # Act
-    builder = PromptBuilder(prompts_path=Path("fake.yaml"))
-
-    # Assert
-    assert builder.prompts == fake_yaml
-    mock_exists.assert_called_once()
-    mock_read.assert_called_once()
-    mock_yaml.assert_called_once_with("yaml content")
-
-
-@patch("textfsm_ai.generation.support.prompt_builder.Path.exists")
-def test_load_yaml_missing_file(mock_exists):
-    mock_exists.return_value = False
-
+def test_load_yaml_missing_file(tmp_path):
+    missing = tmp_path / "missing.yaml"
     with pytest.raises(FileNotFoundError):
-        PromptBuilder(prompts_path=Path("missing.yaml"))
+        PromptBuilder(prompts_path=missing)
 
 
-# ------------------------------------------------------------
-# _get tests
-# ------------------------------------------------------------
+def test_get_success(tmp_prompts):
+    builder = PromptBuilder(prompts_path=tmp_prompts)
+    assert builder._get("base").startswith("BASE_PROMPT")
 
 
-def test_get_valid_key(builder):
-    assert builder._get("one_pass_prompt") == "ONE_PASS_BASE"
-
-
-def test_get_missing_key(builder):
+def test_get_missing_key(tmp_prompts):
+    builder = PromptBuilder(prompts_path=tmp_prompts)
     with pytest.raises(KeyError):
         builder._get("does_not_exist")
 
 
-# ------------------------------------------------------------
-# Prompt method tests
-# ------------------------------------------------------------
+def test_base_prompt(tmp_prompts):
+    builder = PromptBuilder(prompts_path=tmp_prompts)
+    sample = "interface Gi0/1"
+
+    out = builder.base_prompt(sample)
+
+    assert "BASE_PROMPT" in out
+    assert "Sample" in out
+    assert "interface Gi0/1" in out
+    assert "=============================" in out
 
 
-def test_one_pass_prompt(builder):
-    result = builder.one_pass_prompt("SAMPLE")
-    assert result == "ONE_PASS_BASE\nSAMPLE"
+def test_correction_prompt(tmp_prompts):
+    builder = PromptBuilder(prompts_path=tmp_prompts)
 
+    sample = "show version"
+    prev = '{"template": "..."}'
+    findings = ["error1", "error2"]
 
-def test_two_pass_prompt_a(builder):
-    result = builder.two_pass_prompt_a("A")
-    assert result == "TWO_PASS_A_BASE\nA"
+    out = builder.correction_prompt(sample, prev, findings)
 
+    # Base prompt included
+    assert "BASE_PROMPT" in out
 
-def test_two_pass_prompt_b(builder):
-    result = builder.two_pass_prompt_b("B")
-    assert result == "TWO_PASS_B_BASE\nB"
+    # Previous response included
+    assert "PREV:" in out
+    assert prev in out
 
+    # Findings included
+    assert "FINDINGS:" in out
+    assert "error1" in out
+    assert "error2" in out
 
-# ------------------------------------------------------------
-# Additional behavior tests
-# ------------------------------------------------------------
-
-
-def test_prompt_builder_caches_yaml(fake_yaml):
-    with patch(
-        "textfsm_ai.generation.support.prompt_builder.PromptBuilder._load_yaml",
-        return_value=fake_yaml,
-    ) as mock_load:
-        b = PromptBuilder(prompts_path=Path("fake.yaml"))
-        _ = b.one_pass_prompt("X")
-        _ = b.two_pass_prompt_a("Y")
-
-        # YAML should be loaded only once
-        mock_load.assert_called_once()
-
-
-def test_prompt_builder_handles_newlines(builder):
-    result = builder.one_pass_prompt("LINE1\nLINE2")
-    assert result == "ONE_PASS_BASE\nLINE1\nLINE2"
-
-
-def test_prompt_builder_raises_on_missing_prompt_key():
-    fake_yaml = {"one_pass_prompt": "OK"}  # missing two_pass_prompt_a
-
-    with patch(
-        "textfsm_ai.generation.support.prompt_builder.PromptBuilder._load_yaml",
-        return_value=fake_yaml,
-    ):
-        b = PromptBuilder(prompts_path=Path("fake.yaml"))
-
-        with pytest.raises(KeyError):
-            b.two_pass_prompt_a("X")
+    # Sample included
+    assert "SAMPLE:" in out
+    assert sample in out

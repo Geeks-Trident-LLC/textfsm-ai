@@ -29,8 +29,8 @@ class PipelineOrchestrator:
         # For now, we derive records (if any) from structured.data; later we can
         # promote this to a first-class field on GenerationResult.
         records = (
-            gen.structured.data.get("parsed_result", [])
-            if gen.structured and gen.structured.data
+            gen.metadata.data.get("parsed_result", [])
+            if gen.metadata and gen.metadata.data
             else []
         )
 
@@ -39,12 +39,12 @@ class PipelineOrchestrator:
         human_dsl = self._dsl.to_human_dsl(
             dsl=machine_dsl,
             canonical=canonical,
-            sample=gen.structured.llm_run_result.sample,
+            sample=gen.metadata.llm_run_result.sample,
         )
         recognizer = self._dsl.recognize(
             dsl=machine_dsl,
             canonical=canonical,
-            sample=gen.structured.llm_run_result.sample,
+            sample=gen.metadata.llm_run_result.sample,
         )
 
         # 3. Delivery engine

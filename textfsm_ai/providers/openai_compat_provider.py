@@ -34,7 +34,17 @@ class OpenAICompatProvider(Provider):
             )
 
             content = response.choices[0].message.content
-            return {"content": content}
+            usage = getattr(response, "usage", None)
+
+            return {
+                "content": content,
+                "usage": {
+                    "prompt_tokens": getattr(usage, "prompt_tokens", None),
+                    "completion_tokens": getattr(usage, "completion_tokens", None),
+                    "total_tokens": getattr(usage, "total_tokens", None),
+                },
+                "raw": response,  # optional but recommended
+            }
 
         except Exception as exc:
             raise ProviderError(str(exc)) from exc
@@ -48,7 +58,17 @@ class OpenAICompatProvider(Provider):
             )
 
             content = response.choices[0].message.content
-            return {"content": content}
+            usage = getattr(response, "usage", None)
+
+            return {
+                "content": content,
+                "usage": {
+                    "prompt_tokens": getattr(usage, "prompt_tokens", None),
+                    "completion_tokens": getattr(usage, "completion_tokens", None),
+                    "total_tokens": getattr(usage, "total_tokens", None),
+                },
+                "raw": response,
+            }
 
         except Exception as exc:
             raise ProviderError(str(exc)) from exc

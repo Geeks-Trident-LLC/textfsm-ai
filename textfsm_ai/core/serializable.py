@@ -17,15 +17,57 @@ class Serializable:
     """
 
     def to_dict(self: T) -> Dict[str, Any]:
-        # Tell mypy: self is a dataclass instance
         d = asdict(cast(Any, self))
 
-        # Convert Enums to their name
-        for k, v in d.items():
-            if isinstance(v, Enum):
-                d[k] = v.name
+        def normalize(value):
+            # Enum → name
+            if isinstance(value, Enum):
+                return value.name
 
-        return d
+            # OpenAI / Anthropic / Gemini objects
+            if hasattr(value, "model_dump"):
+                return value.model_dump()
+
+            if hasattr(value, "to_dict"):
+                return value.to_dict()
+
+            # ChatCompletion (OpenAI v1)
+            if hasattr(value, "choices") and hasattr(value, "usage"):
+                try:
+                    return {
+                        "id": getattr(value, "id", None),
+                        "object": getattr(value, "object", None),
+                        "created": getattr(value, "created", None),
+                        "model": getattr(value, "model", None),
+                        "choices": [
+                            {
+                                "index": c.index,
+                                "message": getattr(c, "message", None),
+                                "finish_reason": getattr(c, "finish_reason", None),
+                            }
+                            for c in value.choices
+                        ],
+                        "usage": getattr(value, "usage", None),
+                    }
+                except Exception:
+                    return str(value)
+
+            # List → normalize each element
+            if isinstance(value, list):
+                return [normalize(v) for v in value]
+
+            # Dict → normalize each value
+            if isinstance(value, dict):
+                return {k: normalize(v) for k, v in value.items()}
+
+            # Primitive → return as is
+            if isinstance(value, (str, int, float, bool)) or value is None:
+                return value
+
+            # Fallback
+            return str(value)
+
+        return {k: normalize(v) for k, v in d.items()}
 
     def to_dot_dict(self) -> DotDict:
         return DotDict(self.to_dict())

@@ -1,98 +1,142 @@
 # tests/unit/generation/support/test_extractor.py
 
-from textfsm_ai.generation.core.models import LLMRunResult
-from textfsm_ai.generation.support.extractor import (
-    extract,
-    next_extract,
-)
-
-# ------------------------------------------------------------
-# LLMRunResult tests
-# ------------------------------------------------------------
+from textfsm_ai.generation.core.models import LLMRawResponse, LLMResponse
+from textfsm_ai.generation.support import extractor
 
 
-def test_llm_run_result_initialization():
-    result = LLMRunResult(
-        provider="deepseek",
-        model="deepseek-chat",
-        sample="interface Gi0/1",
-        prompt="prompt text",
-        response="raw response",
+# ---------------------------------------------------------
+# Mock provider
+# ---------------------------------------------------------
+class MockProvider:
+    name = "MockProvider"
+
+    def __init__(self, behavior):
+        """
+        behavior:
+          - {"raw": LLMRawResponse(...)}
+        """
+        self.behavior = behavior
+
+
+# ---------------------------------------------------------
+# Patch llm_extractor.extract
+# ---------------------------------------------------------
+class DummyLLMExtractor:
+    def __init__(self, raw_response):
+        self.raw_response = raw_response
+
+    def __call__(self, provider, model, prompt):
+        return self.raw_response
+
+
+# ---------------------------------------------------------
+# Tests
+# ---------------------------------------------------------
+def test_extract_success_with_content(monkeypatch):
+    raw = LLMRawResponse(
+        raw={"content": "hello", "usage": {"prompt_tokens": 5, "completion_tokens": 7}},
+        ready=True,
     )
 
-    assert result.provider == "deepseek"
-    assert result.model == "deepseek-chat"
-    assert result.sample == "interface Gi0/1"
-    assert result.prompt == "prompt text"
-    assert result.response == "raw response"
-    assert result.next_prompt is None
-    assert result.next_response is None
-
-
-def test_llm_run_result_to_dict():
-    result = LLMRunResult(
-        provider="openai",
-        model="gpt-4",
-        sample="show version",
-        prompt="prompt text",
-        response="raw response",
-        next_prompt="next prompt",
-        next_response="next response",
+    monkeypatch.setattr(
+        extractor.llm_extractor,
+        "extract",
+        DummyLLMExtractor(raw),
     )
 
-    d = result.to_dict()
+    provider = MockProvider({})
+    result = extractor.extract(provider, model="m", prompt="p")
 
-    assert d["provider"] == "openai"
-    assert d["model"] == "gpt-4"
-    assert d["sample"] == "show version"
-    assert d["prompt"] == "prompt text"
-    assert d["response"] == "raw response"
-    assert d["next_prompt"] == "next prompt"
-    assert d["next_response"] == "next response"
-
-
-# ------------------------------------------------------------
-# extract() tests
-# ------------------------------------------------------------
-
-
-def test_extract_creates_llm_run_result():
-    provider_name = "deepseek"
-    model = "deepseek-chat"
-    sample = "interface Gi0/1"
-    prompt = "prompt text"
-    response = "raw response"
-
-    result = extract(provider_name, model, sample, prompt, response)
-
-    assert isinstance(result, LLMRunResult)
-    assert result.provider == provider_name
-    assert result.model == model
-    assert result.sample == sample
-    assert result.prompt == prompt
-    assert result.response == response
-    assert result.next_prompt is None
-    assert result.next_response is None
+    assert isinstance(result, LLMResponse)
+    assert result.ready is True
+    assert result.content == "hello"
+    assert result.input_tokens == 5
+    assert result.output_tokens == 7
+    assert result.total_tokens is None
+    assert result.provider == "MockProvider"
+    assert result.model == "m"
+    assert result.prompt == "p"
+    assert result.duration_ms >= 0
+    assert result.sent_at.endswith("Z")
+    assert result.received_at.endswith("Z")
 
 
-# ------------------------------------------------------------
-# next_extract() tests
-# ------------------------------------------------------------
+def test_extract_success_empty_content(monkeypatch):
+    raw = LLMRawResponse(raw={"content": ""}, ready=True)
 
-
-def test_next_extract_updates_existing_result():
-    result = LLMRunResult(
-        provider="deepseek",
-        model="deepseek-chat",
-        sample="sample",
-        prompt="first prompt",
-        response="first response",
+    monkeypatch.setattr(
+        extractor.llm_extractor,
+        "extract",
+        DummyLLMExtractor(raw),
     )
 
-    next_prompt = "second prompt"
-    next_response = "second response"
+    provider = MockProvider({})
+    result = extractor.extract(provider, model="m", prompt="p")
 
-    next_extract(result, next_prompt, next_response)
+    assert isinstance(result, LLMResponse)
+    assert result.ready is False
+    assert result.content == ""
+    assert "empty" in result.reason.lower()
 
-    assert result.next_prompt == next_prompt
-    assert result.next_response == next_response
+
+def test_extract_failure_raw_not_ready(monkeypatch):
+    raw = LLMRawResponse(raw={}, ready=False, reason="boom")
+
+    monkeypatch.setattr(
+        extractor.llm_extractor,
+        "extract",
+        DummyLLMExtractor(raw),
+    )
+
+    provider = MockProvider({})
+    result = extractor.extract(provider, model="m", prompt="p")
+
+    assert isinstance(result, LLMResponse)
+    assert result.ready is False
+    assert result.reason == "boom"
+    assert result.content == ""
+    assert result.raw == raw
+
+
+def test_extract_usage_variants(monkeypatch):
+    raw = LLMRawResponse(
+        raw={
+            "content": "ok",
+            "usage": {
+                "input_tokens": 10,
+                "output_tokens": 20,
+                "total_tokens": 30,
+            },
+        },
+        ready=True,
+    )
+
+    monkeypatch.setattr(
+        extractor.llm_extractor,
+        "extract",
+        DummyLLMExtractor(raw),
+    )
+
+    provider = MockProvider({})
+    result = extractor.extract(provider, model="m", prompt="p")
+
+    assert result.input_tokens == 10
+    assert result.output_tokens == 20
+    assert result.total_tokens == 30
+
+
+def test_extract_no_usage(monkeypatch):
+    raw = LLMRawResponse(raw={"content": "ok"}, ready=True)
+
+    monkeypatch.setattr(
+        extractor.llm_extractor,
+        "extract",
+        DummyLLMExtractor(raw),
+    )
+
+    provider = MockProvider({})
+    result = extractor.extract(provider, model="m", prompt="p")
+
+    assert result.input_tokens is None
+    assert result.output_tokens is None
+    assert result.total_tokens is None

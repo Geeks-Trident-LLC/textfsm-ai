@@ -38,7 +38,7 @@ class DSLController:
 
     def canonicalize(self, gen: GenerationResult) -> CanonicalTemplate:
         template = gen.template
-        records = gen.structured.data.get("parsed_result")
+        records = gen.metadata.data.get("parsed_result")
         if not template:
             raise ValueError("template must not be empty")
         return canonicalize_template(template, records)

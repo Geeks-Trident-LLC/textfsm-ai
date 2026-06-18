@@ -1,78 +1,125 @@
 # tests/unit/generation/controller/test_generation_controller.py
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import Mock
 
-import pytest
-
-from textfsm_ai.generation.controller.generation_controller import (
-    GenerationController,
-)
-from textfsm_ai.generation.core.models import (
-    OnePassResult,
-    TwoPassResult,
-)
+from textfsm_ai.generation.controller.generation_controller import GenerationController
+from textfsm_ai.generation.core.models import GenerationResult
 
 
-@pytest.mark.skip(reason="Deferred: inspect this test later.")
-@patch("textfsm_ai.generation.controller.generation_controller.one_pass")
-@patch("textfsm_ai.generation.controller.generation_controller.parse_from_response")
-@patch("textfsm_ai.generation.controller.generation_controller.validate_template")
-@patch("textfsm_ai.generation.controller.generation_controller.generator")
-def test_controller_one_pass_success(mock_gen, mock_val, mock_parse, mock_one):
-    mock_one.return_value = OnePassResult("P", "R", "M", "LLM")
-    mock_parse.return_value = MagicMock(template="T")
-    mock_val.return_value = True
-
-    controller = GenerationController("KEY", "M")
-    controller.run("S")
-
-    mock_one.assert_called()
-    mock_gen.generate.assert_called()
+# ---------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------
+def make_result(template, records, ready, reason=""):
+    """Utility to create a GenerationResult-like object."""
+    return GenerationResult(
+        template=template,
+        records=records,
+        metadata=None,  # controller does not inspect metadata
+        reason=reason,
+        ready=ready,
+    )
 
 
-@pytest.mark.skip(reason="Deferred: inspect this test later.")
-@patch("textfsm_ai.generation.controller.generation_controller.two_pass")
-@patch("textfsm_ai.generation.controller.generation_controller.one_pass")
-@patch("textfsm_ai.generation.controller.generation_controller.parse_from_response")
-@patch("textfsm_ai.generation.controller.generation_controller.validate_template")
-@patch("textfsm_ai.generation.controller.generation_controller.generator")
-def test_controller_two_pass_success(
-    mock_gen, mock_val, mock_parse, mock_one, mock_two
-):
-    mock_one.return_value = OnePassResult("P", "R", "M", "LLM")
-    mock_two.return_value = TwoPassResult("A", "B", "C", "D", "M", "LLM")
+# ---------------------------------------------------------
+# Test: base attempt succeeds immediately
+# ---------------------------------------------------------
+def test_controller_base_success(monkeypatch):
+    base_result = make_result("T1", [1], ready=True)
 
-    # one-pass fails validation
-    mock_parse.return_value = MagicMock(template="T")
-    mock_val.side_effect = [False, True]
+    mock_run = Mock(return_value=base_result)
+    mock_corr = Mock()
 
-    controller = GenerationController("KEY", "M")
-    controller.run("S")
+    monkeypatch.setattr(
+        "textfsm_ai.generation.controller.generation_controller.engine.run",
+        mock_run,
+    )
+    monkeypatch.setattr(
+        "textfsm_ai.generation.controller.generation_controller.engine.run_correction_prompt",
+        mock_corr,
+    )
 
-    mock_two.assert_called()
-    mock_gen.generate.assert_called()
+    controller = GenerationController(api_key="KEY", model="m", max_retries=3)
+    result = controller.run("sample")
+
+    # Assertions
+    assert result.ready is True
+    assert result.last_stage.template == "T1"
+    assert result.last_stage.records == [1]
+    assert result.attempts == 1
+    assert result.last_stage is base_result
+    assert result.stages == [base_result]
+
+    # Behavior checks
+    mock_run.assert_called_once()
+    mock_corr.assert_not_called()
 
 
-@pytest.mark.skip(reason="Deferred: inspect this test later.")
-@patch("textfsm_ai.generation.controller.generation_controller.fallback")
-@patch("textfsm_ai.generation.controller.generation_controller.two_pass")
-@patch("textfsm_ai.generation.controller.generation_controller.one_pass")
-@patch("textfsm_ai.generation.controller.generation_controller.parse_from_response")
-@patch("textfsm_ai.generation.controller.generation_controller.validate_template")
-@patch("textfsm_ai.generation.controller.generation_controller.generator")
-def test_controller_fallback(
-    mock_gen, mock_val, mock_parse, mock_one, mock_two, mock_fb
-):
-    mock_one.return_value = OnePassResult("P", "R", "M", "LLM")
-    mock_two.return_value = TwoPassResult("A", "B", "C", "D", "M", "LLM")
-    mock_fb.return_value = MagicMock()
+# ---------------------------------------------------------
+# Test: base fails → correction succeeds
+# ---------------------------------------------------------
+def test_controller_correction_success(monkeypatch):
+    base_result = make_result("BAD", [], ready=False, reason="bad template")
+    corrected_result = make_result("GOOD", [1], ready=True)
 
-    # both fail validation
-    mock_parse.return_value = MagicMock(template="T")
-    mock_val.return_value = False
+    mock_run = Mock(return_value=base_result)
+    mock_corr = Mock(return_value=corrected_result)
 
-    controller = GenerationController("KEY", "M")
-    controller.run("S")
+    monkeypatch.setattr(
+        "textfsm_ai.generation.controller.generation_controller.engine.run",
+        mock_run,
+    )
+    monkeypatch.setattr(
+        "textfsm_ai.generation.controller.generation_controller.engine.run_correction_prompt",
+        mock_corr,
+    )
 
-    mock_fb.assert_called()
-    mock_gen.generate.assert_called()
+    controller = GenerationController(api_key="KEY", model="m", max_retries=3)
+    result = controller.run("sample")
+
+    # Assertions
+    assert result.ready is True
+    assert result.last_stage.template == "GOOD"
+    assert result.last_stage.records == [1]
+    assert result.attempts == 2
+    assert result.last_stage is corrected_result
+    assert result.stages == [base_result, corrected_result]
+
+    # Behavior checks
+    assert mock_run.call_count == 1
+    mock_corr.assert_called_once()
+
+
+# ---------------------------------------------------------
+# Test: all attempts fail → fallback result
+# ---------------------------------------------------------
+def test_controller_all_fail(monkeypatch):
+    base_result = make_result("BAD1", [], ready=False, reason="bad1")
+    correction_result = make_result("BAD2", [], ready=False, reason="bad2")
+
+    mock_run = Mock(return_value=base_result)
+    mock_corr = Mock(return_value=correction_result)
+
+    monkeypatch.setattr(
+        "textfsm_ai.generation.controller.generation_controller.engine.run",
+        mock_run,
+    )
+    monkeypatch.setattr(
+        "textfsm_ai.generation.controller.generation_controller.engine.run_correction_prompt",
+        mock_corr,
+    )
+
+    controller = GenerationController(api_key="KEY", model="m", max_retries=2)
+    result = controller.run("sample")
+
+    # Assertions
+    assert result.ready is False
+    assert result.last_stage.template == "BAD2"
+    assert result.last_stage.records == []
+    assert result.reason == "bad2"
+    assert result.attempts == 2
+    assert result.last_stage is correction_result
+    assert result.stages == [base_result, correction_result]
+
+    # Behavior checks
+    assert mock_run.call_count == 1
+    assert mock_corr.call_count == 1

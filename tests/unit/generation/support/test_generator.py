@@ -1,69 +1,89 @@
 # tests/unit/generation/support/test_generator.py
 
-from unittest.mock import MagicMock, patch
 
-from textfsm_ai.generation.core.models import GenerationResult
-from textfsm_ai.generation.support.generator import generate
-
-
-def make_structured(template="RAW"):
-    s = MagicMock()
-    s.template = template
-    s.to_dict.return_value = {"template": template}
-    return s
+from textfsm_ai.generation.core.models import (
+    GenerationResult,
+)
+from textfsm_ai.generation.support import generator
 
 
-# ------------------------------------------------------------
-# 1. Raw template valid
-# ------------------------------------------------------------
+# ---------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------
+class DummyStructured:
+    """Simple mock for StructuredResponse."""
+
+    def __init__(self, template, records, ready=True, reason=""):
+        self.template = template
+        self.records = records
+        self.ready = ready
+        self.reason = reason
+        self.response = None  # not used by generator
 
 
-@patch("textfsm_ai.generation.support.generator.validate_template")
-def test_valid_raw(mock_val):
-    mock_val.return_value = True
-    structured = make_structured("RAW")
+# ---------------------------------------------------------
+# Tests
+# ---------------------------------------------------------
+def test_generate_not_ready():
+    structured = DummyStructured(
+        template="ignored",
+        records=[["x"]],
+        ready=False,
+        reason="parse error",
+    )
 
-    result = generate(structured)
+    result = generator.generate(structured)
 
     assert isinstance(result, GenerationResult)
-    assert result.template == "RAW"
-    assert result.status == "valid_raw"
-    assert result.structured is structured
+    assert result.ready is False
+    assert result.template == ""
+    assert result.records == []
+    assert result.reason == "parse error"
+    assert result.metadata is structured
 
 
-# ------------------------------------------------------------
-# 2. Raw invalid → cleaned valid
-# ------------------------------------------------------------
+def test_generate_ready_valid_template():
+    template = """
+Value iface (\\S+)
+
+Start
+  ^interface ${iface} -> Record
+""".strip()
+    structured = DummyStructured(
+        template=template,
+        records=[["Gi0/1"]],
+        ready=True,
+    )
+
+    result = generator.generate(structured)
+
+    assert isinstance(result, GenerationResult)
+    assert result.ready is True
+    assert result.template == template
+    assert result.records == [["Gi0/1"]]
+    assert result.metadata is structured
+    assert result.reason == ""  # validator.reason should be empty for valid template
 
 
-@patch("textfsm_ai.generation.support.generator.validate_template")
-@patch("textfsm_ai.generation.support.generator.clean_template")
-def test_cleaned_valid(mock_clean, mock_val):
-    mock_val.side_effect = [False, True]
-    mock_clean.return_value = "CLEANED"
+def test_generate_ready_invalid_template():
+    # Missing parentheses in Value definition → invalid
+    template = """
+Value iface \\S+
 
-    structured = make_structured("RAW")
+Start
+  ^interface ${iface} -> Record
+"""
+    structured = DummyStructured(
+        template=template,
+        records=[["Gi0/1"]],
+        ready=True,
+    )
 
-    result = generate(structured)
+    result = generator.generate(structured)
 
-    assert result.template == "CLEANED"
-    assert result.status == "cleaned"
-
-
-# ------------------------------------------------------------
-# 3. Raw invalid → cleaned invalid
-# ------------------------------------------------------------
-
-
-@patch("textfsm_ai.generation.support.generator.validate_template")
-@patch("textfsm_ai.generation.support.generator.clean_template")
-def test_cleaned_invalid(mock_clean, mock_val):
-    mock_val.side_effect = [False, False]
-    mock_clean.return_value = "CLEANED"
-
-    structured = make_structured("RAW")
-
-    result = generate(structured)
-
-    assert result.template == "CLEANED"
-    assert result.status == "invalid"
+    assert isinstance(result, GenerationResult)
+    assert result.ready is False
+    assert result.template == template
+    assert result.records == [["Gi0/1"]]
+    assert result.metadata is structured
+    assert "FSMTemplateError" in result.reason or "Error" in result.reason

@@ -1,43 +1,197 @@
 # tests/unit/generation/engine/test_generation_engine.py
 
-from unittest.mock import patch
+import pytest
 
-import textfsm_ai.generation.engine.generation_engine as gen_engine
 from textfsm_ai.generation.core.models import (
-    FallbackResult,
-    OnePassResult,
-    TwoPassResult,
+    GenerationResult,
+    LLMResponse,
+    StructuredResponse,
 )
+from textfsm_ai.generation.engine import generation_engine
 
 
-@patch("textfsm_ai.generation.engine.generation_engine._run_one_pass")
-def test_one_pass(mock_run):
-    mock_run.return_value = OnePassResult("P", "R", "M", "LLM")
+# ---------------------------------------------------------
+# Mock provider + registry
+# ---------------------------------------------------------
+class MockProvider:
+    name = "MockProvider"
 
-    result = gen_engine.one_pass("KEY", "M", "S")
-
-    mock_run.assert_called_once_with(api_key="KEY", model="M", sample="S")
-    assert isinstance(result, OnePassResult)
-
-
-@patch("textfsm_ai.generation.engine.generation_engine._run_two_pass")
-def test_two_pass(mock_run):
-    mock_run.return_value = TwoPassResult("A", "B", "C", "D", "M", "LLM")
-
-    result = gen_engine.two_pass("KEY", "M", "S")
-
-    mock_run.assert_called_once_with(api_key="KEY", model="M", sample="S")
-    assert isinstance(result, TwoPassResult)
+    def __init__(self, api_key, model):
+        self.api_key = api_key
+        self.model = model
 
 
-@patch("textfsm_ai.generation.engine.generation_engine._run_fallback")
-def test_fallback(mock_fb):
-    one = OnePassResult("P", "R", "M", "LLM")
-    two = TwoPassResult("A", "B", "C", "D", "M", "LLM")
+def mock_get_provider_for_model(model):
+    return MockProvider
 
-    mock_fb.return_value = FallbackResult("one_pass", "reason", one)
 
-    result = gen_engine.fallback(one, two)
+# ---------------------------------------------------------
+# Fixtures for monkeypatching
+# ---------------------------------------------------------
+@pytest.fixture
+def patch_provider(monkeypatch):
+    monkeypatch.setattr(
+        generation_engine,
+        "get_provider_for_model",
+        mock_get_provider_for_model,
+    )
 
-    mock_fb.assert_called_once_with(one, two)
-    assert isinstance(result, FallbackResult)
+
+@pytest.fixture
+def patch_prompt_builder(monkeypatch):
+    class DummyPB:
+        def base_prompt(self, sample):
+            return f"BASE:{sample}"
+
+        def correction_prompt(self, sample, prev, findings):
+            return f"CORR:{sample}:{prev}:{findings}"
+
+    monkeypatch.setattr(
+        generation_engine.prompt_builder,
+        "PromptBuilder",
+        lambda: DummyPB(),
+    )
+
+
+# ---------------------------------------------------------
+# Tests for run()
+# ---------------------------------------------------------
+def test_run_success(patch_provider, patch_prompt_builder, monkeypatch):
+    # Mock extractor.extract → returns LLMResponse
+    raw_resp = LLMResponse(
+        content='{"template":"T","records":[1],"variables":{},"handling":[]}',
+        prompt="p",
+        provider="MockProvider",
+        model="m",
+        ready=True,
+    )
+    monkeypatch.setattr(
+        generation_engine.extractor,
+        "extract",
+        lambda provider, model, prompt: raw_resp,
+    )
+
+    # Mock structured_extractor.extract
+    structured = StructuredResponse(
+        template="T",
+        records=[1],
+        variables={},
+        handling=[],
+        response=raw_resp,
+        ready=True,
+    )
+    monkeypatch.setattr(
+        generation_engine.structured_extractor,
+        "extract",
+        lambda resp: structured,
+    )
+
+    # Mock generator.generate
+    final = GenerationResult(
+        template="T",
+        records=[1],
+        metadata=structured,
+        ready=True,
+    )
+    monkeypatch.setattr(
+        generation_engine.generator,
+        "generate",
+        lambda s: final,
+    )
+
+    result = generation_engine.run("KEY", "m", "sample")
+
+    assert isinstance(result, GenerationResult)
+    assert result.ready is True
+    assert result.template == "T"
+    assert result.records == [1]
+
+
+# ---------------------------------------------------------
+# Tests for run_correction_prompt()
+# ---------------------------------------------------------
+def test_run_correction_prompt_success(
+    patch_provider, patch_prompt_builder, monkeypatch
+):
+    # Previous result metadata
+    prev_raw = LLMResponse(
+        content="PREV_JSON",
+        prompt="p",
+        provider="MockProvider",
+        model="m",
+        ready=True,
+    )
+    prev_structured = StructuredResponse(
+        template="OLD_TEMPLATE",
+        records=[1],
+        variables={},
+        handling=[],
+        response=prev_raw,
+        ready=True,
+    )
+    prev_result = GenerationResult(
+        template="OLD_TEMPLATE",
+        records=[1],
+        metadata=prev_structured,
+        ready=False,
+    )
+
+    # Mock validator.find_template_issues
+    class DummyFinding:
+        findings = ["err1", "err2"]
+        ready = False
+
+    monkeypatch.setattr(
+        generation_engine.validator,
+        "find_template_issues",
+        lambda t, r, s: DummyFinding(),
+    )
+
+    # Mock extractor.extract
+    new_raw = LLMResponse(
+        content='{"template":"NEW","records":[2],"variables":{},"handling":[]}',
+        prompt="p",
+        provider="MockProvider",
+        model="m",
+        ready=True,
+    )
+    monkeypatch.setattr(
+        generation_engine.extractor,
+        "extract",
+        lambda provider, model, prompt: new_raw,
+    )
+
+    # Mock structured_extractor.extract
+    new_structured = StructuredResponse(
+        template="NEW",
+        records=[2],
+        variables={},
+        handling=[],
+        response=new_raw,
+        ready=True,
+    )
+    monkeypatch.setattr(
+        generation_engine.structured_extractor,
+        "extract",
+        lambda resp: new_structured,
+    )
+
+    # Mock generator.generate
+    final = GenerationResult(
+        template="NEW",
+        records=[2],
+        metadata=new_structured,
+        ready=True,
+    )
+    monkeypatch.setattr(
+        generation_engine.generator,
+        "generate",
+        lambda s: final,
+    )
+
+    result = generation_engine.run_correction_prompt("KEY", "m", "sample", prev_result)
+
+    assert isinstance(result, GenerationResult)
+    assert result.ready is True
+    assert result.template == "NEW"
+    assert result.records == [2]

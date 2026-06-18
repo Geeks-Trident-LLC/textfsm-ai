@@ -3,7 +3,7 @@
 import json
 import re
 
-from textfsm_ai.generation.core.models import LLMRunResult, StructuredResult
+from textfsm_ai.generation.core.models import StructuredResponse
 
 # ------------------------------------------------------------
 # Helpers
@@ -22,25 +22,7 @@ def _strip_code_fence(raw: str) -> str:
     if fenced:
         return fenced.group(1).strip()
 
-    return raw
-
-
-def _extract_json_block(raw: str) -> str:
-    """
-    Extracts the first {...} JSON block.
-    If none found, wraps raw as {"textfsm_template": raw}.
-    """
-    text = raw.strip()
-
-    # Find first '{' and last '}'
-    start = text.find("{")
-    end = text.rfind("}")
-
-    if start == -1 or end == -1 or end <= start:
-        # No JSON found → treat raw as template-only
-        return json.dumps({"textfsm_template": raw})
-
-    return text[start : end + 1]
+    return text
 
 
 # ------------------------------------------------------------
@@ -48,33 +30,65 @@ def _extract_json_block(raw: str) -> str:
 # ------------------------------------------------------------
 
 
-def parse_from_response(raw: str, llm_run_result: LLMRunResult) -> StructuredResult:
-    """
-    Converts raw LLM output into a structured dict.
-    Handles:
-    - pure JSON
-    - fenced ```json blocks
-    - malformed JSON (fallback to template-only)
-    """
+def extract(response) -> StructuredResponse:
+    if not response.ready:
+        return StructuredResponse(
+            template="",
+            records=[],
+            variables={},
+            handling=[],
+            response=response,
+            reason=response.reason,
+            ready=False,
+        )
 
-    # Step 1 — strip code fences
-    cleaned = _strip_code_fence(raw)
+    cleaned = _strip_code_fence(response.content or "")
 
-    # Step 2 — extract JSON block
-    json_str = _extract_json_block(cleaned)
-
-    # Step 3 — parse JSON safely
     try:
-        data = json.loads(json_str)
-    except json.JSONDecodeError:
-        # fallback: treat raw as template-only
-        data = {"textfsm_template": raw}
+        data = json.loads(cleaned)
+    except json.JSONDecodeError as ex:
+        return StructuredResponse(
+            template="",
+            records=[],
+            variables={},
+            handling=[],
+            response=response,
+            reason=f"{type(ex).__name__}: {ex}",
+            ready=False,
+        )
 
-    # Step 4 — extract template
-    template = data.get("textfsm_template", "")
+    # Extract fields with type validation
+    template = data.get("template", "")
 
-    return StructuredResult(
+    records = data.get("records")
+    if not isinstance(records, list):
+        records = []
+
+    variables = data.get("variables")
+    if not isinstance(variables, dict):
+        variables = {}
+
+    handling = data.get("handling")
+    if not isinstance(handling, list):
+        handling = []
+
+    # Determine readiness
+    ready = bool(template)
+
+    # Determine reason
+    if not ready:
+        reason = "Template missing or empty in JSON output"
+    elif not records:
+        reason = "Empty parsed records"
+    else:
+        reason = ""
+
+    return StructuredResponse(
         template=template,
-        data=data,
-        llm_run_result=llm_run_result,
+        records=records,
+        variables=variables,
+        handling=handling,
+        response=response,
+        reason=reason,
+        ready=ready,
     )

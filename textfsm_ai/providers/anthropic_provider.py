@@ -33,6 +33,7 @@ class AnthropicProvider(Provider, ModelListingMixin):
     async def generate(self, prompt: str, *, model: str, **kwargs: Any) -> dict:
         kwargs.setdefault("temperature", 0.2)
         kwargs.setdefault("max_tokens", 2048)
+
         try:
             response = await self.client.messages.create(
                 model=model or self.default_model,
@@ -41,16 +42,31 @@ class AnthropicProvider(Provider, ModelListingMixin):
             )
 
             # Anthropic returns a list of content blocks
-            # e.g. response.content = [{"type": "text", "text": "..."}]
             content = response.content[0].text
 
-            return {"content": content}
+            usage = getattr(response, "usage", None)
+
+            return {
+                "content": content,
+                "usage": {
+                    "prompt_tokens": getattr(usage, "input_tokens", None),
+                    "completion_tokens": getattr(usage, "output_tokens", None),
+                    "total_tokens": (
+                        (usage.input_tokens or 0) + (usage.output_tokens or 0)
+                        if usage
+                        else None
+                    ),
+                },
+                "raw": response,
+            }
 
         except Exception as exc:
             raise ProviderError(str(exc)) from exc
 
     def generate_sync(self, prompt: str, *, model: str, **kwargs: Any) -> dict:
+        kwargs.setdefault("temperature", 0.2)
         kwargs.setdefault("max_tokens", 2048)
+
         try:
             response = self.sync_client.messages.create(
                 model=model or self.default_model,
@@ -58,10 +74,22 @@ class AnthropicProvider(Provider, ModelListingMixin):
                 **kwargs,
             )
 
-            # Same structure as async version
             content = response.content[0].text
+            usage = getattr(response, "usage", None)
 
-            return {"content": content}
+            return {
+                "content": content,
+                "usage": {
+                    "prompt_tokens": getattr(usage, "input_tokens", None),
+                    "completion_tokens": getattr(usage, "output_tokens", None),
+                    "total_tokens": (
+                        (usage.input_tokens or 0) + (usage.output_tokens or 0)
+                        if usage
+                        else None
+                    ),
+                },
+                "raw": response,
+            }
 
         except Exception as exc:
             raise ProviderError(str(exc)) from exc

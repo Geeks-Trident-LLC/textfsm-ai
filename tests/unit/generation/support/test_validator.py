@@ -1,131 +1,233 @@
 # tests/unit/generation/support/test_validator.py
 
+from textfsm_ai.generation.core.models import (
+    TemplateFindingResult,
+    TemplateValidationResult,
+)
 from textfsm_ai.generation.support.validator import (
-    HandlingTemplateValidator,
-    ParsedResultValidator,
-    TemplateValidator,
-    VariableExplanationValidator,
-    is_ascii,
+    check_rule_actions,
+    check_rule_spacers,
+    check_start_state,
+    check_transition_states,
+    check_value_definitions,
+    extract_lines,
+    find_template_issues,
     validate_template,
+    validate_template_and_records,
 )
 
-# ------------------------------------------------------------
-# TemplateValidator tests
-# ------------------------------------------------------------
 
-
-def test_template_validator_valid_template():
+# ---------------------------------------------------------
+# validate_template
+# ---------------------------------------------------------
+def test_validate_template_success():
     template = """
-Value interface_name (\\S+)
+Value name (\\S+)
 
 Start
-  ^interface ${interface_name} -> Record
+  ^Name: ${name} -> Record
 """.strip()
-    assert TemplateValidator.is_valid_template(template) is True
-    assert validate_template(template) is True
+    result = validate_template(template)
+    assert isinstance(result, TemplateValidationResult)
+    assert result.ready is True
+    assert result.reason == ""
 
 
-def test_template_validator_missing_start():
+def test_validate_template_empty():
+    result = validate_template("")
+    assert result.ready is False
+    assert "non-empty string" in result.reason
+
+
+def test_validate_template_invalid_syntax():
+    template = "Value name (\\S+)\nStart\n  ^ -> Record"
+    result = validate_template(template)
+    assert result.ready is False
+    assert "FSMTemplateError" in result.reason or "Error" in result.reason
+
+
+# ---------------------------------------------------------
+# validate_template_and_records
+# ---------------------------------------------------------
+def test_validate_template_and_records_success():
     template = """
-Value interface_name (\\S+)
-  ^interface ${interface_name} -> Record
-"""
-    assert TemplateValidator.is_valid_template(template) is False
-
-
-def test_template_validator_invalid_syntax():
-    # Missing closing brace or malformed regex
-    template = """
-Value interface_name (\\S+
+Value iface (\\S+)
 
 Start
-  ^interface ${interface_name} -> Record
-"""
-    assert TemplateValidator.is_valid_template(template) is False
+  ^interface ${iface} -> Record
+""".strip()
+    sample = "interface Gi0/1"
+    expected = [{"iface": "Gi0/1"}]
+
+    findings, ready = validate_template_and_records(template, sample, expected)
+    assert findings == []
+    assert ready is True
 
 
-def test_template_validator_empty_or_non_string():
-    assert TemplateValidator.is_valid_template("") is False
-    assert TemplateValidator.is_valid_template("   ") is False
-    assert TemplateValidator.is_valid_template(None) is False
-    assert TemplateValidator.is_valid_template(123) is False
+def test_validate_template_and_records_mismatch():
+    template = """
+Value iface (\\S+)
+
+Start
+  ^interface ${iface} -> Record
+""".strip()
+    sample = "interface Gi0/1"
+    expected = [{"iface": "Gi0/2"}]  # mismatch
+
+    findings, ready = validate_template_and_records(template, sample, expected)
+    assert ready is False
+    assert "value_mismatch" in findings[0]
 
 
-# ------------------------------------------------------------
-# ParsedResultValidator tests
-# ------------------------------------------------------------
+def test_validate_template_and_records_syntax_error():
+    template = "Value iface (\\S+)\nStart\n  ^ -> Record"
+    findings, ready = validate_template_and_records(template, "x", [])
+    assert ready is False
+    assert "template_syntax_error" in findings[0]
 
 
-def test_parsed_result_validator_valid():
-    parsed = [{"a": 1}, {"b": 2}]
-    assert ParsedResultValidator.is_valid(parsed) is True
+# ---------------------------------------------------------
+# extract_lines
+# ---------------------------------------------------------
+def test_extract_lines_removes_comments_and_strips():
+    template = """
+# comment
+Value name (\\S+)
+Start
+  ^foo -> Record
+""".strip()
+    lines = extract_lines(template)
+    assert lines == ["Value name (\\S+)", "Start", "  ^foo -> Record"]
 
 
-def test_parsed_result_validator_invalid_not_list():
-    assert ParsedResultValidator.is_valid({"a": 1}) is False
+# ---------------------------------------------------------
+# check_value_definitions
+# ---------------------------------------------------------
+def test_check_value_definitions_valid():
+    lines = [
+        "Value iface (\\S+)",
+        "Value Required,Filldown name (\\S+)",
+        "Start",
+    ]
+    findings = check_value_definitions(lines)
+    assert findings == []
 
 
-def test_parsed_result_validator_invalid_item_not_dict():
-    parsed = [{"a": 1}, "not a dict"]
-    assert ParsedResultValidator.is_valid(parsed) is False
+def test_check_value_definitions_invalid_format():
+    lines = ["Value iface \\S+", "Start"]
+    findings = check_value_definitions(lines)
+    assert any("invalid_value_definition" in f for f in findings)
 
 
-# ------------------------------------------------------------
-# is_ascii tests
-# ------------------------------------------------------------
+def test_check_value_definitions_invalid_regex():
+    lines = ["Value iface (++)", "Start"]
+    findings = check_value_definitions(lines)
+    assert any("regex_compile_error" in f for f in findings)
 
 
-def test_is_ascii_valid():
-    assert is_ascii("hello") is True
-    assert is_ascii("GigabitEthernet0/1") is True
+# ---------------------------------------------------------
+# check_start_state
+# ---------------------------------------------------------
+def test_check_start_state_valid():
+    lines = ["Value iface (\\S+)", "", "Start"]
+    findings = check_start_state(lines)
+    assert findings == []
 
 
-def test_is_ascii_invalid():
-    assert is_ascii("café") is False
-    assert is_ascii("接口") is False
+def test_check_start_state_missing():
+    lines = ["Value iface (\\S+)", "Foo"]
+    findings = check_start_state(lines)
+    assert "missing_start_state" in findings
 
 
-# ------------------------------------------------------------
-# VariableExplanationValidator tests
-# ------------------------------------------------------------
+def test_check_start_state_casing():
+    lines = ["value iface (\\S+)", "start"]
+    findings = check_start_state(lines)
+    assert "start_state_casing_error: start" in findings
 
 
-def test_variable_explanation_validator_valid():
-    expl = {"interface_name": "ASCII only explanation"}
-    assert VariableExplanationValidator.is_valid(expl) is True
+# ---------------------------------------------------------
+# check_transition_states
+# ---------------------------------------------------------
+def test_check_transition_states_forbidden():
+    lines = ["Next", "Continue", "MyState"]
+    findings = check_transition_states(lines)
+    assert "forbidden_state_name: Next" in findings
+    assert "forbidden_state_name: Continue" in findings
 
 
-def test_variable_explanation_validator_invalid_non_dict():
-    assert VariableExplanationValidator.is_valid("not a dict") is False
+def test_check_transition_states_valid():
+    lines = ["Start", "MyState", "OtherState"]
+    findings = check_transition_states(lines)
+    assert findings == []
 
 
-def test_variable_explanation_validator_invalid_key_or_value():
-    expl = {"": "valid", "name": ""}
-    assert VariableExplanationValidator.is_valid(expl) is False
+# ---------------------------------------------------------
+# check_rule_actions
+# ---------------------------------------------------------
+def test_check_rule_actions_valid():
+    lines = ["  ^foo -> Record"]
+    findings = check_rule_actions(lines)
+    assert findings == []
 
 
-def test_variable_explanation_validator_invalid_non_ascii():
-    expl = {"interface": "café"}
-    assert VariableExplanationValidator.is_valid(expl) is False
+def test_check_rule_actions_invalid_action():
+    lines = ["  ^foo -> WrongAction"]
+    findings = check_rule_actions(lines)
+    assert any("invalid_action" in f for f in findings)
 
 
-# ------------------------------------------------------------
-# HandlingTemplateValidator tests
-# ------------------------------------------------------------
+def test_check_rule_actions_invalid_rule():
+    lines = ["  foo -> Record"]
+    findings = check_rule_actions(lines)
+    assert any("invalid_rule_definition" in f for f in findings)
 
 
-def test_handling_template_validator_valid():
-    lines = ["This is ASCII.", "Another ASCII line."]
-    assert HandlingTemplateValidator.is_valid(lines) is True
+# ---------------------------------------------------------
+# check_rule_spacers
+# ---------------------------------------------------------
+def test_check_rule_spacers_consistent():
+    lines = ["  ^foo -> Record", "  ^bar -> Continue"]
+    findings = check_rule_spacers(lines)
+    assert findings == []
 
 
-def test_handling_template_validator_invalid_not_list():
-    assert HandlingTemplateValidator.is_valid("not a list") is False
+def test_check_rule_spacers_inconsistent():
+    lines = ["  ^foo -> Record", "    ^bar -> Continue"]
+    findings = check_rule_spacers(lines)
+    assert any("inconsistent_rule_definition_spacers" in f for f in findings)
 
 
-def test_handling_template_validator_invalid_item_not_string():
-    assert HandlingTemplateValidator.is_valid(["ok", 123]) is False
+# ---------------------------------------------------------
+# find_template_issues
+# ---------------------------------------------------------
+def test_find_template_issues_ready():
+    template = """
+Value iface (\\S+)
+
+Start
+  ^interface ${iface} -> Record
+""".strip()
+    sample = "interface Gi0/1"
+    records = [{"iface": "Gi0/1"}]
+
+    result = find_template_issues(template, records, sample)
+    assert isinstance(result, TemplateFindingResult)
+    assert result.ready is True
+    assert result.findings == []
 
 
-def test_handling_template_validator_invalid_non_ascii():
-    assert HandlingTemplateValidator.is_valid(["valid", "café"]) is False
+def test_find_template_issues_with_errors():
+    template = """
+Value iface \\S+
+
+Start
+  ^interface ${iface} -> Record
+""".strip()
+    sample = "interface Gi0/1"
+    records = [["Gi0/1"]]
+
+    result = find_template_issues(template, records, sample)
+    assert result.ready is False
+    assert len(result.findings) > 0
+    assert any("invalid_value_definition" in f for f in result.findings)

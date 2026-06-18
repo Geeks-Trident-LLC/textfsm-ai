@@ -34,11 +34,15 @@ class GeminiProvider(Provider, ModelListingMixin):
 
     async def generate(self, prompt: str, *, model: str, **kwargs: Any) -> dict:
         try:
-            config = {}
-            if "temperature" in kwargs:
-                config["temperature"] = kwargs.pop("temperature")
-            if "max_tokens" in kwargs:
-                config["max_output_tokens"] = kwargs.pop("max_tokens")
+            thinking_budget = kwargs.pop("thinking_budget", 0)
+            config = genai.types.GenerateContentConfig(
+                temperature=kwargs.pop("temperature", None),
+                max_output_tokens=kwargs.pop("max_tokens", None),
+                thinking_config=genai.types.ThinkingConfig(
+                    thinking_budget=thinking_budget
+                ),
+                **kwargs,
+            )
 
             response = await asyncio.to_thread(
                 self.client.models.generate_content,
@@ -47,18 +51,32 @@ class GeminiProvider(Provider, ModelListingMixin):
                 config=config,
             )
 
-            return {"content": response.text}
+            usage = getattr(response, "usage_metadata", None)
+
+            return {
+                "content": response.text,
+                "usage": {
+                    "prompt_tokens": getattr(usage, "prompt_token_count", None),
+                    "completion_tokens": getattr(usage, "candidates_token_count", None),
+                    "total_tokens": getattr(usage, "total_token_count", None),
+                },
+                "raw": response,
+            }
 
         except Exception as exc:
             raise ProviderError(str(exc)) from exc
 
     def generate_sync(self, prompt: str, *, model: str, **kwargs: Any) -> dict:
         try:
-            config = {}
-            if "temperature" in kwargs:
-                config["temperature"] = kwargs.pop("temperature")
-            if "max_tokens" in kwargs:
-                config["max_output_tokens"] = kwargs.pop("max_tokens")
+            thinking_budget = kwargs.pop("thinking_budget", 0)
+            config = genai.types.GenerateContentConfig(
+                temperature=kwargs.pop("temperature", None),
+                max_output_tokens=kwargs.pop("max_tokens", None),
+                thinking_config=genai.types.ThinkingConfig(
+                    thinking_budget=thinking_budget
+                ),
+                **kwargs,
+            )
 
             response = self.client.models.generate_content(
                 model=model or self.default_model,
@@ -66,7 +84,17 @@ class GeminiProvider(Provider, ModelListingMixin):
                 config=config,
             )
 
-            return {"content": response.text}
+            usage = getattr(response, "usage_metadata", None)
+
+            return {
+                "content": response.text,
+                "usage": {
+                    "prompt_tokens": getattr(usage, "prompt_token_count", None),
+                    "completion_tokens": getattr(usage, "candidates_token_count", None),
+                    "total_tokens": getattr(usage, "total_token_count", None),
+                },
+                "raw": response,
+            }
 
         except Exception as exc:
             raise ProviderError(str(exc)) from exc

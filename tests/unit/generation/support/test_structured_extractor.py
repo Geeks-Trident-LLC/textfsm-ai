@@ -1,160 +1,198 @@
 # tests/unit/generation/support/test_structured_extractor.py
 
-import json
-
-from textfsm_ai.generation.core.models import LLMRunResult, StructuredResult
-from textfsm_ai.generation.support.structured_extractor import (
-    _extract_json_block,
-    _strip_code_fence,
-    parse_from_response,
-)
-
-# ------------------------------------------------------------
-# Helpers
-# ------------------------------------------------------------
+from textfsm_ai.generation.core.models import StructuredResponse
+from textfsm_ai.generation.support import structured_extractor
 
 
-def make_llm_result():
-    return LLMRunResult(
-        provider="deepseek",
-        model="deepseek-chat",
-        sample="sample text",
-        prompt="prompt text",
-        response="response text",
-    )
+# ---------------------------------------------------------
+# Helper mock response
+# ---------------------------------------------------------
+class MockResponse:
+    def __init__(self, content, ready=True, reason=""):
+        self.content = content
+        self.ready = ready
+        self.reason = reason
 
 
-# ------------------------------------------------------------
-# _strip_code_fence tests
-# ------------------------------------------------------------
-
-
+# ---------------------------------------------------------
+# _strip_code_fence
+# ---------------------------------------------------------
 def test_strip_code_fence_json_block():
     raw = """```json
-{
-  "textfsm_template": "TEMPLATE"
-}
-```"""
-    cleaned = _strip_code_fence(raw)
-    assert cleaned.strip().startswith("{")
-    assert cleaned.strip().endswith("}")
+    {"a": 1}
+    ```"""
+    out = structured_extractor._strip_code_fence(raw)
+    assert out == '{"a": 1}'
 
 
 def test_strip_code_fence_plain_text():
-    raw = "no fences here"
-    cleaned = _strip_code_fence(raw)
-    assert cleaned == raw
+    raw = '{"a": 1}'
+    out = structured_extractor._strip_code_fence(raw)
+    assert out == raw
 
 
 def test_strip_code_fence_non_json_fence():
     raw = """```
-{
-  "textfsm_template": "TEMPLATE"
-}
-```"""
-    cleaned = _strip_code_fence(raw)
-    assert cleaned.strip().startswith("{")
-    assert cleaned.strip().endswith("}")
+    {"a": 1}
+    ```"""
+    out = structured_extractor._strip_code_fence(raw)
+    assert out == '{"a": 1}'
 
 
-# ------------------------------------------------------------
-# _extract_json_block tests
-# ------------------------------------------------------------
+# ---------------------------------------------------------
+# extract() — response.ready = False
+# ---------------------------------------------------------
+def test_extract_not_ready():
+    resp = MockResponse(content="", ready=False, reason="boom")
+    result = structured_extractor.extract(resp)
+
+    assert isinstance(result, StructuredResponse)
+    assert result.ready is False
+    assert result.template == ""
+    assert result.records == []
+    assert result.variables == {}
+    assert result.handling == []
+    assert result.reason == "boom"
+    assert result.response is resp
 
 
-def test_extract_json_block_valid():
-    raw = 'prefix {"a": 1} suffix'
-    json_str = _extract_json_block(raw)
-    assert json.loads(json_str) == {"a": 1}
+# ---------------------------------------------------------
+# extract() — invalid JSON
+# ---------------------------------------------------------
+def test_extract_invalid_json():
+    resp = MockResponse(content="not json", ready=True)
+    result = structured_extractor.extract(resp)
+
+    assert result.ready is False
+    assert "JSONDecodeError" in result.reason
+    assert result.template == ""
+    assert result.records == []
+    assert result.variables == {}
+    assert result.handling == []
 
 
-def test_extract_json_block_no_json():
-    raw = "just text"
-    json_str = _extract_json_block(raw)
-    data = json.loads(json_str)
-    assert data == {"textfsm_template": "just text"}
+# ---------------------------------------------------------
+# extract() — valid JSON, full fields
+# ---------------------------------------------------------
+def test_extract_valid_json():
+    data = {
+        "template": "Value iface (\\S+)\nStart\n  ^interface ${iface} -> Record",
+        "records": [{"iface": "Gi0/1"}],
+        "variables": {"iface": "interface name"},
+        "handling": ["parsed interface"],
+    }
+    resp = MockResponse(content=str(data).replace("'", '"'), ready=True)
+
+    result = structured_extractor.extract(resp)
+
+    assert result.ready is True
+    assert result.template.startswith("Value iface")
+    assert result.records == [{"iface": "Gi0/1"}]
+    assert result.variables == {"iface": "interface name"}
+    assert result.handling == ["parsed interface"]
+    assert result.reason == ""
 
 
-def test_extract_json_block_malformed_json():
-    raw = "{invalid json"
-    json_str = _extract_json_block(raw)
-    # Should wrap raw as template-only
-    data = json.loads(json_str)
-    assert data == {"textfsm_template": raw}
+# ---------------------------------------------------------
+# extract() — missing template
+# ---------------------------------------------------------
+def test_extract_missing_template():
+    data = {
+        "records": [{"iface": "Gi0/1"}],
+        "variables": {},
+        "handling": [],
+    }
+    resp = MockResponse(content=str(data).replace("'", '"'), ready=True)
+
+    result = structured_extractor.extract(resp)
+
+    assert result.ready is False
+    assert "Template missing" in result.reason
+    assert result.template == ""
 
 
-# ------------------------------------------------------------
-# parse_from_response tests
-# ------------------------------------------------------------
+# ---------------------------------------------------------
+# extract() — empty template
+# ---------------------------------------------------------
+def test_extract_empty_template():
+    data = {
+        "template": "",
+        "records": [{"iface": "Gi0/1"}],
+        "variables": {},
+        "handling": [],
+    }
+    resp = MockResponse(content=str(data).replace("'", '"'), ready=True)
+
+    result = structured_extractor.extract(resp)
+
+    assert result.ready is False
+    assert "Template missing" in result.reason
 
 
-def test_parse_from_response_pure_json():
-    raw = json.dumps(
-        {
-            "textfsm_template": "TEMPLATE",
-            "parsed_result": [],
-            "variable_explanation": {},
-            "llm_handling_template": [],
-        }
-    )
+# ---------------------------------------------------------
+# extract() — records not a list
+# ---------------------------------------------------------
+def test_extract_records_wrong_type():
+    data = {
+        "template": "Value iface (\\S+)",
+        "records": "not a list",
+        "variables": {},
+        "handling": [],
+    }
+    resp = MockResponse(content=str(data).replace("'", '"'), ready=True)
 
-    llm_result = make_llm_result()
-    structured = parse_from_response(raw, llm_result)
+    result = structured_extractor.extract(resp)
 
-    assert isinstance(structured, StructuredResult)
-    assert structured.template == "TEMPLATE"
-    assert structured.data["textfsm_template"] == "TEMPLATE"
-    assert structured.llm_run_result is llm_result
+    assert result.records == []
 
 
-def test_parse_from_response_fenced_json():
-    raw = """```json
-{
-  "textfsm_template": "TEMPLATE2",
-  "parsed_result": [],
-  "variable_explanation": {},
-  "llm_handling_template": []
-}
-```"""
+# ---------------------------------------------------------
+# extract() — variables not a dict
+# ---------------------------------------------------------
+def test_extract_variables_wrong_type():
+    data = {
+        "template": "Value iface (\\S+)",
+        "records": [],
+        "variables": "oops",
+        "handling": [],
+    }
+    resp = MockResponse(content=str(data).replace("'", '"'), ready=True)
 
-    llm_result = make_llm_result()
-    structured = parse_from_response(raw, llm_result)
+    result = structured_extractor.extract(resp)
 
-    assert structured.template == "TEMPLATE2"
-    assert structured.data["textfsm_template"] == "TEMPLATE2"
-
-
-def test_parse_from_response_malformed_json():
-    raw = """```json
-{ invalid json
-```"""
-
-    llm_result = make_llm_result()
-    structured = parse_from_response(raw, llm_result)
-
-    # After stripping code fences, this is the cleaned raw
-    cleaned = "{ invalid json"
-
-    # Fallback: template should equal cleaned version
-    assert structured.template == cleaned
-    assert structured.data == {"textfsm_template": cleaned}
+    assert result.variables == {}
 
 
-def test_parse_from_response_no_json():
-    raw = "just a template"
+# ---------------------------------------------------------
+# extract() — handling not a list
+# ---------------------------------------------------------
+def test_extract_handling_wrong_type():
+    data = {
+        "template": "Value iface (\\S+)",
+        "records": [],
+        "variables": {},
+        "handling": "oops",
+    }
+    resp = MockResponse(content=str(data).replace("'", '"'), ready=True)
 
-    llm_result = make_llm_result()
-    structured = parse_from_response(raw, llm_result)
+    result = structured_extractor.extract(resp)
 
-    assert structured.template == "just a template"
-    assert structured.data == {"textfsm_template": "just a template"}
+    assert result.handling == []
 
 
-def test_parse_from_response_extracts_template_key():
-    raw = json.dumps({"textfsm_template": "MY_TEMPLATE", "parsed_result": [{"a": 1}]})
+# ---------------------------------------------------------
+# extract() — template ok but records empty
+# ---------------------------------------------------------
+def test_extract_empty_records_reason():
+    data = {
+        "template": "Value iface (\\S+)",
+        "records": [],
+        "variables": {},
+        "handling": [],
+    }
+    resp = MockResponse(content=str(data).replace("'", '"'), ready=True)
 
-    llm_result = make_llm_result()
-    structured = parse_from_response(raw, llm_result)
+    result = structured_extractor.extract(resp)
 
-    assert structured.template == "MY_TEMPLATE"
-    assert structured.data["parsed_result"] == [{"a": 1}]
+    assert result.ready is True  # template exists
+    assert result.reason == "Empty parsed records"
