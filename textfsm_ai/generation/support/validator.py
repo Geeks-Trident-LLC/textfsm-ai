@@ -11,6 +11,19 @@ from textfsm_ai.generation.core.models import (
     TemplateValidationResult,
 )
 
+# 1. Bare $ (not $$, not \$, not ${var})
+BARE_DOLLAR_PATTERN = re.compile(
+    r"(?<!\\)(?<!\$)\$(?!\$|\{)"  # not escaped, not $$, not ${var}
+)
+
+# 2. $$ allowed ONLY at end of line
+DOUBLE_DOLLAR_NOT_END_PATTERN = re.compile(
+    r"\$\$(?!$)"  # $$ not followed by end-of-line
+)
+
+# 3. ${var:regex} is INVALID
+INVALID_VAR_REGEX_PATTERN = re.compile(r"\$\{[^}:]+:[^}]+\}")  # ${name:regex}
+
 # -------------------------------
 # Template validation
 # -------------------------------
@@ -319,6 +332,33 @@ def check_rule_spacers(lines: list[str]):
     return findings
 
 
+def check_illegal_dollar(lines: list[str]) -> list[str]:
+    issues = []
+
+    for line in lines:
+        # 1. Bare $ (illegal)
+        if BARE_DOLLAR_PATTERN.search(line):
+            issues.append(
+                f'illegal_dollar: Bare "$" detected. '
+                f'Use "$$" for end-of-line or "\\$" for literal "$". Line: {line}'
+            )
+
+        # 2. $$ not at end (illegal)
+        if DOUBLE_DOLLAR_NOT_END_PATTERN.search(line):
+            issues.append(
+                f'illegal_double_dollar: "$$" is only valid at end-of-line. '
+                f"Line: {line}"
+            )
+
+        # 3. ${var:regex} is invalid
+        if INVALID_VAR_REGEX_PATTERN.search(line):
+            issues.append(
+                f'illegal_var_regex: "${{var:regex}}" form is not allowed. Line: {line}'
+            )
+
+    return issues
+
+
 # ---------------------------------------------------------
 # 7. Main entry point
 # ---------------------------------------------------------
@@ -338,6 +378,7 @@ def find_template_issues(
     findings.extend(check_value_definitions(lines))
     findings.extend(check_start_state(lines))
     findings.extend(check_transition_states(lines))
+    findings.extend(check_illegal_dollar(lines))
     findings.extend(check_rule_actions(lines))
     findings.extend(check_rule_spacers(lines))
 
