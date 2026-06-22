@@ -5,6 +5,8 @@ from typing import Dict, List
 
 from textfsm import TextFSM
 
+from ..models import ValidationResult
+
 
 def _create_parser(template: str) -> TextFSM:
     """Create a TextFSM parser from a template string."""
@@ -19,3 +21,25 @@ def parse_to_lists(template: str, sample: str) -> List[List[str]]:
 def parse_to_dicts(template: str, sample: str) -> List[Dict[str, str]]:
     parser = _create_parser(template)
     return parser.ParseTextToDicts(sample)
+
+
+def validate_template(template: str) -> ValidationResult:
+    """Validate that a TextFSM template is non-empty and syntactically valid."""
+
+    text = template.strip()
+    if not text:
+        return ValidationResult(
+            data=template,
+            reason="template_empty",
+            ready=False,
+        )
+
+    try:
+        _create_parser(text)
+        return ValidationResult(data=template, ready=True)
+    except Exception as ex:
+        return ValidationResult(
+            data=template,
+            reason=f"template_syntax_error: {type(ex).__name__}: {ex}",
+            ready=False,
+        )

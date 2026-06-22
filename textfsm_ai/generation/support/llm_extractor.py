@@ -1,12 +1,11 @@
 # textfsm_ai/generation/engine/llm_extractor.py
 
-from typing import Type
 
 from textfsm_ai.generation.core.models import LLMRawResponse
 from textfsm_ai.orchestrator.provider import Provider
 
 
-def extract(provider: Type[Provider], model: str, prompt: str) -> LLMRawResponse:
+def extract(provider: Provider, model: str, prompt: str) -> LLMRawResponse:
     try:
         raw = provider.generate_sync(prompt, model=model) or {}
         if raw:

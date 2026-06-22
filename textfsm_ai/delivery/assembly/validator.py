@@ -12,10 +12,10 @@ def validate_delivery_package(pkg: DeliveryPackage) -> None:
     if not pkg.template:
         raise ValueError("template section must not be None")
 
-    if not pkg.template.canonical_template.strip():
+    if pkg.template.canonical_template and not pkg.template.canonical_template.strip():
         raise ValueError("canonical_template must not be empty")
 
-    if not pkg.template.human_template_dsl.strip():
+    if pkg.template.human_template_dsl and not pkg.template.human_template_dsl.strip():
         raise ValueError("human_template_dsl must not be empty")
 
     # ------------------------------------------------------------
@@ -45,11 +45,11 @@ def validate_delivery_package(pkg: DeliveryPackage) -> None:
     if pkg.mode >= DeliveryMode.INFO:
         # usage may be None if no token info was provided
         if pkg.usage is not None:
-            if pkg.usage.input_tokens < 0:
+            if pkg.usage.input_tokens is not None and pkg.usage.input_tokens < 0:
                 raise ValueError("usage.input_tokens must be >= 0")
-            if pkg.usage.output_tokens < 0:
+            if pkg.usage.output_tokens is not None and pkg.usage.output_tokens < 0:
                 raise ValueError("usage.output_tokens must be >= 0")
-            if pkg.usage.total_tokens < 0:
+            if pkg.usage.total_tokens is not None and pkg.usage.total_tokens < 0:
                 raise ValueError("usage.total_tokens must be >= 0")
 
     # ------------------------------------------------------------
@@ -65,7 +65,7 @@ def validate_delivery_package(pkg: DeliveryPackage) -> None:
         ):
             raise ValueError("debug.machine_dsl must be a dict")
 
-        if pkg.debug.recognizer_dsl is not None and not isinstance(
-            pkg.debug.recognizer_dsl, list
+        if pkg.debug.recognizer_pattern is not None and not isinstance(
+            pkg.debug.recognizer_pattern, list
         ):
             raise ValueError("debug.recognizer_dsl must be a list")

@@ -1,6 +1,7 @@
 # textfsm_ai/generation/engine/generation_engine.py
 
-from textfsm_ai.generation.core.models import GenerationResult
+
+from textfsm_ai.generation.core.models import GenerationStage
 from textfsm_ai.generation.support import (
     extractor,
     generator,
@@ -23,17 +24,21 @@ def run(api_key: str, model: str, sample: str):
         prompt=prompt,
     )
     structured = structured_extractor.extract(response)
-    return generator.generate(structured)
+    result = generator.generate(structured)
+    result.name = "generate-using-base-prompt"
+    return result
 
 
 def run_correction_prompt(
-    api_key: str, model: str, sample: str, prev_result: GenerationResult
+    api_key: str, model: str, sample: str, prev_result: GenerationStage
 ):
     provider = get_provider_for_model(model)(api_key, model)
 
-    prev_response = prev_result.metadata.response.content
-    template = prev_result.metadata.template
-    records = prev_result.metadata.records
+    metadata = prev_result.metadata
+
+    prev_response = metadata.response.content if metadata else ""
+    template = metadata.template if metadata else ""
+    records = metadata.records if metadata else []
 
     findings = validator.find_template_issues(template, records, sample)
 
@@ -48,4 +53,6 @@ def run_correction_prompt(
         prompt=prompt,
     )
     structured = structured_extractor.extract(response)
-    return generator.generate(structured)
+    result = generator.generate(structured)
+    result.name = "generate-using-correction-prompt"
+    return result

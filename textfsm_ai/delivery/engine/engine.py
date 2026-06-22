@@ -3,13 +3,9 @@
 
 from textfsm_ai.delivery.assembly.builder import build_delivery_package
 from textfsm_ai.delivery.assembly.validator import validate_delivery_package
-from textfsm_ai.dsl.core.models import (
-    CanonicalTemplate,
-    HumanDSL,
-    MachineDSL,
-    RecognizerPatterns,
-)
-from textfsm_ai.generation.core.models import GenerationResult
+from textfsm_ai.delivery.core.package import DeliveryMode
+from textfsm_ai.dsl.core.models import DSLPipeline
+from textfsm_ai.generation.core.models import GenerationPipeline
 
 
 class DeliveryEngine:
@@ -21,14 +17,24 @@ class DeliveryEngine:
     def assemble(
         self,
         *,
-        mode: str,
-        generation: GenerationResult,
-        canonical: CanonicalTemplate,
-        machine_dsl: MachineDSL,
-        human_dsl: HumanDSL,
-        recognizer: RecognizerPatterns,
+        mode: DeliveryMode,
+        generation_pipeline: GenerationPipeline,
+        dsl_pipeline: DSLPipeline,
         duration_ms: int = 0,
     ):
+        generation = generation_pipeline.last_stage
+
+        total = len(dsl_pipeline.stages)
+        canonical = dsl_pipeline.stages[0].result if total > 0 else None
+        machine_dsl = dsl_pipeline.stages[1].result if total > 1 else None
+        human_dsl = dsl_pipeline.stages[2].result if total > 2 else None
+        recognizer = dsl_pipeline.stages[3].result if total > 3 else None
+        state = (
+            dsl_pipeline.last_stage.name or generation_pipeline.last_stage.name
+            if generation_pipeline.last_stage
+            else ""
+        )
+        reason = dsl_pipeline.reason or generation_pipeline.reason
         pkg = build_delivery_package(
             mode=mode,
             model=self._model,
@@ -37,6 +43,8 @@ class DeliveryEngine:
             machine_dsl=machine_dsl,
             human_dsl=human_dsl,
             recognizer=recognizer,
+            state=state,
+            reason=reason,
             duration_ms=duration_ms,
         )
 

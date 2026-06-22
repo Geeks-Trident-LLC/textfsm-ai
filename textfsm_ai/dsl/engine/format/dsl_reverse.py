@@ -1,6 +1,7 @@
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
+from textfsm_ai.dsl.core.models import DSLExtractorResult
 from textfsm_ai.dsl.core.nodes import create_node
 from textfsm_ai.dsl.core.patterns import KEYWORD_TO_BASE
 
@@ -206,7 +207,7 @@ def tokens_to_pattern(
     return "".join(parts)
 
 
-def human_dsl_to_machine_dsl(human_dsl: str) -> Dict[str, Any]:
+def human_dsl_to_machine_dsl(human_dsl: str) -> DSLExtractorResult:
     """Convert human-readable DSL back into machine DSL."""
     collected = parse_human_dsl(human_dsl)
 
@@ -246,7 +247,4 @@ def human_dsl_to_machine_dsl(human_dsl: str) -> Dict[str, Any]:
             }
         )
 
-    return {
-        "states": states,
-        "variables": variables,
-    }
+    return DSLExtractorResult(states=states, variables=variables, ready=True)

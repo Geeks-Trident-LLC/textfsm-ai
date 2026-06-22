@@ -49,6 +49,9 @@ def orchestrator_route(model: str) -> None:
         async def generate(self, *args, **kwargs):
             raise NotImplementedError
 
+        def generate_sync(self, *args, **kwargs):
+            raise NotImplementedError
+
     providers = {
         "openai": DummyProvider("openai"),
         "anthropic": DummyProvider("anthropic"),

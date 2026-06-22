@@ -6,18 +6,54 @@ base: |
     Analyze the sample, generate a valid TextFSM template, validate it, parse records,
     explain variables, and describe how you handled the sample.
 
-  Rules
-    - Variable names: lowercase ASCII only
-    - Value options: Fillup, Filldown, Required, Key, List (comma-separated, no spaces)
-    - Value definitions:
-        Value <var> (<regex>)
-        Value <options> <var> (<regex>)
-      Regex must be enclosed in parentheses
-    - Start state required; Start must appear after the final Value definition with a preceding newline
-    - Forbidden state names: EOF, Next, Continue, Record, NoRecord, Clear, Clearall
-    - Line/record actions must be title case: Next, Continue, Record, NoRecord, Clear, Clearall
-    - Extract only fields present in the sample
-    - ASCII only; no Unicode punctuation; no markdown; no code fences
+  TextFSM Rules
+    Value Rules: 
+      - Variable names: lowercase ASCII only
+      - Value options: Fillup, Filldown, Required, Key, List (comma-separated, no spaces)
+      - Forms:
+          Value <var> (<regex>)
+          Value <options> <var> (<regex>)
+        Regex must be enclosed in parentheses
+    State Rules:
+      - Allowed forms:
+          <pattern>
+          <pattern> -> <state>
+          <pattern> -> <line-action>
+          <pattern> -> <line-action> <state>
+          <pattern> -> <line-action>.<record-action>
+          <pattern> -> <line-action>.<record-action> <state>
+          <pattern> -> <record-action>
+          <pattern> -> <record-action> <stat>
+      - Pattern must end with $$ or have no $$ (never a single $)
+        Correct: ^foo\s*$$, ^foo\s*, ^${x}\s*$$, ^${x}\s*
+        Incorrect: ^foo\s*$, ^${x}\s*$
+      - Start state required; Start must appear after the final Value definition with a preceding newline
+      - All other states must also be preceded by a blank line
+        Correct
+          <value-definition>
+          
+          Start
+            <pattern> -> MyState
+          
+          MyState
+            <pattern> ...
+
+        Incorrect
+          <value-definition>
+          
+          Start
+            <pattern> -> MyState
+          MyState
+            <pattern> ...
+      - Forbidden state names: EOF, Next, Continue, Record, NoRecord, Clear, Clearall
+      - Line actions must be title case: Next, Continue
+      - Record actions must be title case: Record, NoRecord, Clear, Clearall
+      - Only line-action may combine with record-action and line-action always in front of record-action: (Next.Record)
+      - Do not combine state names with dot syntax
+        Correct: Next <state>, Record <state>, Next.Record <state>
+        Incorrect: Next.<state>, Record.<state>, Next.Record.<state>
+      - Extract only fields present in the sample
+      - ASCII only; no Unicode punctuation; no markdown; no code fences
 
   JSON structure
   {

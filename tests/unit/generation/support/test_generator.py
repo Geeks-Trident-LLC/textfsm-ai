@@ -2,7 +2,7 @@
 
 
 from textfsm_ai.generation.core.models import (
-    GenerationResult,
+    GenerationStage,
 )
 from textfsm_ai.generation.support import generator
 
@@ -34,7 +34,7 @@ def test_generate_not_ready():
 
     result = generator.generate(structured)
 
-    assert isinstance(result, GenerationResult)
+    assert isinstance(result, GenerationStage)
     assert result.ready is False
     assert result.template == ""
     assert result.records == []
@@ -57,7 +57,7 @@ Start
 
     result = generator.generate(structured)
 
-    assert isinstance(result, GenerationResult)
+    assert isinstance(result, GenerationStage)
     assert result.ready is True
     assert result.template == template
     assert result.records == [["Gi0/1"]]
@@ -81,7 +81,7 @@ Start
 
     result = generator.generate(structured)
 
-    assert isinstance(result, GenerationResult)
+    assert isinstance(result, GenerationStage)
     assert result.ready is False
     assert result.template == template
     assert result.records == [["Gi0/1"]]

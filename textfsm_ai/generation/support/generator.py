@@ -1,14 +1,14 @@
 # textfsm_ai/generation/support/generator.py
 
-from textfsm_ai.generation.core.models import GenerationResult
+from textfsm_ai.generation.core.models import GenerationStage
 
 from ..core.models import StructuredResponse
 from .validator import validate_template
 
 
-def generate(structured: StructuredResponse) -> GenerationResult:
+def generate(structured: StructuredResponse) -> GenerationStage:
     if not structured.ready:
-        return GenerationResult(
+        return GenerationStage(
             template="",
             records=[],
             metadata=structured,
@@ -18,7 +18,7 @@ def generate(structured: StructuredResponse) -> GenerationResult:
 
     template = structured.template
     validator = validate_template(template)
-    return GenerationResult(
+    return GenerationStage(
         template=template,
         records=structured.records,
         metadata=structured,

@@ -2,12 +2,17 @@
 
 from unittest.mock import MagicMock, patch
 
-import textfsm_ai.dsl.engine.dsl_engine as dsl_engine
 from textfsm_ai.dsl.core.models import (
     CanonicalTemplate,
     HumanDSL,
     MachineDSL,
     RecognizerPatterns,
+)
+from textfsm_ai.dsl.engine.dsl_engine import (
+    build_machine_dsl,
+    canonicalize_template,
+    recognize_patterns,
+    render_human_dsl,
 )
 
 # ------------------------------------------------------------
@@ -15,20 +20,36 @@ from textfsm_ai.dsl.core.models import (
 # ------------------------------------------------------------
 
 
-@patch("textfsm_ai.dsl.engine.dsl_engine.TemplateCanonicalizer")
-def test_canonicalize_template(mock_canon_cls):
-    mock_instance = MagicMock()
-    mock_instance.canonicalize.return_value = "CANONICAL"
-    mock_canon_cls.return_value = mock_instance
+@patch("textfsm_ai.dsl.engine.dsl_engine.canonicalize")
+def test_canonicalize_template_success(mock_canon):
+    mock_canon.return_value = MagicMock(
+        return_text="CANONICAL",
+        reason="",
+        ready=True,
+    )
 
-    result = dsl_engine.canonicalize_template("RAW", ["REC"])
-
-    mock_instance.canonicalize.assert_called_once_with("RAW", ["REC"])
+    result = canonicalize_template("RAW", records=[{"x": 1}])
 
     assert isinstance(result, CanonicalTemplate)
-    assert result.raw_template == "RAW"
     assert result.template == "CANONICAL"
-    assert result.records == ["REC"]
+    assert result.llm_template == "RAW"
+    assert result.records == [{"x": 1}]
+    assert result.ready is True
+
+
+@patch("textfsm_ai.dsl.engine.dsl_engine.canonicalize")
+def test_canonicalize_template_failure(mock_canon):
+    mock_canon.return_value = MagicMock(
+        return_text="BAD",
+        reason="canon-fail",
+        ready=False,
+    )
+
+    result = canonicalize_template("RAW", records=[])
+
+    assert result.template == "BAD"
+    assert result.ready is False
+    assert result.reason == "canon-fail"
 
 
 # ------------------------------------------------------------
@@ -37,22 +58,47 @@ def test_canonicalize_template(mock_canon_cls):
 
 
 @patch("textfsm_ai.dsl.engine.dsl_engine._extract_machine_dsl")
-def test_build_machine_dsl(mock_extract):
-    mock_extract.return_value = {"ast": "X"}
-
-    canon = CanonicalTemplate(
-        raw_template="RAW",
-        template="CANON",
-        records=[],
+def test_build_machine_dsl_success(mock_extract):
+    mock_extract.return_value = MagicMock(
+        reason="",
+        ready=True,
     )
 
-    result = dsl_engine.build_machine_dsl(canon)
+    canonical = CanonicalTemplate(
+        llm_template="RAW",
+        records=[],
+        template="CANON",
+        reason="",
+        ready=True,
+    )
 
-    mock_extract.assert_called_once_with("CANON")
+    result = build_machine_dsl(canonical)
 
     assert isinstance(result, MachineDSL)
-    assert result.canonical is canon
-    assert result.ast == {"ast": "X"}
+    assert result.canonical is canonical
+    assert result.ready is True
+    assert result.reason == ""
+
+
+@patch("textfsm_ai.dsl.engine.dsl_engine._extract_machine_dsl")
+def test_build_machine_dsl_failure(mock_extract):
+    mock_extract.return_value = MagicMock(
+        reason="extract-fail",
+        ready=False,
+    )
+
+    canonical = CanonicalTemplate(
+        llm_template="RAW",
+        records=[],
+        template="CANON",
+        reason="",
+        ready=True,
+    )
+
+    result = build_machine_dsl(canonical)
+
+    assert result.ready is False
+    assert result.reason == "extract-fail"
 
 
 # ------------------------------------------------------------
@@ -61,28 +107,62 @@ def test_build_machine_dsl(mock_extract):
 
 
 @patch("textfsm_ai.dsl.engine.dsl_engine._render_dsl")
-def test_render_human_dsl(mock_render):
-    mock_render.return_value = "HUMAN_DSL"
-
-    canon = CanonicalTemplate(
-        raw_template="RAW",
-        template="CANON",
-        records=[],
+def test_render_human_dsl_success(mock_render):
+    mock_render.return_value = MagicMock(
+        return_text="HUMAN",
+        reason="",
+        ready=True,
     )
-    dsl = MachineDSL(canonical=canon, ast={"ast": "X"})
 
-    result = dsl_engine.render_human_dsl(dsl=dsl, template=canon, sample="SAMP")
-
-    mock_render.assert_called_once_with(
-        dsl={"ast": "X"},
-        template="CANON",
-        sample="SAMP",
+    machine = MachineDSL(
+        canonical=CanonicalTemplate(
+            llm_template="RAW",
+            records=[],
+            template="CANON",
+            reason="",
+            ready=True,
+        ),
+        dsl=MagicMock(),
+        reason="",
+        ready=True,
     )
+
+    result = render_human_dsl(machine, sample="SAMPLE")
 
     assert isinstance(result, HumanDSL)
-    assert result.dsl_text == "HUMAN_DSL"
-    assert result.template_preview == "CANON"
-    assert result.sample == "SAMP"
+    assert result.human_dsl == "HUMAN"
+    assert result.template == "CANON"
+    assert result.sample == "SAMPLE"
+    assert result.ready is True
+
+
+@patch("textfsm_ai.dsl.engine.dsl_engine.build_machine_dsl")
+@patch("textfsm_ai.dsl.engine.dsl_engine._render_dsl")
+def test_render_human_dsl_builds_machine_if_missing(mock_render, mock_build):
+    mock_render.return_value = MagicMock(
+        return_text="HUMAN",
+        reason="",
+        ready=True,
+    )
+    mock_build.return_value = MagicMock(dsl="BUILT")
+
+    machine = MachineDSL(
+        canonical=CanonicalTemplate(
+            llm_template="RAW",
+            records=[],
+            template="CANON",
+            reason="",
+            ready=True,
+        ),
+        dsl=None,
+        reason="",
+        ready=True,
+    )
+
+    result = render_human_dsl(machine)
+
+    mock_build.assert_called_once()
+    assert result.human_dsl == "HUMAN"
 
 
 # ------------------------------------------------------------
@@ -91,61 +171,75 @@ def test_render_human_dsl(mock_render):
 
 
 @patch("textfsm_ai.dsl.engine.dsl_engine._recognize_dsl_patterns")
-def test_recognize_patterns(mock_recognize):
-    mock_recognize.return_value = (["P1", "P2"], {"debug": True})
+def test_recognize_patterns_success(mock_rec):
+    mock_rec.return_value = ("PATTERNS", "DEBUG")
 
-    canon = CanonicalTemplate(
-        raw_template="RAW",
-        template="CANON",
-        records=[],
+    machine = MachineDSL(
+        canonical=CanonicalTemplate(
+            llm_template="RAW",
+            records=[],
+            template="CANON",
+            reason="",
+            ready=True,
+        ),
+        dsl=MagicMock(),
+        reason="",
+        ready=True,
     )
-    dsl = MachineDSL(canonical=canon, ast={"ast": "X"})
 
-    result = dsl_engine.recognize_patterns(
-        machine=dsl,
-        template=canon,
-        sample="SAMP",
-        debug=True,
-    )
-
-    mock_recognize.assert_called_once_with(
-        dsl={"ast": "X"},
-        template="CANON",
-        sample="SAMP",
-        debug=True,
-    )
+    result = recognize_patterns(machine, sample="SAMPLE", debug=True)
 
     assert isinstance(result, RecognizerPatterns)
-    assert result.patterns == ["P1", "P2"]
-    assert result.debug_info == {"debug": True}
-    assert result.sample == "SAMP"
-    assert result.dsl is dsl
-    assert result.template is canon
-
-
-# ------------------------------------------------------------
-# recognize_patterns (debug=False)
-# ------------------------------------------------------------
+    assert result.patterns == "PATTERNS"
+    assert result.debug_info == "DEBUG"
+    assert result.ready is True
 
 
 @patch("textfsm_ai.dsl.engine.dsl_engine._recognize_dsl_patterns")
-def test_recognize_patterns_no_debug(mock_recognize):
-    mock_recognize.return_value = (["P"], {"debug": True})
+def test_recognize_patterns_failure(mock_rec):
+    mock_rec.side_effect = RuntimeError("boom")
 
-    canon = CanonicalTemplate(
-        raw_template="RAW",
-        template="CANON",
-        records=[],
+    machine = MachineDSL(
+        canonical=CanonicalTemplate(
+            llm_template="RAW",
+            records=[],
+            template="CANON",
+            reason="",
+            ready=True,
+        ),
+        dsl=MagicMock(),
+        reason="",
+        ready=True,
     )
-    dsl = MachineDSL(canonical=canon, ast={"ast": "X"})
 
-    result = dsl_engine.recognize_patterns(
-        machine=dsl,
-        template=canon,
-        sample="SAMP",
-        debug=False,
+    result = recognize_patterns(machine, sample="SAMPLE")
+
+    assert result.ready is False
+    assert "RuntimeError" in result.reason
+    assert result.patterns == ""
+    assert list(result.debug_info.values()) == ["RuntimeError: boom"]
+
+
+@patch("textfsm_ai.dsl.engine.dsl_engine.build_machine_dsl")
+@patch("textfsm_ai.dsl.engine.dsl_engine._recognize_dsl_patterns")
+def test_recognize_patterns_builds_machine_if_missing(mock_rec, mock_build):
+    mock_rec.return_value = ("PATTERNS", "")
+    mock_build.return_value = MagicMock(dsl="BUILT")
+
+    machine = MachineDSL(
+        canonical=CanonicalTemplate(
+            llm_template="RAW",
+            records=[],
+            template="CANON",
+            reason="",
+            ready=True,
+        ),
+        dsl=None,
+        reason="",
+        ready=True,
     )
 
-    # debug_info must be stripped
-    assert result.debug_info is None
-    assert result.patterns == ["P"]
+    result = recognize_patterns(machine)
+
+    mock_build.assert_called_once()
+    assert result.patterns == "PATTERNS"

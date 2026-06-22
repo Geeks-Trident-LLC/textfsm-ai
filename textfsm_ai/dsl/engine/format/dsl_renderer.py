@@ -1,32 +1,37 @@
 import re
-from typing import Any, Dict, List
+from typing import List
 
+from textfsm_ai.core.models import ReturnText
+from textfsm_ai.core.utils.template import validate_template
+from textfsm_ai.dsl.core.models import DSLExtractorResult
 from textfsm_ai.dsl.core.nodes import create_node
 from textfsm_ai.dsl.engine.parse.infer import infer_base_keyword
-from textfsm_ai.generation.support.validator import TemplateValidator
 
 CAPTURE_RE = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
 
 
-def render_dsl(ast: Dict[str, Any], template: str, sample: str) -> str:
+def render_dsl(dsl: DSLExtractorResult, template: str, sample: str) -> ReturnText:
     """
     Render human-readable DSL aligned with:
     - TextFSM template indentation
     - literal spacing from sample text
     """
 
-    if not TemplateValidator.is_valid_template(template):
-        raise ValueError(f"Invalid template\n{template}")
+    validator = validate_template(template)
+    if not validator.ready:
+        return ReturnText(
+            reason=f"Invalid template\n{validator.reason}\n{template}", ready=False
+        )
 
-    var_lookup = {v["name"]: v for v in ast["variables"]}
+    var_lookup = {v["name"]: v for v in dsl.variables or []}
     rendered: List[str] = []
 
-    for state in ast["states"]:
+    for state in dsl.states or []:
         rendered.append(state["name"])
 
         for trans in state["transitions"]:
-            pattern = trans["pattern"]
-            action = trans["action"]
+            pattern = trans["pattern"] if isinstance(trans, dict) else trans
+            action = trans["action"] if isinstance(trans, dict) else trans
 
             # NEW: detect end-of-line marker
             has_end = pattern.endswith("$$")
@@ -40,7 +45,10 @@ def render_dsl(ast: Dict[str, Any], template: str, sample: str) -> str:
                 literal_regex = pattern.replace("\\s+", r"\s+")
                 m = re.search(literal_regex, sample, re.MULTILINE)
                 if not m:
-                    raise ValueError(f"Literal pattern did not match sample: {pattern}")
+                    return ReturnText(
+                        reason=f"Literal pattern did not match sample: {pattern}",
+                        ready=False,
+                    )
 
                 literal_text = render_literal_text(m.group(0))
 
@@ -82,7 +90,9 @@ def render_dsl(ast: Dict[str, Any], template: str, sample: str) -> str:
 
             match = re.search(full_regex, sample, re.MULTILINE)
             if not match:
-                raise ValueError(f"Pattern did not match sample: {pattern}")
+                return ReturnText(
+                    reason=f"Pattern did not match sample: {pattern}", ready=False
+                )
 
             groups = match.groupdict()
 
@@ -104,8 +114,7 @@ def render_dsl(ast: Dict[str, Any], template: str, sample: str) -> str:
                 tokens.append(action)
 
             rendered.append("".join(tokens))
-
-    return "\n".join(rendered)
+    return ReturnText(return_text="\n".join(rendered), ready=True)
 
 
 TOKEN_RE = re.compile(r"(\s+|[^\s]+)")

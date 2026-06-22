@@ -15,10 +15,10 @@ It orchestrates the full generation pipeline:
 """
 
 from textfsm_ai.generation.controller.controller import Controller
-from textfsm_ai.generation.core.models import GenerationResult
+from textfsm_ai.generation.core.models import GenerationStage
 
 
-def generate_template(api_key: str, model: str, sample: str) -> GenerationResult:
+def generate_template(api_key: str, model: str, sample: str) -> GenerationStage:
     """
     Runs the full template-generation pipeline on a single sample.
 

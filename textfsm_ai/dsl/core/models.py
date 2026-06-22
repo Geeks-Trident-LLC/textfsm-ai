@@ -3,16 +3,27 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
-from ...core.serializable import Serializable
+from textfsm_ai.core.serializable import Serializable
+
+
+@dataclass(frozen=True)
+class DSLExtractorResult(Serializable):
+    template: str = ""
+    variables: Optional[List[Dict[str, str]]] = None
+    states: Optional[List[Dict[str, str]]] = None
+    reason: str = ""
+    ready: bool = False
 
 
 @dataclass(frozen=True)
 class CanonicalTemplate(Serializable):
     """Canonical, normalized representation of a TextFSM template."""
 
-    raw_template: str
+    llm_template: str
     template: str
     records: Optional[List[Dict[str, Any]]] = None
+    reason: str = ""
+    ready: bool = False
 
 
 @dataclass(frozen=True)
@@ -20,25 +31,56 @@ class MachineDSL(Serializable):
     """Machine-readable DSL structure derived from a canonical template."""
 
     canonical: CanonicalTemplate
-    ast: Any  # replace with concrete AST type when available
+    dsl: DSLExtractorResult
     version: str = "1.0"
+    reason: str = ""
+    ready: bool = False
 
 
 @dataclass(frozen=True)
 class HumanDSL(Serializable):
     """Human-readable DSL text plus optional context."""
 
-    dsl_text: str
-    template_preview: Optional[str] = None
+    human_dsl: str
+    template: Optional[str] = None
     sample: Optional[str] = None
+    reason: str = ""
+    ready: bool = False
 
 
 @dataclass(frozen=True)
 class RecognizerPatterns(Serializable):
     """Patterns recognized from DSL/template/sample for classification or routing."""
 
-    dsl: Optional[MachineDSL]
-    template: Optional[CanonicalTemplate]
+    dsl: Optional[DSLExtractorResult]
+    template: Optional[str]
     sample: Optional[str]
-    patterns: List[str]
+    patterns: str = ""
     debug_info: Optional[Dict[str, Any]] = None
+    reason: str = ""
+    ready: bool = False
+
+
+@dataclass(frozen=True)
+class HumanDSLResult(Serializable):
+    template: str = ""
+    variables: Optional[list] = None
+    states: Optional[list] = None
+    reason: str = ""
+    ready: bool = False
+
+
+@dataclass(frozen=True)
+class DSLStage(Serializable):
+    name: str
+    result: Any
+    reason: str = ""
+    ready: bool = False
+
+
+@dataclass(frozen=True)
+class DSLPipeline(Serializable):
+    stages: list
+    last_stage: Any
+    reason: str = ""
+    ready: bool = False

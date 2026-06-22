@@ -18,43 +18,77 @@ The controller delegates all logic to the DSL engine and handles:
 
 from __future__ import annotations
 
-from textfsm_ai.dsl.core.models import (
-    CanonicalTemplate,
-    HumanDSL,
-    MachineDSL,
-    RecognizerPatterns,
-)
-from textfsm_ai.dsl.engine import (
-    build_machine_dsl,
-    canonicalize_template,
-    recognize_patterns,
-    render_human_dsl,
-)
-from textfsm_ai.generation.core.models import GenerationResult
+from textfsm_ai.dsl import engine
+from textfsm_ai.dsl.core.models import DSLPipeline, DSLStage
+from textfsm_ai.generation.core.models import GenerationPipeline
 
 
 class DSLController:
     """High-level orchestrator for DSL operations."""
 
-    def canonicalize(self, gen: GenerationResult) -> CanonicalTemplate:
-        template = gen.template
-        records = gen.metadata.data.get("parsed_result")
-        if not template:
-            raise ValueError("template must not be empty")
-        return canonicalize_template(template, records)
+    def _fail(self, stages, name, result):
+        stage = DSLStage(name=name, result=result, reason=result.reason, ready=False)
+        stages.append(stage)
+        return DSLPipeline(
+            stages=stages, last_stage=stage, reason=stage.reason, ready=False
+        )
 
-    def to_machine_dsl(self, canonical: CanonicalTemplate) -> MachineDSL:
-        if not isinstance(canonical, CanonicalTemplate):
-            raise TypeError("canonical must be a CanonicalTemplate instance")
-        return build_machine_dsl(canonical)
+    def _ok(self, stages, name, result):
+        stage = DSLStage(
+            name=name, result=result, reason=result.reason, ready=result.ready
+        )
+        stages.append(stage)
+        return stage
 
-    def to_human_dsl(self, machine: MachineDSL, sample: str) -> HumanDSL:
-        return render_human_dsl(machine, sample)
+    def run(self, gen: GenerationPipeline, debug: bool = False) -> DSLPipeline:
+        stages: list[DSLStage] = []
 
-    def recognize(
-        self,
-        machine: MachineDSL,
-        sample: str,
-        debug: bool = False,
-    ) -> RecognizerPatterns:
-        return recognize_patterns(machine, sample, debug=debug)
+        # -------------------------
+        # Stage 0: validate generation
+        # -------------------------
+        if not gen.ready:
+            return self._fail(stages, "validate-generation", gen.last_stage)
+
+        # -------------------------
+        # Stage 1: canonicalize template
+        # -------------------------
+        stage_name = "canonicalize-template"
+        sample = gen.sample
+        llm_template = gen.last_stage.template if gen.last_stage else ""
+        records = gen.last_stage.records if gen.last_stage else []
+        canonical = engine.canonicalize_template(llm_template, records)
+        if not canonical.ready:
+            return self._fail(stages, stage_name, canonical)
+        self._ok(stages, stage_name, canonical)
+
+        # -------------------------
+        # Stage 2: machine DSL
+        # -------------------------
+        stage_name = "extract-machine-dsl"
+        machine_dsl = engine.build_machine_dsl(canonical)
+        if not machine_dsl.ready:
+            return self._fail(stages, stage_name, machine_dsl)
+        self._ok(stages, stage_name, machine_dsl)
+
+        # -------------------------
+        # Stage 3: human DSL
+        # -------------------------
+        stage_name = "render-human-dsl"
+        human_dsl = engine.render_human_dsl(machine_dsl, sample)
+        if not human_dsl.ready:
+            return self._fail(stages, stage_name, human_dsl)
+        self._ok(stages, stage_name, human_dsl)
+
+        # -------------------------
+        # Stage 4: recognizer
+        # -------------------------
+        stage_name = "recognize-patterns"
+        recognizer = engine.recognize_patterns(machine_dsl, sample, debug=debug)
+        last_stage = self._ok(stages, stage_name, recognizer)
+
+        return DSLPipeline(
+            stages=stages,
+            last_stage=last_stage,
+            reason=last_stage.reason,
+            ready=last_stage.ready,
+        )

@@ -59,7 +59,7 @@ class TemplateRecordValidator:
         return findings
 
     def check_variable_case(self, row: Dict[str, str]) -> List[str]:
-        findings = []
+        findings: List[str] = []
         for k in row.keys():
             if k != k.lower():
                 findings.append(f"invalid_variable_case: '{k}' must be lowercase")
@@ -116,7 +116,7 @@ def validate_template_and_records(
       findings: list[str]
       ready: bool
     """
-    findings = []
+    findings: list[str] = []
 
     # 1. Compile template
     try:
@@ -152,7 +152,7 @@ def extract_lines(template: str):
 # 3. Value definitions
 # ---------------------------------------------------------
 def check_value_definitions(lines: list[str]):
-    findings = []
+    findings: list[str] = []
     values = []
 
     for line in lines:
@@ -192,9 +192,9 @@ def check_value_definitions(lines: list[str]):
 
             continue
 
-        opts = m2.group(1).split(",")
-        var = m2.group(2)
-        regex = m2.group(3)
+        opts = m2.group(1).split(",") if m2 else ""
+        var = m2.group(2) if m2 else ""
+        regex = m2.group(3) if m2 else ""
 
         if any(o not in allowed_opts for o in opts):
             findings.append(f"invalid_value_options: {opts} in {vline}")

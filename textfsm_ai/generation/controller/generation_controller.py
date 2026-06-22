@@ -1,6 +1,6 @@
 # textfsm_ai/generation/controller/generation_controller.py
 
-from textfsm_ai.generation.core.models import GenerationControllerResult
+from textfsm_ai.generation.core.models import GenerationPipeline
 from textfsm_ai.generation.engine import (
     generation_engine as engine,
 )
@@ -14,7 +14,7 @@ class GenerationController:
         self.model = model
         self.max_retries = max_retries
 
-    def run(self, sample: str):
+    def run(self, sample: str) -> GenerationPipeline:
 
         stages = []
         last_result = None
@@ -33,7 +33,7 @@ class GenerationController:
                 stages.append(result)
 
                 if result.ready:
-                    return GenerationControllerResult(
+                    return GenerationPipeline(
                         model=self.model,
                         stages=stages,
                         last_stage=result,
@@ -48,18 +48,19 @@ class GenerationController:
             # ----------------------------------------
             # Attempt > 0 → correction prompt
             # ----------------------------------------
+            assert last_result is not None
             result = engine.run_correction_prompt(
                 api_key=self.api_key,
                 model=self.model,
                 sample=sample,
                 prev_result=last_result,
             )
-
+            result.name = "generate-using-correction-prompt"
             last_result = result
             stages.append(result)
 
             if result.ready:
-                return GenerationControllerResult(
+                return GenerationPipeline(
                     model=self.model,
                     stages=stages,
                     last_stage=result,
@@ -72,7 +73,7 @@ class GenerationController:
         # ----------------------------------------
         # All attempts exhausted
         # ----------------------------------------
-        return GenerationControllerResult(
+        return GenerationPipeline(
             model=self.model,
             stages=stages,
             last_stage=last_result,

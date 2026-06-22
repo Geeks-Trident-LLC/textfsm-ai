@@ -1,3 +1,5 @@
+# textfsm_ai/orchestrator/provider.py
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -26,6 +28,10 @@ class Provider(ABC):
         """
         Async text generation call.
         """
+        raise NotImplementedError
+
+    @abstractmethod
+    def generate_sync(self, prompt: str, *, model: str, **kwargs: Any) -> dict:
         raise NotImplementedError
 
     @classmethod

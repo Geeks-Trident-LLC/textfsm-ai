@@ -3,7 +3,7 @@
 import pytest
 
 from textfsm_ai.generation.core.models import (
-    GenerationResult,
+    GenerationStage,
     LLMResponse,
     StructuredResponse,
 )
@@ -87,7 +87,7 @@ def test_run_success(patch_provider, patch_prompt_builder, monkeypatch):
     )
 
     # Mock generator.generate
-    final = GenerationResult(
+    final = GenerationStage(
         template="T",
         records=[1],
         metadata=structured,
@@ -101,7 +101,7 @@ def test_run_success(patch_provider, patch_prompt_builder, monkeypatch):
 
     result = generation_engine.run("KEY", "m", "sample")
 
-    assert isinstance(result, GenerationResult)
+    assert isinstance(result, GenerationStage)
     assert result.ready is True
     assert result.template == "T"
     assert result.records == [1]
@@ -129,7 +129,7 @@ def test_run_correction_prompt_success(
         response=prev_raw,
         ready=True,
     )
-    prev_result = GenerationResult(
+    prev_result = GenerationStage(
         template="OLD_TEMPLATE",
         records=[1],
         metadata=prev_structured,
@@ -177,7 +177,7 @@ def test_run_correction_prompt_success(
     )
 
     # Mock generator.generate
-    final = GenerationResult(
+    final = GenerationStage(
         template="NEW",
         records=[2],
         metadata=new_structured,
@@ -191,7 +191,7 @@ def test_run_correction_prompt_success(
 
     result = generation_engine.run_correction_prompt("KEY", "m", "sample", prev_result)
 
-    assert isinstance(result, GenerationResult)
+    assert isinstance(result, GenerationStage)
     assert result.ready is True
     assert result.template == "NEW"
     assert result.records == [2]

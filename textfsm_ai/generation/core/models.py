@@ -65,20 +65,21 @@ class TemplateFindingResult(Serializable):
 
 
 @dataclass
-class GenerationResult(Serializable):
+class GenerationStage(Serializable):
     template: str
     records: list
-    metadata: StructuredResponse
+    metadata: Optional[StructuredResponse] = None
+    name: str = ""
     reason: str = ""
     ready: bool = False
 
 
 @dataclass
-class GenerationControllerResult(Serializable):
-    model: str
-    stages: list
-    last_stage: GenerationResult
-    sample: str
+class GenerationPipeline(Serializable):
+    model: str = ""
+    stages: Optional[list] = None
+    last_stage: Optional[GenerationStage] = None
+    sample: str = ""
     attempts: int = 0
     max_retries: int = 1
     reason: str = ""

@@ -1,8 +1,9 @@
-# textfsm_ai/dsl/dsl_extractor.py
+# textfsm_ai/dsl/engine/parse/dsl_extractor.py
 
 import re
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
+from textfsm_ai.dsl.core.models import DSLExtractorResult
 from textfsm_ai.dsl.core.nodes import create_node
 from textfsm_ai.dsl.core.patterns import KEYWORD_TO_BASE, PATTERNS
 
@@ -11,74 +12,120 @@ VALUE_RE = re.compile(
     r"(?:\s+((?:Required|List|Key|Filldown|Fillup)"
     r"(?:,(?:Required|List|Key|Filldown|Fillup))*))?"
     r"\s+([A-Za-z_][A-Za-z0-9_]*)"
-    r"(\s+)\((.+)\)\s*$"
+    r"\s*\((.+)\)\s*$"
 )
 
 STATE_RE = re.compile(r"^(\w+)\s*$")
 TRANSITION_RE = re.compile(r"^\s*(\^.+?)\s*(?:->\s*(.+))?$")
 
 
-def extract_machine_dsl(canonical_template: str):
-    lines = canonical_template.splitlines()
+class DSLExtractor:
+    """Extract machine-DSL structure from a canonical TextFSM template."""
 
-    variables = []
-    states = []
-    current_state: Optional[dict[str, Any]] = None
+    def __init__(self, template: str):
+        self.template = template
+        self.lines = template.splitlines()
+        self.variables: List[Dict[str, Any]] = []
+        self.states: List[Dict[str, Any]] = []
+        self.current_state: Optional[Dict[str, Any]] = None
 
-    for line in lines:
+    # ---------------------------------------------------------
+    # Public API
+    # ---------------------------------------------------------
+    def extract(self) -> DSLExtractorResult:
+        for line in self.lines:
+            try:
+                if self._parse_value(line):
+                    continue
+            except Exception as ex:
+                return self._fail(f"{type(ex).__name__}: {ex}")
+
+            if self._parse_state(line):
+                continue
+            if self._parse_transition(line):
+                continue
+
+        return DSLExtractorResult(
+            template=self.template,
+            variables=self.variables,
+            states=self.states,
+            ready=True,
+        )
+
+    # ---------------------------------------------------------
+    # Parsing helpers
+    # ---------------------------------------------------------
+    def _parse_value(self, line: str) -> bool:
         m = VALUE_RE.match(line)
-        if m:
-            options, varname, ws, regex = m.groups()
+        if not m:
+            return False
 
-            # reverse lookup keyword
-            keyword = None
-            for k, p in PATTERNS.items():
-                if p.regex == regex:
-                    keyword = k
-                    break
+        options, varname, regex = m.groups()
 
-            if keyword is None:
-                raise ValueError(f"Unknown regex pattern: {regex!r}")
+        keyword = self._lookup_keyword(regex)
+        if keyword is None:
+            raise RuntimeError(f"Unknown regex pattern: {regex!r}")
 
-            node = create_node(keyword, varname, generalize=True)
+        node = create_node(keyword, varname, extra=options or "", generalize=True)
 
-            variables.append(
-                {
-                    "name": varname,
-                    "keyword": keyword,
-                    "category": KEYWORD_TO_BASE[keyword].name,
-                    "options": options or "",
-                    "expression": node.to_expression(),
-                    "expression_regex": node.to_expression_regex(),
-                }
-            )
+        self.variables.append(
+            {
+                "name": varname,
+                "keyword": keyword,
+                "category": KEYWORD_TO_BASE[keyword].name,
+                "options": options or "",
+                "expression": node.to_expression(),
+                "expression_regex": node.to_expression_regex(),
+            }
+        )
+        return True
 
-            continue
+    def _parse_state(self, line: str) -> bool:
+        m = STATE_RE.match(line)
+        if not m:
+            return False
 
-        # -------------------------
-        # Parse state headers
-        # -------------------------
-        s = STATE_RE.match(line)
-        if s:
-            current_state = {"name": s.group(1), "transitions": []}
-            states.append(current_state)
-            continue
+        name = m.group(1)
+        self.current_state = {"name": name, "transitions": []}
+        self.states.append(self.current_state)
+        return True
 
-        # -------------------------
-        # Parse transitions
-        # -------------------------
-        if current_state:
-            t = TRANSITION_RE.match(line)
-            if t:
-                pattern, action = t.groups()
-                current_state["transitions"].append(
-                    {
-                        "pattern": pattern,
-                        "action": action or None,
-                    }
-                )
+    def _parse_transition(self, line: str) -> bool:
+        if not self.current_state:
+            return False
 
-    return {
-        "variables": variables,
-        "states": states,
-    }
+        m = TRANSITION_RE.match(line)
+        if not m:
+            return False
+
+        pattern, action = m.groups()
+        self.current_state["transitions"].append(
+            {
+                "pattern": pattern,
+                "action": action or None,
+            }
+        )
+        return True
+
+    # ---------------------------------------------------------
+    # Utility helpers
+    # ---------------------------------------------------------
+    def _lookup_keyword(self, regex: str) -> Optional[str]:
+        for k, p in PATTERNS.items():
+            if p.regex == regex:
+                return k
+        return None
+
+    def _fail(self, reason: str) -> DSLExtractorResult:
+        return DSLExtractorResult(
+            template=self.template,
+            reason=reason,
+            ready=False,
+        )
+
+
+# ---------------------------------------------------------
+# Public function
+# ---------------------------------------------------------
+def extract_machine_dsl(canonical_template: str) -> DSLExtractorResult:
+    return DSLExtractor(canonical_template).extract()

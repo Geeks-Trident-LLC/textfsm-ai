@@ -3,7 +3,7 @@
 from unittest.mock import Mock
 
 from textfsm_ai.generation.controller.generation_controller import GenerationController
-from textfsm_ai.generation.core.models import GenerationResult
+from textfsm_ai.generation.core.models import GenerationStage
 
 
 # ---------------------------------------------------------
@@ -11,7 +11,7 @@ from textfsm_ai.generation.core.models import GenerationResult
 # ---------------------------------------------------------
 def make_result(template, records, ready, reason=""):
     """Utility to create a GenerationResult-like object."""
-    return GenerationResult(
+    return GenerationStage(
         template=template,
         records=records,
         metadata=None,  # controller does not inspect metadata

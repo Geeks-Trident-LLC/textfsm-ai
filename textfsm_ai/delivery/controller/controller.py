@@ -20,22 +20,16 @@ class DeliveryController:
         start = time.perf_counter()
 
         # 1. Generation
-        gen = self._gen.run(sample)
+        gen_pipeline = self._gen.run(sample)
 
         # 2. DSL
-        canonical = self._dsl.canonicalize(gen)
-        machine = self._dsl.to_machine_dsl(canonical)
-        human = self._dsl.to_human_dsl(machine, sample)
-        recognizer = self._dsl.recognize(machine, sample)
+        dsl_pipeline = self._dsl.run(gen_pipeline)
         duration_ms = int((time.perf_counter() - start) * 1000)
 
         # 3. Delivery engine
         return self._engine.assemble(
             mode=mode_enum,
-            generation=gen,
-            canonical=canonical,
-            machine_dsl=machine,
-            human_dsl=human,
-            recognizer=recognizer,
+            generation_pipeline=gen_pipeline,
+            dsl_pipeline=dsl_pipeline,
             duration_ms=duration_ms,
         )

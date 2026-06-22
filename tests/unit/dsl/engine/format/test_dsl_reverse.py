@@ -4,6 +4,8 @@ import textwrap
 
 import pytest
 
+from textfsm_ai.dsl.core.models import DSLExtractorResult
+from textfsm_ai.dsl.engine.format.dsl_renderer import render_dsl
 from textfsm_ai.dsl.engine.format.dsl_reverse import (
     human_dsl_to_machine_dsl,
     parse_keyword_call,
@@ -77,7 +79,7 @@ def test_variable_extraction_with_options():
         """)
 
     dsl = human_dsl_to_machine_dsl(human)
-    vars_ = {v["name"]: v for v in dsl["variables"]}
+    vars_ = {v["name"]: v for v in dsl.variables}
 
     assert "interface" in vars_
     v = vars_["interface"]
@@ -96,7 +98,7 @@ def test_variable_extraction_without_options():
         """)
 
     dsl = human_dsl_to_machine_dsl(human)
-    vars_ = {v["name"]: v for v in dsl["variables"]}
+    vars_ = {v["name"]: v for v in dsl.variables}
 
     assert "mtu" in vars_
     v = vars_["mtu"]
@@ -117,7 +119,7 @@ def test_pattern_generation_with_options():
         """)
 
     dsl = human_dsl_to_machine_dsl(human)
-    t = dsl["states"][0]["transitions"][0]
+    t = dsl.states[0]["transitions"][0]
 
     assert t["pattern"] == "^interface\\s+${interface}"
 
@@ -129,7 +131,7 @@ def test_pattern_generation_literal_and_keyword():
         """)
 
     dsl = human_dsl_to_machine_dsl(human)
-    t = dsl["states"][0]["transitions"][0]
+    t = dsl.states[0]["transitions"][0]
 
     assert t["pattern"].startswith("^abc")
     assert "connection:" in t["pattern"]
@@ -148,7 +150,7 @@ def test_action_extraction():
         """)
 
     dsl = human_dsl_to_machine_dsl(human)
-    t = dsl["states"][0]["transitions"][0]
+    t = dsl.states[0]["transitions"][0]
 
     assert t["action"] == "Continue.Record"
 
@@ -167,7 +169,7 @@ def test_multiple_transitions_order_preserved():
         """)
 
     dsl = human_dsl_to_machine_dsl(human)
-    transitions = dsl["states"][0]["transitions"]
+    transitions = dsl.states[0]["transitions"]
 
     assert len(transitions) == 3
     assert transitions[0]["pattern"].startswith("^a")
@@ -181,20 +183,20 @@ def test_multiple_transitions_order_preserved():
 
 
 def test_roundtrip_machine_human_machine_with_options():
-    machine1 = {
-        "states": [
+    machine1 = DSLExtractorResult(
+        states=[
             {
                 "name": "Start",
                 "transitions": [
                     {
                         "pattern": "^interface\\s+${interface}",
-                        "action": "Continue.Record",
+                        "action": "Continue",
                     },
-                    {"pattern": "^mtu\\s+${mtu}", "action": None},
+                    {"pattern": "^mtu\\s+${mtu}", "action": "Record"},
                 ],
             }
         ],
-        "variables": [
+        variables=[
             {
                 "name": "interface",
                 "keyword": "mixed-word",
@@ -212,27 +214,33 @@ def test_roundtrip_machine_human_machine_with_options():
                 "expression_regex": "[0-9]+",
             },
         ],
-    }
+    )
 
     # FIX: sample must match BOTH transitions
+    template = _strip("""
+        Value interface ([!-~]*[0-9A-Za-z][!-~]*)
+        Value mtu ([0-9]+)
+
+        Start
+          ^interface\\s+${interface} -> Continue
+          ^mtu\\s+${mtu} -> Record
+        """)
     sample = "interface Gi0/1\nmtu 1500"
 
-    from textfsm_ai.dsl.engine.format.dsl_renderer import render_dsl
+    human = render_dsl(machine1, template, sample)
 
-    human = render_dsl(machine1, "", sample)
-
-    machine2 = human_dsl_to_machine_dsl(human)
+    machine2 = human_dsl_to_machine_dsl(human.return_text)
 
     # Compare state counts
-    assert len(machine1["states"]) == len(machine2["states"])
+    assert len(machine1.states) == len(machine2.states)
 
     # Compare transition counts
-    assert len(machine1["states"][0]["transitions"]) == len(
-        machine2["states"][0]["transitions"]
+    assert len(machine1.states[0]["transitions"]) == len(
+        machine2.states[0]["transitions"]
     )
 
     # Compare variable keyword + options
-    vars1 = {v["name"]: (v["keyword"], v["options"]) for v in machine1["variables"]}
-    vars2 = {v["name"]: (v["keyword"], v["options"]) for v in machine2["variables"]}
+    vars1 = {v["name"]: (v["keyword"], v["options"]) for v in machine1.variables}
+    vars2 = {v["name"]: (v["keyword"], v["options"]) for v in machine2.variables}
 
     assert vars1 == vars2

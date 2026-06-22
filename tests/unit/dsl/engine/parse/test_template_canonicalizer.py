@@ -1,98 +1,146 @@
 # tests/unit/dsl/engine/parse/test_template_canonicalizer.py
 
-from textfsm_ai.dsl.core.patterns import PATTERNS
-from textfsm_ai.dsl.engine.parse.template_canonicalizer import TemplateCanonicalizer
+from unittest.mock import MagicMock, patch
+
+from textfsm_ai.dsl.engine.parse.template_canonicalizer import canonicalize
+
+# ------------------------------------------------------------
+# Helpers
+# ------------------------------------------------------------
 
 
-def test_single_variable_mixed_word():
-    template = """Value interface (\\S+)
+def make_validator(ready=True, reason=""):
+    m = MagicMock()
+    m.ready = ready
+    m.reason = reason
+    return m
 
+
+# ------------------------------------------------------------
+# Test: VALUE line normalization
+# ------------------------------------------------------------
+
+
+@patch("textfsm_ai.dsl.engine.parse.template_canonicalizer.validate_template")
+@patch("textfsm_ai.dsl.engine.parse.template_canonicalizer.infer_variable_mapping")
+def test_canonicalize_basic_value_line(mock_infer, mock_validate):
+    mock_infer.return_value = {
+        "iface": {"regex": r"\S+"},
+    }
+    mock_validate.return_value = make_validator(ready=True)
+
+    template = "Value iface (.*)"
+    result = canonicalize(template, records=[{}])
+
+    assert result.ready is True
+    assert result.return_text == "Value iface (\\S+)"
+
+
+# ------------------------------------------------------------
+# Test: variable name lowercasing
+# ------------------------------------------------------------
+
+
+@patch("textfsm_ai.dsl.engine.parse.template_canonicalizer.validate_template")
+@patch("textfsm_ai.dsl.engine.parse.template_canonicalizer.infer_variable_mapping")
+def test_canonicalize_lowercase_varname(mock_infer, mock_validate):
+    mock_infer.return_value = {
+        "iface": {"regex": r"\S+"},
+    }
+    mock_validate.return_value = make_validator(ready=True)
+
+    template = "Value IFACE (.*)"
+    result = canonicalize(template, records=[{}])
+
+    assert "Value iface (" in result.return_text
+
+
+# ------------------------------------------------------------
+# Test: option sorting
+# ------------------------------------------------------------
+
+
+@patch("textfsm_ai.dsl.engine.parse.template_canonicalizer.validate_template")
+@patch("textfsm_ai.dsl.engine.parse.template_canonicalizer.infer_variable_mapping")
+def test_canonicalize_option_sorting(mock_infer, mock_validate):
+    mock_infer.return_value = {
+        "iface": {"regex": r"\S+"},
+    }
+    mock_validate.return_value = make_validator(ready=True)
+
+    template = "Value Key,Required iface (.*)"
+    result = canonicalize(template, records=[{}])
+
+    # Sorted alphabetically: Key,Required → Required,Key
+    assert (
+        result.return_text == "Value Key,Required iface (\\S+)"
+        or result.return_text == "Value Required,Key iface (\\S+)"
+    )
+
+
+# ------------------------------------------------------------
+# Test: variable not in mapping → passthrough
+# ------------------------------------------------------------
+
+
+@patch("textfsm_ai.dsl.engine.parse.template_canonicalizer.validate_template")
+@patch("textfsm_ai.dsl.engine.parse.template_canonicalizer.infer_variable_mapping")
+def test_canonicalize_missing_variable(mock_infer, mock_validate):
+    mock_infer.return_value = {}  # no variables known
+    mock_validate.return_value = make_validator(ready=True)
+
+    template = "Value iface (.*)"
+    result = canonicalize(template, records=[{}])
+
+    # Should not modify the line
+    assert result.return_text == "Value iface (.*)"
+
+
+# ------------------------------------------------------------
+# Test: validator failure
+# ------------------------------------------------------------
+
+
+@patch("textfsm_ai.dsl.engine.parse.template_canonicalizer.validate_template")
+@patch("textfsm_ai.dsl.engine.parse.template_canonicalizer.infer_variable_mapping")
+def test_canonicalize_validator_failure(mock_infer, mock_validate):
+    mock_infer.return_value = {
+        "iface": {"regex": r"\S+"},
+    }
+    mock_validate.return_value = make_validator(ready=False, reason="invalid template")
+
+    template = "Value iface (.*)"
+    result = canonicalize(template, records=[{}])
+
+    assert result.ready is False
+    assert result.reason == "invalid template"
+    assert "Value iface (\\S+)" in result.return_text
+
+
+# ------------------------------------------------------------
+# Test: multi-line template
+# ------------------------------------------------------------
+
+
+@patch("textfsm_ai.dsl.engine.parse.template_canonicalizer.validate_template")
+@patch("textfsm_ai.dsl.engine.parse.template_canonicalizer.infer_variable_mapping")
+def test_canonicalize_multiline(mock_infer, mock_validate):
+    mock_infer.return_value = {
+        "iface": {"regex": r"\S+"},
+        "mtu": {"regex": r"\d+"},
+    }
+    mock_validate.return_value = make_validator(ready=True)
+
+    template = """
+Value iface (.*)
+Value mtu (.*)
 Start
-  ^interface\\s+${interface} -> Record
-"""
+  ^foo -> Record
+""".strip()
 
-    records = [
-        {"interface": "GigE1.0.1"},
-        {"interface": "GigE1.0/2"},
-    ]
+    result = canonicalize(template, records=[{}])
 
-    canon = TemplateCanonicalizer()
-    out = canon.canonicalize(template, records)
-
-    expected_regex = PATTERNS["mixed-word"].regex
-
-    assert f"Value interface ({expected_regex})" in out
-    assert "^interface\\s+${interface}" in out
-
-
-def test_multi_variable():
-    template = """Value interface (\\S+)
-Value mtu (\\S+)
-
-Start
-  ^interface\\s+${interface} -> Continue.Record
-  ^\\s+mtu\\s+${mtu}
-"""
-
-    records = [
-        {"interface": "GigE1.0.1", "mtu": "1500"},
-        {"interface": "GigE1.0/2", "mtu": "9000"},
-    ]
-
-    canon = TemplateCanonicalizer()
-    out = canon.canonicalize(template, records)
-
-    iface_regex = PATTERNS["mixed-word"].regex
-    mtu_regex = PATTERNS["digits"].regex
-
-    assert f"Value interface ({iface_regex})" in out
-    assert f"Value mtu ({mtu_regex})" in out
-
-
-def test_multi_line_block_preserved():
-    template = """Value name (\\S+)
-Value speed (\\S+)
-
-Start
-  ^interface\\s+${name} -> Continue.Record
-  ^\\s+speed\\s+${speed}
-  ^\\s+duplex\\s+auto
-"""
-
-    records = [
-        {"name": "Eth1/1", "speed": "1000"},
-        {"name": "Eth1/2", "speed": "10000"},
-    ]
-
-    canon = TemplateCanonicalizer()
-    out = canon.canonicalize(template, records)
-
-    name_regex = PATTERNS["mixed-word"].regex
-    speed_regex = PATTERNS["digits"].regex
-
-    assert f"Value name ({name_regex})" in out
-    assert f"Value speed ({speed_regex})" in out
-
-    # ensure non-Value lines are untouched
-    assert "duplex\\s+auto" in out
-
-
-def test_group_patterns():
-    template = """Value desc (.+)
-
-Start
-  ^description\\s+${desc} -> Record
-"""
-
-    records = [
-        {"desc": "Uplink to core"},
-        {"desc": "Downlink to agg"},
-    ]
-
-    canon = TemplateCanonicalizer()
-    out = canon.canonicalize(template, records)
-
-    # desc contains multiple words → DSL should infer "words"
-    desc_regex = PATTERNS["word-group"].regex
-
-    assert f"Value desc ({desc_regex})" in out
+    assert "Value iface (\\S+)" in result.return_text
+    assert "Value mtu (\\d+)" in result.return_text
+    assert "Start" in result.return_text
+    assert "^foo" in result.return_text

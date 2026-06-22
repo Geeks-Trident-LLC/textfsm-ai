@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
+from textfsm_ai.dsl.core.models import DSLExtractorResult
 from textfsm_ai.dsl.core.patterns import PATTERNS_MAPPING
 from textfsm_ai.dsl.engine.parse.dsl_extractor import extract_machine_dsl
 from textfsm_ai.dsl.engine.parse.infer import infer_base_keyword
@@ -111,19 +112,34 @@ def _build_variable_pattern(
     pattern: str, var_map: Dict[str, str], *, debug: bool = False
 ) -> str:
     """
-    Variable case:
-      - prematch: keep as-is (literal pattern, including '\\s+')
-      - match: replace ${var} with its expression_regex
-      - remaining: keep as-is
-      - if final ends with $$, convert to $
+    Build a regex pattern by replacing ${var} with its expression_regex.
+
+    Improvements:
+      - Use fullmatch to extract prefix (^), body, suffix ($ or $$)
+      - Apply variable substitution only to the body
+      - Normalize literal segments using _build_literal_regex()
+      - Convert final $$ → $ (TextFSM escaping rule)
     """
+    # 1. Extract prefix (^), body, suffix ($ or $$)
+    match = re.fullmatch(r"(\^)?(.+?)(\$\$|\$)?", pattern.strip())
+    if not match:
+        raise ValueError(f"Invalid pattern format: {pattern!r}")
+
+    prefix, body, suffix = match.groups()
+
+    if debug:
+        print(f"[pattern] prefix={prefix!r}, body={body!r}, suffix={suffix!r}")
+
     out: List[str] = []
     pos = 0
 
-    for m in _VAR_RE.finditer(pattern):
+    # 2. Replace ${var} inside the body
+    for m in _VAR_RE.finditer(body):
         var_name = m.group(1)
-        prematch = pattern[pos : m.start()]
-        out.append(prematch)
+        prematch = body[pos : m.start()]
+
+        # Normalize literal prematch
+        out.append(_build_literal_regex(prematch, debug=debug))
 
         if var_name not in var_map:
             raise KeyError(f"Variable '{var_name}' not found in DSL variables.")
@@ -131,13 +147,23 @@ def _build_variable_pattern(
         var_regex = var_map[var_name]
         if debug:
             print(f"  [variable] {var_name} -> {var_regex!r}")
+
         out.append(var_regex)
         pos = m.end()
 
-    tail = pattern[pos:]
-    out.append(tail)
+    # 3. Append tail (literal)
+    tail = body[pos:]
+    out.append(_build_literal_regex(tail, debug=debug))
 
-    final = "".join(out)
+    # 4. Reassemble prefix + substituted body + suffix
+    final = ""
+    if prefix:
+        final += prefix
+    final += "".join(out)
+    if suffix:
+        final += suffix
+
+    # 5. Convert final $$ → $ (TextFSM escaping rule)
     if final.endswith("$$"):
         final = final[:-2] + "$"
 
@@ -147,8 +173,8 @@ def _build_variable_pattern(
     return final
 
 
-def _build_variable_map(ast: Dict[str, Any]) -> Dict[str, str]:
-    return {v["name"]: v["expression_regex"] for v in ast.get("variables", [])}
+def _build_variable_map(dsl: DSLExtractorResult) -> Dict[str, str]:
+    return {v["name"]: v["expression_regex"] for v in dsl.variables or []}
 
 
 def visualize_pattern_matches(pattern: str, sample: str, max_matches: int = 3) -> str:
@@ -179,29 +205,29 @@ def visualize_literal_transformation(txt: str, regex: str) -> str:
 
 
 def recognize_dsl_patterns(
-    ast: Optional[Dict[str, Any]],
+    dsl: Optional[DSLExtractorResult],
     template: Optional[str],
     sample: str,
     *,
     debug: bool = False,
 ):
-    if ast is None:
+    if dsl is None:
         if template is None:
             raise ValueError("Either 'dsl' or 'template' must be provided.")
-        ast = extract_machine_dsl(template)
+        dsl = extract_machine_dsl(template)
 
-    var_map = _build_variable_map(ast)
+    var_map = _build_variable_map(dsl)
     seen: List[str] = []
     out: List[str] = []
 
     all_debug = []
 
-    for state in ast.get("states", []):
+    for state in dsl.states or []:
         state_name = state.get("name", "<unknown>")
 
         debug_lst = []
         for trans in state.get("transitions", []):
-            pattern = trans["pattern"]
+            pattern = trans["pattern"] if isinstance(trans, dict) else trans
 
             if debug:
                 print(f"\n[STATE {state_name}] pattern: {pattern!r}")
@@ -244,7 +270,7 @@ def recognize_dsl_patterns(
 
             final = f"{prefix}{body}{suffix}"
 
-            debug_info = {}
+            debug_info: dict[str, str] = {}
             if debug:
                 literal_trans = visualize_literal_transformation(matched_text, final)
                 pat_matches = visualize_pattern_matches(final, sample, max_matches=2)

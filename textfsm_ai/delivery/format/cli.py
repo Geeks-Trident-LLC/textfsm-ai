@@ -41,21 +41,15 @@ def format_delivery_for_cli(pkg: DeliveryPackage) -> str:
     # ------------------------------------------------------------
     # TEMPLATE (always)
     # ------------------------------------------------------------
-    lines.extend(_block("Template", pkg.template.canonical_template))
+    lines.extend(_block("Template", pkg.template.canonical_template or ""))
 
-    lines.extend(_block("Human DSL", pkg.template.human_template_dsl))
+    lines.extend(_block("Human DSL", pkg.template.human_template_dsl or ""))
 
     # ------------------------------------------------------------
     # EXPLANATION (default/info/debug)
     # ------------------------------------------------------------
     if pkg.mode >= DeliveryMode.DEFAULT and pkg.explanation:
-        explanation_text = "\n".join(
-            [
-                pkg.explanation.variable_definitions,
-                pkg.explanation.llm_parsing_explanation,
-                pkg.explanation.template_generation_explanation,
-            ]
-        )
+        explanation_text = pkg.explanation.to_json()
         lines.extend(_block("Explanation", explanation_text))
 
     # ------------------------------------------------------------
@@ -97,9 +91,9 @@ def format_delivery_for_cli(pkg: DeliveryPackage) -> str:
             debug_lines.append(str(pkg.debug.machine_dsl))
             debug_lines.append("")
 
-        if pkg.debug.recognizer_dsl:
+        if pkg.debug.recognizer_pattern:
             debug_lines.append("Recognizer DSL:")
-            debug_lines.extend(pkg.debug.recognizer_dsl)
+            debug_lines.extend(pkg.debug.recognizer_pattern)
             debug_lines.append("")
 
         lines.extend(_block("Debug", "\n".join(debug_lines)))

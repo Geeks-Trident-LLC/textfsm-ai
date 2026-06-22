@@ -2,14 +2,13 @@
 
 import time
 from datetime import datetime, timezone
-from typing import Type
 
 from textfsm_ai.generation.core.models import LLMResponse
 from textfsm_ai.generation.support import llm_extractor
 from textfsm_ai.orchestrator.provider import Provider
 
 
-def extract(provider: Type[Provider], model: str, prompt: str) -> LLMResponse:
+def extract(provider: Provider, model: str, prompt: str) -> LLMResponse:
     sent_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     start = time.time()
 

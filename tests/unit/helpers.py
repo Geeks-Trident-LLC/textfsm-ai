@@ -51,6 +51,10 @@ class MockProvider(Provider):
 
         raise RuntimeError("unknown behavior")
 
+    # sync path not used in orchestrator tests
+    def generate_sync(self, prompt: str, *, model: str, **kwargs):
+        return {"content": f"{self.name}:{prompt}"}
+
 
 def read_text(path: str) -> str:
     return pathlib.Path(path).read_text(encoding="utf-8")

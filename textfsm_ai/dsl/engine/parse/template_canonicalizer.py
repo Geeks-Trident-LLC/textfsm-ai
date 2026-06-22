@@ -1,41 +1,54 @@
 # textfsm_ai/dsl/template_canonicalizer.py
 
 import re
+from typing import List
+
+from textfsm_ai.core.models import ReturnText
+from textfsm_ai.core.utils.template import validate_template
 
 from .variable_infer import infer_variable_mapping
 
-# Matches:
-#   Value interface (...)
-#   Value Required interface (...)
-#   Value Optional interface (...)
 VALUE_LINE_RE = re.compile(
-    r"^(Value)(?:\s+(Required|Optional))?\s+([A-Za-z_][A-Za-z0-9_]*)(\s+)\((.+)\)\s*$"
+    r"^Value"
+    r"(?:\s+(\w+(?:,\w+)*))?"  # options (optional)
+    r"\s+([A-Za-z_][A-Za-z0-9_]*)"  # variable name
+    r"\s*\((.+)\)\s*$"  # regex
 )
 
 
-class TemplateCanonicalizer:
-    def canonicalize(self, template: str, records):
-        var_mapping = infer_variable_mapping(records)
-        lines = template.splitlines()
-        out = []
+def canonicalize(llm_template: str, records: List[dict]) -> ReturnText:
+    var_mapping = infer_variable_mapping(records)
+    lines = llm_template.splitlines()
+    out = []
 
-        for line in lines:
-            m = VALUE_LINE_RE.match(line)
-            if not m:
-                out.append(line)
-                continue
+    for line in lines:
+        m = VALUE_LINE_RE.match(line)
+        if not m:
+            out.append(line)
+            continue
 
-            value_kw, req_opt, varname, ws, _old = m.groups()
-            info = var_mapping.get(varname)
+        options, varname, _old_regex = m.groups()
 
-            if not info:
-                out.append(line)
-                continue
+        # normalize variable name
+        varname = varname.lower()
 
-            # Preserve Required/Optional if present
-            if req_opt:
-                out.append(f"{value_kw} {req_opt} {varname}{ws}({info['regex']})")
-            else:
-                out.append(f"{value_kw} {varname}{ws}({info['regex']})")
+        info = var_mapping.get(varname)
+        if not info:
+            out.append(line)
+            continue
 
-        return "\n".join(out)
+        # normalize options
+        if options:
+            opts = sorted(options.split(","))
+            opt_str = ",".join(opts)
+            out.append(f"Value {opt_str} {varname} ({info['regex']})")
+        else:
+            out.append(f"Value {varname} ({info['regex']})")
+
+    template = "\n".join(out)
+    validator = validate_template(template)
+
+    if not validator.ready:
+        return ReturnText(return_text=template, reason=validator.reason, ready=False)
+
+    return ReturnText(return_text=template, ready=True)

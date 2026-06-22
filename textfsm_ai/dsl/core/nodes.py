@@ -186,9 +186,12 @@ class KeywordNode(BaseNode):
 
 
 class VariableKeywordNode(BaseNode):
-    def __init__(self, keyword: str, varname: str, generalize: bool = False):
+    def __init__(
+        self, keyword: str, varname: str, extra: str = "", generalize: bool = False
+    ):
         self.keyword = keyword
         self.varname = varname
+        self.extra = extra
         self.generalize = generalize
         self.name = self._generalized_keyword()
         self.regex = PATTERNS[self.name].regex
@@ -212,6 +215,8 @@ class VariableKeywordNode(BaseNode):
         return self.regex
 
     def to_expression(self):
+        if self.extra:
+            return f"{self.name}(var-{self.varname}, options-{self.extra})"
         return f"{self.name}(var-{self.varname})"
 
     def to_expression_regex(self):
@@ -224,7 +229,11 @@ def check_custom_keyword(keyword):
 
 class CustomKeywordNode(BaseNode):
     def __init__(
-        self, keyword: str, varname: Optional[str] = None, generalize: bool = False
+        self,
+        keyword: str,
+        varname: Optional[str] = None,
+        extra: str = "",
+        generalize: bool = False,
     ):
         if not check_custom_keyword(keyword):
             custom_keywords = list(CUSTOM_KEYWORD_MAPPING)
@@ -233,6 +242,7 @@ class CustomKeywordNode(BaseNode):
             )
         self.keyword = keyword
         self.varname = varname
+        self.extra = extra
         self.generalize = generalize
         self.name = self._generalized_keyword()
         self.regex = CUSTOM_KEYWORD_MAPPING[self.name]
@@ -257,6 +267,8 @@ class CustomKeywordNode(BaseNode):
 
     def to_expression(self):
         if self.varname:
+            if self.extra:
+                return f"{self.name}(var-{self.varname}, options-{self.extra})"
             return f"{self.name}(var-{self.varname})"
         return f"{self.name}()"
 
@@ -749,6 +761,7 @@ class RangeQuantityNode(BaseNode):
 def create_node(
     keyword: str,
     varname: Optional[str] = None,
+    extra: str = "",
     generalize: bool = False,
     literal: bool = False,
 ) -> BaseNode:
@@ -756,7 +769,9 @@ def create_node(
         return LiteralNode(keyword)
 
     if check_custom_keyword(keyword):
-        return CustomKeywordNode(keyword, varname=varname, generalize=generalize)
+        return CustomKeywordNode(
+            keyword, varname=varname, extra=extra, generalize=generalize
+        )
 
     # ------------------------------------------------------------
     # range-lo-hi-keyword
@@ -773,7 +788,7 @@ def create_node(
         hi = None if hi_raw == "inf" else int(hi_raw)
         inner_kw = m.group(3)
 
-        inner_node = create_node(inner_kw, varname, generalize)
+        inner_node = create_node(inner_kw, varname, extra, generalize)
         return RangeQuantityNode(inner_node, lo, hi)
 
     # ------------------------------------------------------------
@@ -788,7 +803,7 @@ def create_node(
         count = int(m.group(1))
         inner_kw = m.group(2)
 
-        inner_node = create_node(inner_kw, varname, generalize)
+        inner_node = create_node(inner_kw, varname, extra, generalize)
         return ExactCountNode(inner_node, count)
 
     # ------------------------------------------------------------
@@ -796,55 +811,55 @@ def create_node(
     # ------------------------------------------------------------
     if keyword.startswith("any-"):
         inner_kw = keyword[len("any-") :]
-        return ZeroOrMoreNode(create_node(inner_kw, varname, generalize))
+        return ZeroOrMoreNode(create_node(inner_kw, varname, extra, generalize))
 
     # ------------------------------------------------------------
     # some-<keyword> → one-or-more
     # ------------------------------------------------------------
     if keyword.startswith("some-"):
         inner_kw = keyword[len("some-") :]
-        return OneOrMoreNode(create_node(inner_kw, varname, generalize))
+        return OneOrMoreNode(create_node(inner_kw, varname, extra, generalize))
 
     # ------------------------------------------------------------
     # maybe-<keyword> → optional
     # ------------------------------------------------------------
     if keyword.startswith("maybe-"):
         inner_kw = keyword[len("maybe-") :]
-        return OptionalNode(create_node(inner_kw, varname, generalize))
+        return OptionalNode(create_node(inner_kw, varname, extra, generalize))
 
     # ------------------------------------------------------------
     # optional-<keyword>
     # ------------------------------------------------------------
     if keyword.startswith("optional-"):
         inner_kw = keyword[len("optional-") :]
-        return OptionalNode(create_node(inner_kw, varname, generalize))
+        return OptionalNode(create_node(inner_kw, varname, extra, generalize))
 
     # ------------------------------------------------------------
     # zero-or-more-<keyword>
     # ------------------------------------------------------------
     if keyword.startswith("zero-or-more-"):
         inner_kw = keyword[len("zero-or-more-") :]
-        return ZeroOrMoreNode(create_node(inner_kw, varname, generalize))
+        return ZeroOrMoreNode(create_node(inner_kw, varname, extra, generalize))
 
     # ------------------------------------------------------------
     # one-or-more-<keyword>
     # ------------------------------------------------------------
     if keyword.startswith("one-or-more-"):
         inner_kw = keyword[len("one-or-more-") :]
-        return OneOrMoreNode(create_node(inner_kw, varname, generalize))
+        return OneOrMoreNode(create_node(inner_kw, varname, extra, generalize))
 
     # ------------------------------------------------------------
     # not-<keyword>
     # ------------------------------------------------------------
     if keyword.startswith("not-"):
         inner_kw = keyword[len("not-") :]
-        return NotNode(create_node(inner_kw, varname, generalize))
+        return NotNode(create_node(inner_kw, varname, extra, generalize))
 
     # ------------------------------------------------------------
     # variable keyword
     # ------------------------------------------------------------
     if varname is not None:
-        return VariableKeywordNode(keyword, varname, generalize)
+        return VariableKeywordNode(keyword, varname, extra, generalize)
 
     # ------------------------------------------------------------
     # plain keyword
