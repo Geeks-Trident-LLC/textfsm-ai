@@ -1,3 +1,27 @@
+azure:
+  quality:
+    chat:
+      - gpt-4o
+      - gpt-4.1
+  balance:
+    chat:
+      - gpt-4o-mini
+      - gpt-4.1-mini
+  speed:
+    chat:
+      - gpt-4o-mini
+  thinking:
+    quality:
+      chat:
+        - o1
+        - o1-mini
+    balance:
+      chat:
+        - o1-mini
+    speed:
+      chat:
+        - o1-mini
+
 openai:
   quality:
     chat:
