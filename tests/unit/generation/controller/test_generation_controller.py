@@ -38,7 +38,9 @@ def test_controller_base_success(monkeypatch):
         mock_corr,
     )
 
-    controller = GenerationController(api_key="KEY", model="m", max_retries=3)
+    controller = GenerationController(
+        "Provider", api_key="KEY", model="m", max_retries=3
+    )
     result = controller.run("sample")
 
     # Assertions
@@ -73,7 +75,9 @@ def test_controller_correction_success(monkeypatch):
         mock_corr,
     )
 
-    controller = GenerationController(api_key="KEY", model="m", max_retries=3)
+    controller = GenerationController(
+        "Provider", api_key="KEY", model="m", max_retries=3
+    )
     result = controller.run("sample")
 
     # Assertions
@@ -108,7 +112,9 @@ def test_controller_all_fail(monkeypatch):
         mock_corr,
     )
 
-    controller = GenerationController(api_key="KEY", model="m", max_retries=2)
+    controller = GenerationController(
+        "Provider", api_key="KEY", model="m", max_retries=2
+    )
     result = controller.run("sample")
 
     # Assertions

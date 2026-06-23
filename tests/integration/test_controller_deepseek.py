@@ -8,7 +8,10 @@ from textfsm_ai.models import model as MODEL
 
 def test_real(deepseek_key):
     controller = GenerationController(
-        api_key=deepseek_key, model=MODEL.deepseek.default, max_retries=2
+        provider_name="deepseek",
+        api_key=deepseek_key,
+        model=MODEL.deepseek.default,
+        max_retries=2,
     )
 
     gen_pipeline = controller.run("interface GigabitEthernet0/1")

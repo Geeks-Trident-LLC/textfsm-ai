@@ -9,11 +9,11 @@ from textfsm_ai.generation.support import (
     structured_extractor,
     validator,
 )
-from textfsm_ai.providers.registry import get_provider_for_model
+from textfsm_ai.providers.registry import get_provider_by_name
 
 
-def run(api_key: str, model: str, sample: str):
-    provider = get_provider_for_model(model)(api_key, model)
+def run(provider_name: str, api_key: str, model: str, sample: str):
+    provider = get_provider_by_name(provider_name)(api_key, model)
 
     # Build prompt
     prompt = prompt_builder.PromptBuilder().base_prompt(sample)
@@ -30,9 +30,13 @@ def run(api_key: str, model: str, sample: str):
 
 
 def run_correction_prompt(
-    api_key: str, model: str, sample: str, prev_result: GenerationStage
+    provider_name: str,
+    api_key: str,
+    model: str,
+    sample: str,
+    prev_result: GenerationStage,
 ):
-    provider = get_provider_for_model(model)(api_key, model)
+    provider = get_provider_by_name(provider_name)(api_key, model)
 
     metadata = prev_result.metadata
 

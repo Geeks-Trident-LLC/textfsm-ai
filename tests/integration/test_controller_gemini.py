@@ -8,7 +8,10 @@ from textfsm_ai.models import model as MODEL
 
 def test_real(gemini_key):
     controller = GenerationController(
-        api_key=gemini_key, model=MODEL.gemini.balance.chat[0], max_retries=2
+        provider_name="gemini",
+        api_key=gemini_key,
+        model=MODEL.gemini.balance.chat[0],
+        max_retries=2,
     )
 
     gen_pipeline = controller.run("interface GigabitEthernet0/1")

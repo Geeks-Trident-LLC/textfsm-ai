@@ -36,22 +36,9 @@ registry.register(GeminiProvider)
 registry.register(DeepSeekProvider)
 
 
-def get_provider_for_model(model: str) -> Type[Provider]:
-    """
-    Determine provider based on model prefix.
-    """
-    model = model.lower()
-
-    if model.startswith("deepseek"):
-        return registry.get("deepseek")
-
-    if model.startswith("gpt") or model.startswith("o"):
-        return registry.get("openai")
-
-    if model.startswith("claude"):
-        return registry.get("anthropic")
-
-    if model.startswith("gemini"):
-        return registry.get("gemini")
-
-    raise ValueError(f"Unknown model provider for model: {model}")
+def get_provider_by_name(provider_name: str) -> Type[Provider]:
+    provider_name = provider_name.lower()
+    try:
+        return registry.get(provider_name)
+    except KeyError:
+        raise ValueError(f"Unknown provider name: {provider_name}")

@@ -9,7 +9,10 @@ from textfsm_ai.generation.engine import (
 class GenerationController:
     """Stateless orchestrator for generation pipeline."""
 
-    def __init__(self, api_key: str, model: str, max_retries: int = 1):
+    def __init__(
+        self, provider_name: str, api_key: str, model: str, max_retries: int = 1
+    ):
+        self.provider_name = provider_name
         self.api_key = api_key
         self.model = model
         self.max_retries = max_retries
@@ -25,6 +28,7 @@ class GenerationController:
             # ----------------------------------------
             if attempt == 0:
                 result = engine.run(
+                    provider_name=self.provider_name,
                     api_key=self.api_key,
                     model=self.model,
                     sample=sample,
@@ -50,6 +54,7 @@ class GenerationController:
             # ----------------------------------------
             assert last_result is not None
             result = engine.run_correction_prompt(
+                provider_name=self.provider_name,
                 api_key=self.api_key,
                 model=self.model,
                 sample=sample,

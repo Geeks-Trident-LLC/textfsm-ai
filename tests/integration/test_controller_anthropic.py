@@ -8,7 +8,10 @@ from textfsm_ai.models import model as MODEL
 
 def test_real(anthropic_key):
     controller = GenerationController(
-        api_key=anthropic_key, model=MODEL.anthropic.default, max_retries=2
+        provider_name="anthropic",
+        api_key=anthropic_key,
+        model=MODEL.anthropic.default,
+        max_retries=2,
     )
 
     gen_pipeline = controller.run("interface GigabitEthernet0/1")

@@ -19,7 +19,7 @@ def delivery_controller(deepseek_key) -> DeliveryController:
     # Use a real API key in CI or a fake/mock provider in tests
     api_key = deepseek_key
     model = MODEL.deepseek.default
-    return DeliveryController(api_key=api_key, model=model)
+    return DeliveryController(provider_name="deepseek", api_key=api_key, model=model)
 
 
 @pytest.mark.parametrize(

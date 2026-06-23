@@ -24,6 +24,28 @@ class model:
 
         default = ModelRegistry.alias("openai_default")
 
+    class azure:
+        class quality:
+            chat = ModelRegistry.get("azure", "quality", "chat")
+
+        class balance:
+            chat = ModelRegistry.get("azure", "balance", "chat")
+
+        class speed:
+            chat = ModelRegistry.get("azure", "speed", "chat")
+
+        class thinking:
+            class quality:
+                chat = ModelRegistry.get("azure", "thinking", "quality", "chat")
+
+            class balance:
+                chat = ModelRegistry.get("azure", "thinking", "balance", "chat")
+
+            class speed:
+                chat = ModelRegistry.get("azure", "thinking", "speed", "chat")
+
+        default = ModelRegistry.alias("azure_default")
+
     class anthropic:
         class quality:
             chat = ModelRegistry.get("anthropic", "quality", "chat")

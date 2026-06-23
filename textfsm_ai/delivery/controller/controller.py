@@ -9,8 +9,15 @@ from textfsm_ai.generation.controller.generation_controller import GenerationCon
 
 
 class DeliveryController:
-    def __init__(self, api_key: str, model: str):
-        self._gen = GenerationController(api_key=api_key, model=model)
+    def __init__(
+        self, provider_name: str, api_key: str, model: str, max_tries: int = 1
+    ):
+        self._gen = GenerationController(
+            provider_name=provider_name,
+            api_key=api_key,
+            model=model,
+            max_retries=max_tries,
+        )
         self._dsl = DSLController()
         self._engine = DeliveryEngine(model=model)
 

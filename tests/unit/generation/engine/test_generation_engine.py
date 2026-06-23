@@ -21,7 +21,7 @@ class MockProvider:
         self.model = model
 
 
-def mock_get_provider_for_model(model):
+def mock_get_provider_by_name(model):
     return MockProvider
 
 
@@ -32,8 +32,8 @@ def mock_get_provider_for_model(model):
 def patch_provider(monkeypatch):
     monkeypatch.setattr(
         generation_engine,
-        "get_provider_for_model",
-        mock_get_provider_for_model,
+        "get_provider_by_name",
+        mock_get_provider_by_name,
     )
 
 
@@ -99,7 +99,7 @@ def test_run_success(patch_provider, patch_prompt_builder, monkeypatch):
         lambda s: final,
     )
 
-    result = generation_engine.run("KEY", "m", "sample")
+    result = generation_engine.run("Provider", "KEY", "m", "sample")
 
     assert isinstance(result, GenerationStage)
     assert result.ready is True
@@ -189,7 +189,9 @@ def test_run_correction_prompt_success(
         lambda s: final,
     )
 
-    result = generation_engine.run_correction_prompt("KEY", "m", "sample", prev_result)
+    result = generation_engine.run_correction_prompt(
+        "provider", "KEY", "m", "sample", prev_result
+    )
 
     assert isinstance(result, GenerationStage)
     assert result.ready is True
