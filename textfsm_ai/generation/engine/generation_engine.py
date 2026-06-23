@@ -12,16 +12,27 @@ from textfsm_ai.generation.support import (
 from textfsm_ai.providers.registry import get_provider_by_name
 
 
-def run(provider_name: str, api_key: str, model: str, sample: str):
-    provider = get_provider_by_name(provider_name)(api_key, model)
+def run(
+    provider_name: str,
+    api_key: str,
+    model: str,
+    sample: str,
+    endpoint: str = "",
+    api_version: str = "",
+    **kwargs,
+):
+    provider_type = get_provider_by_name(provider_name)
+    if provider_type.name == "azure":
+        deployment = model
+        provider = provider_type(api_key, endpoint, api_version, deployment)
+    else:
+        provider = provider_type(api_key, model)
 
     # Build prompt
     prompt = prompt_builder.PromptBuilder().base_prompt(sample)
 
     response = extractor.extract(
-        provider=provider,
-        model=model,
-        prompt=prompt,
+        provider=provider, model=model, prompt=prompt, **kwargs
     )
     structured = structured_extractor.extract(response)
     result = generator.generate(structured)
@@ -35,8 +46,15 @@ def run_correction_prompt(
     model: str,
     sample: str,
     prev_result: GenerationStage,
+    endpoint: str = "",
+    api_version: str = "",
+    **kwargs,
 ):
-    provider = get_provider_by_name(provider_name)(api_key, model)
+    provider_type = get_provider_by_name(provider_name)
+    if provider_type.name == "azure":
+        provider = provider_type(api_key, endpoint, api_version, model)
+    else:
+        provider = provider_type(api_key, model)
 
     metadata = prev_result.metadata
 
@@ -52,9 +70,7 @@ def run_correction_prompt(
     )
 
     response = extractor.extract(
-        provider=provider,
-        model=model,
-        prompt=prompt,
+        provider=provider, model=model, prompt=prompt, **kwargs
     )
     structured = structured_extractor.extract(response)
     result = generator.generate(structured)

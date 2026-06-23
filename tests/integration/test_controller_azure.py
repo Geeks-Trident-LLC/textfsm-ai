@@ -1,16 +1,19 @@
 # tests/integration/test_controller_azure.py
 
+import os
+
 from textfsm_ai.core.utils.template import parse_to_lists
 from textfsm_ai.dsl.controller.dsl_controller import DSLController
 from textfsm_ai.generation.controller.generation_controller import GenerationController
-from textfsm_ai.models import model as MODEL
 
 
 def test_real(azure_key):
     controller = GenerationController(
         provider_name="azure",
         api_key=azure_key,
-        model=MODEL.azure.default,
+        model="gpt-4.1-textfsm-ai",
+        endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
+        api_version=os.environ.get("AZURE_OPENAI_API_VERSION", "2024-02-15-preview"),
         max_retries=2,
     )
 

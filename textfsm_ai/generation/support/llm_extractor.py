@@ -5,7 +5,7 @@ from textfsm_ai.generation.core.models import LLMRawResponse
 from textfsm_ai.orchestrator.provider import Provider
 
 
-def extract(provider: Provider, model: str, prompt: str) -> LLMRawResponse:
+def extract(provider: Provider, model: str, prompt: str, **kwargs) -> LLMRawResponse:
     """
     Robust LLM extractor that gracefully handles:
     - provider overload / busy / rate limit
@@ -16,7 +16,7 @@ def extract(provider: Provider, model: str, prompt: str) -> LLMRawResponse:
     """
 
     try:
-        raw = provider.generate_sync(prompt, model=model)
+        raw = provider.generate_sync(prompt, model=model, **kwargs)
 
         # Provider returned None or empty
         if not raw:

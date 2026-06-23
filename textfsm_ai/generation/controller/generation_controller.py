@@ -10,14 +10,22 @@ class GenerationController:
     """Stateless orchestrator for generation pipeline."""
 
     def __init__(
-        self, provider_name: str, api_key: str, model: str, max_retries: int = 1
+        self,
+        provider_name: str,
+        api_key: str,
+        model: str,
+        endpoint: str = "",
+        api_version: str = "",
+        max_retries: int = 1,
     ):
         self.provider_name = provider_name
         self.api_key = api_key
         self.model = model
         self.max_retries = max_retries
+        self.endpoint = endpoint
+        self.api_version = api_version
 
-    def run(self, sample: str) -> GenerationPipeline:
+    def run(self, sample: str, **kwargs) -> GenerationPipeline:
 
         stages = []
         last_result = None
@@ -32,6 +40,9 @@ class GenerationController:
                     api_key=self.api_key,
                     model=self.model,
                     sample=sample,
+                    endpoint=self.endpoint,
+                    api_version=self.api_version,
+                    **kwargs,
                 )
                 last_result = result
                 stages.append(result)
@@ -59,6 +70,9 @@ class GenerationController:
                 model=self.model,
                 sample=sample,
                 prev_result=last_result,
+                endpoint=self.endpoint,
+                api_version=self.api_version,
+                **kwargs,
             )
             result.name = "generate-using-correction-prompt"
             last_result = result

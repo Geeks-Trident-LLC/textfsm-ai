@@ -8,11 +8,11 @@ from textfsm_ai.generation.support import llm_extractor
 from textfsm_ai.orchestrator.provider import Provider
 
 
-def extract(provider: Provider, model: str, prompt: str) -> LLMResponse:
+def extract(provider: Provider, model: str, prompt: str, **kwargs) -> LLMResponse:
     sent_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     start = time.time()
 
-    raw = llm_extractor.extract(provider, model=model, prompt=prompt)
+    raw = llm_extractor.extract(provider, model=model, prompt=prompt, **kwargs)
 
     duration_ms = int((time.time() - start) * 1000)
     received_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
