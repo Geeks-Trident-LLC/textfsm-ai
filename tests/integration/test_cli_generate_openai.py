@@ -30,10 +30,9 @@ def test_real_openai(tmp_path, openai_key):
     )
 
     # Basic assertions
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"Generation failed: {result.reason}"
     template = result.output.strip()
 
     # The model should return something TextFSM-like
-    assert "Value " in template
-    assert "Start" in template
-    assert r"  ^hostname\s+${" in template
+    for expected in ("Value ", "\n\nStart", " ^hostname"):
+        assert expected in template

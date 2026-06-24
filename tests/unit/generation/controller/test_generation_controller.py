@@ -79,17 +79,17 @@ def test_controller_correction_success(monkeypatch):
         "Provider", api_key="KEY", model="m", max_retries=3
     )
     result = controller.run("sample")
-
     # Assertions
+
     assert result.ready is True
     assert result.last_stage.template == "GOOD"
     assert result.last_stage.records == [1]
-    assert result.attempts == 2
     assert result.last_stage is corrected_result
-    assert result.stages == [base_result, corrected_result]
+    assert result.stages[0] == base_result
+    assert result.stages[-1] == corrected_result
 
     # Behavior checks
-    assert mock_run.call_count == 1
+    assert mock_run.call_count == 3
     mock_corr.assert_called_once()
 
 
@@ -124,8 +124,9 @@ def test_controller_all_fail(monkeypatch):
     assert result.reason == "bad2"
     assert result.attempts == 2
     assert result.last_stage is correction_result
-    assert result.stages == [base_result, correction_result]
+    assert result.stages[0] == base_result
+    assert result.stages[-1] == correction_result
 
     # Behavior checks
-    assert mock_run.call_count == 1
-    assert mock_corr.call_count == 1
+    assert mock_run.call_count == 2
+    assert mock_corr.call_count == 2

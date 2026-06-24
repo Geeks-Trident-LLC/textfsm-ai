@@ -85,7 +85,7 @@ deepseek:
         - deepseek-chat
 
 aliases:
-  openai_default: gpt-4o
+  openai_default: gpt-4o-mini
   anthropic_default: claude-haiku-4-5-20251001
   gemini_default: gemini-2.5-flash
   deepseek_default: deepseek-v4-flash
