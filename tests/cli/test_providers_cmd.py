@@ -1,3 +1,5 @@
+# tests/cli/test_providers_cmd.py
+
 from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner

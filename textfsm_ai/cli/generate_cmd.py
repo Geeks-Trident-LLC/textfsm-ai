@@ -14,44 +14,68 @@ from textfsm_ai.providers.config import load_config_from_env, load_config_from_f
 
 @click.command("generate")
 @click.argument("input_file", type=click.Path(exists=True))
-@click.option(
-    "--provider",
-    required=True,
-    help="Provider name (azure, openai, gemini, anthropic, deepseek)",
-)
-@click.option("--api-key", required=False, help="Override API key")
-@click.option("--model", required=False, help="Model or deployment name")
-@click.option("--endpoint", required=False, help="Endpoint URL (Azure only)")
-@click.option("--api-version", required=False, help="API version (Azure only)")
+@click.option("--provider", required=True)
+@click.option("--api-key", required=False)
+@click.option("--model", required=False)
+@click.option("--endpoint", required=False)
+@click.option("--api-version", required=False)
 @click.option("--max-retries", default=1, show_default=True)
-def generate(input_file, provider, api_key, model, endpoint, api_version, max_retries):
+@click.option("--raw", is_flag=True, help="Show raw LLM output")
+@click.option("--json", "json_output", is_flag=True, help="Show full pipeline JSON")
+@click.option("--explain", is_flag=True, help="Show variable explanations")
+@click.option("--debug", is_flag=True, help="Show provider/controller resolution")
+@click.option("--usage", is_flag=True, help="Show token usage")
+@click.option("--sections", is_flag=True, help="Print all canonical output sections")
+@click.option(
+    "--template-only", is_flag=True, help="Print only the final TextFSM template"
+)
+@click.option("--records", is_flag=True, help="Print parsed records")
+@click.option("--handling", is_flag=True, help="Print LLM reasoning/handling")
+@click.option("--sample", is_flag=True, help="Print the input sample used by the LLM")
+def generate(
+    input_file,
+    provider,
+    api_key,
+    model,
+    endpoint,
+    api_version,
+    max_retries,
+    raw,
+    json_output,
+    explain,
+    debug,
+    usage,
+    sections,
+    template_only,
+    records,
+    handling,
+    sample,
+):
     """
     Generate a TextFSM template or AI output using the orchestrator.
     """
 
     # -----------------------------
-    # 1. Load config (file → env)
+    # 1. Load prompt
     # -----------------------------
-    from textfsm_ai import BASE_DIR
+    with open(input_file, "r", encoding="utf-8") as f:
+        prompt = f.read()
 
-    cfg = load_config_from_file(BASE_DIR / "models" / "providers.yaml")
+    # -----------------------------
+    # 2. Resolve provider config
+    # -----------------------------
+    cfg = load_config_from_file()
     env_cfg = load_config_from_env()
-
-    # Merge env providers on top of file providers
     providers = {**cfg.providers, **env_cfg.providers}
 
     if provider not in providers:
         keys = ", ".join(sorted(providers.keys()))
         raise click.ClickException(f"Unknown provider '{provider}'. Available: {keys}")
 
-    pconf = providers[provider]  # ProviderConfig
-
-    # -----------------------------
-    # 2. Resolve parameters
-    # -----------------------------
+    pconf = providers[provider]
     params = pconf.params.copy()
 
-    # CLI overrides config
+    # CLI overrides
     if api_key:
         params["api_key"] = api_key
     if model:
@@ -61,41 +85,42 @@ def generate(input_file, provider, api_key, model, endpoint, api_version, max_re
     if api_version:
         params["api_version"] = api_version
 
-    # -----------------------------
-    # 3. Validate required params
-    # -----------------------------
-    if "api_key" not in params or not params["api_key"]:
-        raise click.ClickException(
-            f"Provider '{provider}' requires an API key. "
-            f"Use --api-key or set it in providers.yaml or environment."
-        )
-
-    # Azure-specific validation
+    # Azure validation
     if provider == "azure":
-        if "endpoint" not in params or not params["endpoint"]:
+        if "endpoint" not in params:
             raise click.ClickException(
-                "Azure requires an endpoint. Use --endpoint or "
-                "set AZURE_OPENAI_ENDPOINT."
+                "Azure requires --endpoint or AZURE_OPENAI_ENDPOINT"
             )
-        if "model" not in params or not params["model"]:
+        if "model" not in params:
             raise click.ClickException(
-                "Azure requires a deployment name. Use --model or "
-                "set AZURE_OPENAI_DEPLOYMENT."
+                "Azure requires --model or AZURE_OPENAI_DEPLOYMENT"
             )
         params.setdefault("api_version", "2024-02-15-preview")
 
-    # Non-Azure providers: model optional (fallback to config)
-    else:
-        params.setdefault("model", pconf.params.get("model"))
+    # -----------------------------
+    # 3. Debug output
+    # -----------------------------
+
+    # --debug → provider/controller resolution
+    if debug and not json_output:
+        click.echo("=== Debug Info ===")
+        click.echo(f"provider:       {provider}")
+        click.echo(f"model:          {params.get('model')}")
+        click.echo(f"max_retries:    {max_retries}")
+
+        # API key masking
+        key = params.get("api_key")
+        masked = key[:4] + "..." + key[-4:] if key else "<missing>"
+        click.echo(f"api_key:        {masked}")
+
+        # Azure-only fields
+        if params.get("endpoint"):
+            click.echo(f"endpoint:       {params.get('endpoint')}")
+            click.echo(f"api_version:    {params.get('api_version')}")
+        click.echo("")
 
     # -----------------------------
-    # 4. Read prompt
-    # -----------------------------
-    with open(input_file, "r", encoding="utf-8") as f:
-        prompt = f.read()
-
-    # -----------------------------
-    # 5. Create controller
+    # 4. Create controller
     # -----------------------------
     controller = GenerationController(
         provider_name=provider,
@@ -107,14 +132,110 @@ def generate(input_file, provider, api_key, model, endpoint, api_version, max_re
     )
 
     # -----------------------------
-    # 6. Run generation
+    # 5. Run pipeline
     # -----------------------------
     pipeline = controller.run(prompt)
 
     if not pipeline.ready:
         raise click.ClickException(f"Generation failed: {pipeline.reason}")
 
-    click.echo(pipeline.last_stage.template)
+    # -----------------------------
+    # 6. Output modes
+    # -----------------------------
+
+    stage = pipeline.last_stage
+    meta = stage.metadata
+    resp = meta.response if meta else None
+
+    # --json → full pipeline JSON
+    if json_output:
+        import json
+
+        click.echo(json.dumps(pipeline.to_dict(), indent=2))
+        return
+
+    # --usage → token usage
+    if usage:
+        click.echo("=== LLM Usage ===")
+        if resp:
+            click.echo(f"prompt_tokens: {resp.input_tokens}")
+            click.echo(f"completion_tokens: {resp.output_tokens}")
+            click.echo(f"total_tokens: {resp.total_tokens}")
+        else:
+            click.echo("No token usage available.")
+
+    # --sections → print all 4 canonical blocks
+    if sections:
+        click.echo("=== TEXTFSM TEMPLATE ===")
+        click.echo(stage.template)
+        click.echo("")
+
+        click.echo("=== PARSED RECORDS ===")
+        click.echo(stage.records)
+        click.echo("")
+
+        click.echo("=== VARIABLE EXPLANATIONS ===")
+        if meta and meta.variables:
+            click.echo(meta.variables)
+        else:
+            click.echo("No variable explanations available.")
+        click.echo("")
+
+        click.echo("=== LLM HANDLING ===")
+        if meta and meta.handling:
+            for line in meta.handling:
+                click.echo(line)
+        else:
+            click.echo("No LLM handling information available.")
+        return
+
+    # --template-only → explicitly print only the final template
+    if template_only:
+        click.echo(stage.template)
+        return
+
+    # --records → print parsed records
+    if records:
+        click.echo(stage.records)
+        return
+
+    # --handling → print LLM reasoning
+    if handling:
+        if meta and meta.handling:
+            for line in meta.handling:
+                click.echo(line)
+        else:
+            click.echo("No LLM handling information available.")
+        return
+
+    # --sample → print the input sample
+    if sample:
+        if resp:
+            click.echo(resp.prompt)
+        else:
+            click.echo("No sample available.")
+        return
+
+    # --raw → raw LLM output
+    if raw:
+        if resp and resp.raw:
+            click.echo(resp.raw)
+        else:
+            click.echo("No raw LLM output available.")
+        return
+
+    # --explain → variable explanations
+    if explain:
+        if meta and meta.variables:
+            click.echo(meta.variables)
+        else:
+            click.echo("No variable explanations available.")
+        return
+
+    # -----------------------------
+    # 7. Default output → final template
+    # -----------------------------
+    click.echo(stage.template)
 
 
 # ============================================================

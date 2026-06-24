@@ -22,6 +22,8 @@ def test_real_anthropic(tmp_path, anthropic_key):
         generate,
         [
             str(input_file),
+            "--provider",
+            "anthropic",
             "--model",
             MODEL.anthropic.default,
         ],
@@ -29,7 +31,9 @@ def test_real_anthropic(tmp_path, anthropic_key):
 
     # Basic assertions
     assert result.exit_code == 0
-    assert result.output.strip()
+    template = result.output.strip()
 
     # The model should return something TextFSM-like
-    assert "Router1" in result.output
+    assert "Value " in template
+    assert "Start" in template
+    assert r"  ^hostname\s+${" in template

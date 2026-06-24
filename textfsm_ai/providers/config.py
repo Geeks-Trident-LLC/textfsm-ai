@@ -21,7 +21,15 @@ class OrchestratorConfig:
     providers: Dict[str, ProviderConfig]
 
 
-def load_config_from_file(path: str) -> OrchestratorConfig:
+def load_config_from_file(path: str = "") -> OrchestratorConfig:
+    if not path:
+        from textfsm_ai import BASE_DIR
+
+        path = str(BASE_DIR / "models" / "providers.yaml")
+
+    if not os.path.exists(path):
+        return OrchestratorConfig(providers={})
+
     with open(path, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f) or {}
 

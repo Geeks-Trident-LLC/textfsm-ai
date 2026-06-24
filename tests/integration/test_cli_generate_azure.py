@@ -1,16 +1,17 @@
-# tests/integration/test_cli_generate_openai.py
+# tests/integration/test_cli_generate_anthropic.py
 
 from __future__ import annotations
+
+import os
 
 import pytest
 from click.testing import CliRunner
 
 from textfsm_ai.cli.generate_cmd import generate
-from textfsm_ai.models import model as MODEL
 
 
 @pytest.mark.integration
-def test_real_openai(tmp_path, openai_key):
+def test_real_anthropic(tmp_path, azure_key):
     # Create a temporary input file
     input_file = tmp_path / "input.txt"
     input_file.write_text(
@@ -18,14 +19,19 @@ def test_real_openai(tmp_path, openai_key):
         encoding="utf-8",
     )
     runner = CliRunner()
+
     result = runner.invoke(
         generate,
         [
             str(input_file),
             "--provider",
-            "openai",
+            "azure",
             "--model",
-            MODEL.openai.default,
+            "gpt-4.1-textfsm-ai",
+            "--endpoint",
+            os.environ.get("AZURE_OPENAI_ENDPOINT"),
+            "--api-version",
+            os.environ.get("AZURE_OPENAI_API_VERSION", "2024-02-15-preview"),
         ],
     )
 

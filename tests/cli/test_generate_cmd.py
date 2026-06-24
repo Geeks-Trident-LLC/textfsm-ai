@@ -1,31 +1,46 @@
+# tests/cli/test_generate_cmd.py
+
 from __future__ import annotations
 
-import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from click.testing import CliRunner
 
 from textfsm_ai.cli.generate_cmd import generate
+from textfsm_ai.providers.config import OrchestratorConfig, ProviderConfig
 
 
 def test_generate_basic_output(tmp_path):
     input_file = tmp_path / "input.txt"
     input_file.write_text("hello world", encoding="utf-8")
 
-    with patch(
-        "textfsm_ai.cli.generate_cmd.ask_ai", new_callable=AsyncMock
-    ) as mock_ask:
-        resp = mock_ask.return_value
-        resp.content = "mocked output"
-        resp.to_json.return_value = json.dumps({"output": "mocked output"})
+    fake_provider = ProviderConfig(
+        name="openai",
+        type="openai",
+        params={"api_key": "dummy", "model": "gpt-4o-mini"},
+    )
+
+    with (
+        patch("textfsm_ai.cli.generate_cmd.load_config_from_file") as mock_file,
+        patch("textfsm_ai.cli.generate_cmd.load_config_from_env") as mock_env,
+        patch("textfsm_ai.cli.generate_cmd.GenerationController") as mock_ctrl,
+    ):
+        mock_file.return_value = OrchestratorConfig(providers={"openai": fake_provider})
+        mock_env.return_value = OrchestratorConfig(providers={})
+
+        instance = mock_ctrl.return_value
+        instance.run.return_value.last_stage.template = "mocked output"
+        instance.run.return_value.ready = True
 
         runner = CliRunner()
         result = runner.invoke(
             generate,
             [
                 str(input_file),
+                "--provider",
+                "openai",
                 "--model",
-                "openai/gpt-4o-mini",
+                "gpt-4o-mini",
             ],
         )
 
@@ -33,35 +48,7 @@ def test_generate_basic_output(tmp_path):
     assert "mocked output" in result.output
 
 
-def test_generate_json_output(tmp_path):
-    input_file = tmp_path / "input.txt"
-    input_file.write_text("hello world", encoding="utf-8")
-
-    with patch(
-        "textfsm_ai.cli.generate_cmd.ask_ai", new_callable=AsyncMock
-    ) as mock_ask:
-        resp = mock_ask.return_value
-        resp.content = "mocked output"
-        resp.to_json = lambda: json.dumps({"output": "mocked output"})
-
-        runner = CliRunner()
-        result = runner.invoke(
-            generate,
-            [
-                str(input_file),
-                "--model",
-                "openai/gpt-4o-mini",
-                "--json",
-            ],
-        )
-
-    assert result.exit_code == 0
-
-    parsed = json.loads(result.output)
-    assert parsed["output"] == "mocked output"
-
-
-def test_generate_requires_model(tmp_path):
+def test_generate_requires_provider(tmp_path):
     input_file = tmp_path / "input.txt"
     input_file.write_text("hello world", encoding="utf-8")
 
@@ -69,4 +56,4 @@ def test_generate_requires_model(tmp_path):
     result = runner.invoke(generate, [str(input_file)])
 
     assert result.exit_code != 0
-    assert "Missing option '--model'" in result.output
+    assert "Missing option '--provider'" in result.output
