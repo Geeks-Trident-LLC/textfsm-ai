@@ -13,7 +13,7 @@ def infer_variable_mapping(records):
     for rec in records:
         for k, v in rec.items():
             if v:
-                values_by_var[k].append(v)
+                values_by_var[k.lower()].append(v)
 
     ExpressionNodeFactory()
     result = {}
