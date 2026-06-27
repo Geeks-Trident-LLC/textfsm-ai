@@ -1,3 +1,5 @@
+import textwrap
+
 import pytest
 
 from textfsm_ai.dsl.ast.nodes import Action, RuleNode, TemplateAST, ValueNode, VarNode
@@ -104,12 +106,12 @@ def test_parse_rule_line_eof():
 
 
 def test_parse_textfsm_single_state():
-    text = """
-Start
-  ^foo -> Next
-  ^bar -> Record
-"""
-    ast = parse_textfsm(text, [], "")
+    text = textwrap.dedent("""
+        Start
+          ^foo -> Next
+          ^bar -> Record
+    """).strip()
+    ast = parse_textfsm(text, [])
 
     assert isinstance(ast, TemplateAST)
     assert len(ast.states) == 1
@@ -126,17 +128,21 @@ Start
 
 
 def test_parse_textfsm_multiple_states():
-    text = """
-Value v1 (\\S+)
-Value Required,List v2 (\\S+)
+    text = textwrap.dedent(r"""
+        Value Required v1 (\S+)
+        Value v2 (\S+)
+        Value Filldown,Fillup v3 (\S+)
 
-Start
-  ^foo -> Next
+        Start
+          ^foo ${v1} -> Next
+          ^bar ${v2} -> Continue.Record Table
 
-Table
-  ^bar -> Next.Record Table
-"""
-    ast = parse_textfsm(text, [], "")
+        Table
+          ^foobar ${v3} -> Start
+    """).strip()
+    records = [{"v1": "abc", "v2": "12", "v3": "1.1"}]
+
+    ast = parse_textfsm(text, records)
 
     assert len(ast.states) == 2
 
@@ -147,6 +153,12 @@ Table
     assert table.name == "Table"
 
     assert start.rules[0].actions == [Action(line_action="Next")]
-    assert table.rules[0].actions == [
-        Action(line_action="Next", record_action="Record", state="Table")
+    assert "".join(i.raw for i in start.rules[0].pattern.items) == "^foo ${v1}"
+
+    assert start.rules[1].actions == [
+        Action(line_action="Continue", record_action="Record", state="Table")
     ]
+    assert "".join(i.raw for i in start.rules[1].pattern.items) == "^bar ${v2}"
+
+    assert table.rules[0].actions == [Action(state="Start")]
+    assert "".join(i.raw for i in table.rules[0].pattern.items) == "^foobar ${v3}"

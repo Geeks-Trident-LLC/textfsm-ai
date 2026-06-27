@@ -3,7 +3,6 @@
 import re
 from typing import Dict, List, Optional
 
-from textfsm_ai.dsl.ast.keyword_infer import infer_base_keyword, infer_call_keywords
 from textfsm_ai.dsl.ast.nodes import (
     Action,
     CallNode,
@@ -21,6 +20,7 @@ from textfsm_ai.dsl.ast.nodes import (
 )
 from textfsm_ai.dsl.core.nodes import create_node
 from textfsm_ai.dsl.core.patterns import PATTERNS
+from textfsm_ai.dsl.engine.parse.infer import infer_base_keyword
 
 VALUE_RE = re.compile(
     r"^Value"
@@ -30,7 +30,7 @@ VALUE_RE = re.compile(
 )
 
 STATE_RE = re.compile(r"^(\w+)\s*$")
-RULE_RE = re.compile(r"^\s*(\^.+?)\s*->\s*(.+?)\s*$")
+RULE_RE = re.compile(r"^\s*(\^.+?)\s*(?:->\s*(.+?)\s*)?$")
 
 VAR_RE = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
 CALL_RE = re.compile(r"([A-Za-z_][A-Za-z0-9_-]*)\(\)")
@@ -44,13 +44,22 @@ CALL_RE = re.compile(r"([A-Za-z_][A-Za-z0-9_-]*)\(\)")
 def parse_action_expr(expr: str) -> Action:
     expr = expr.strip()
 
+    # ------------------------------------------------------------
+    # EOF
+    # ------------------------------------------------------------
     if expr == "EOF":
         return Action(eof_action=True)
 
+    # ------------------------------------------------------------
+    # Error ^pattern$
+    # ------------------------------------------------------------
     if expr.startswith("Error "):
         pattern = expr[len("Error ") :].strip()
         return Action(error_pattern=pattern)
 
+    # ------------------------------------------------------------
+    # Combined: Next.Record Foo
+    # ------------------------------------------------------------
     if "." in expr:
         line_part, rest = expr.split(".", 1)
         parts = rest.strip().split()
@@ -62,22 +71,45 @@ def parse_action_expr(expr: str) -> Action:
             state=state,
         )
 
+    # ------------------------------------------------------------
+    # Split into head + tail
+    # ------------------------------------------------------------
     parts = expr.split()
     head = parts[0]
     tail = parts[1:] if len(parts) > 1 else []
 
+    # ------------------------------------------------------------
+    # Line-only: Next Foo, Continue Bar
+    # ------------------------------------------------------------
     if head in ("Next", "Continue"):
         return Action(
             line_action=head,
             state=tail[0] if tail else None,
         )
 
+    # ------------------------------------------------------------
+    # Record-only: Record Foo, NoRecord Bar, Clear Baz, Clearall Qux
+    # ------------------------------------------------------------
     if head in ("Record", "NoRecord", "Clear", "Clearall"):
         return Action(
             record_action=head,
             state=tail[0] if tail else None,
         )
 
+    # ------------------------------------------------------------
+    # ⭐ NEW: State-only transition
+    # e.g. "Start"
+    # ------------------------------------------------------------
+    if len(parts) == 1:
+        return Action(
+            line_action=None,
+            record_action=None,
+            state=head,
+        )
+
+    # ------------------------------------------------------------
+    # Otherwise invalid
+    # ------------------------------------------------------------
     raise ValueError(f"Unknown action expression: {expr}")
 
 
@@ -151,7 +183,6 @@ def parse_body_pattern(
 ) -> List[PatternItem]:
     nodes = []
     pos = 0
-
     for m in VAR_GROUP_RE.finditer(body):
         start, end = m.span()
 
@@ -231,7 +262,7 @@ def _parse_literal_segment(segment: str) -> List[PatternItem]:
             SpacerNode(
                 raw=ws,
                 textfsm_repr="\\s+",
-                expression=ws,
+                expression=" ",
                 regex="\\s+",
             )
         )
@@ -275,18 +306,23 @@ def _literal_or_digit(raw: str) -> PatternItem:
 def parse_rule_line(
     line: str, values_by_name: Dict[str, ValueNode]
 ) -> Optional[RuleNode]:
+
     m = RULE_RE.match(line)
     if not m:
         return None
 
-    pattern_text, action_expr = m.groups()
-    pattern = parse_pattern(pattern_text, values_by_name)
-    action = parse_action_expr(action_expr)
+    if " -> " in line:
+        pattern_text, action_expr = m.groups()
+        pattern = parse_pattern(pattern_text.lstrip(), values_by_name)
+        action = parse_action_expr(action_expr)
 
-    return RuleNode(pattern=pattern, actions=[action])
+        return RuleNode(pattern=pattern, actions=[action])
+
+    pattern = parse_pattern(line.lstrip(), values_by_name)
+    return RuleNode(pattern=pattern, actions=[])
 
 
-def parse_textfsm(template: str, records: List[dict], sample: str) -> TemplateAST:
+def parse_textfsm(template: str, records: List[dict]) -> TemplateAST:
     ast = TemplateAST()
     current_state_name: Optional[str] = None
     current_state_lines: List[str] = []
@@ -315,12 +351,25 @@ def parse_textfsm(template: str, records: List[dict], sample: str) -> TemplateAS
         if m:
             options, varname, regex = m.groups()
             opts = options.split(",") if options else None
+            values = [record[varname] for record in records]
+            keyword = infer_base_keyword(values)
+
+            node = create_node(
+                keyword, varname=varname, extra=options or "", generalize=True
+            )
+            var_node = VarNode(
+                raw=f"${{{varname}}}",
+                textfsm_repr=f"${{{varname}}}",
+                expression=node.to_expression(),
+                regex=node.to_regex(),
+            )
+
             ast.values.append(
                 ValueNode(
                     name=varname,
                     regex=regex,
                     options=opts,
-                    infer=None,
+                    infer=var_node,
                 )
             )
             continue
@@ -334,24 +383,5 @@ def parse_textfsm(template: str, records: List[dict], sample: str) -> TemplateAS
             current_state_lines.append(line)
 
     flush_state()
-
-    # 2) infer VarNode for each ValueNode
-    infer_mapping = infer_call_keywords(ast.values, records)
-    for v in ast.values:
-        keyword = infer_mapping.get(v.name, "") or ""
-        extra = ",".join(v.options) if v.options else ""
-        varname = v.name or None
-        node = create_node(keyword, varname=varname, extra=extra, generalize=True)
-        v.infer = VarNode(
-            raw=f"${{{v.name}}}",
-            textfsm_repr=f"${{{v.name}}}",
-            expression=node.to_expression(),
-            regex=node.to_regex(),
-        )
-
-    # 3) re-parse patterns to use inferred VarNodes (optional)
-    #    If you want patterns to immediately reflect inference, you can
-    #    rebuild states/rules here. For now, we keep structure as-is and
-    #    rely on VarNode already attached to ValueNode for downstream use.
 
     return ast
