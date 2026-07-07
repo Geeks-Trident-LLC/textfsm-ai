@@ -1,9 +1,8 @@
 # textfsm_ai/delivery/engine/engine.py
 
-
 from textfsm_ai.delivery.assembly.builder import build_delivery_package
-from textfsm_ai.delivery.assembly.validator import validate_delivery_package
-from textfsm_ai.delivery.core.package import DeliveryMode
+from textfsm_ai.delivery.core.modes import DeliveryMode
+from textfsm_ai.delivery.core.package import DeliveryOutput
 from textfsm_ai.dsl.core.models import DSLPipeline
 from textfsm_ai.generation.core.models import GenerationPipeline
 
@@ -11,42 +10,58 @@ from textfsm_ai.generation.core.models import GenerationPipeline
 class DeliveryEngine:
     """Assemble a DeliveryPackage from generation + DSL artifacts."""
 
-    def __init__(self, model: str) -> None:
-        self._model = model
-
     def assemble(
         self,
         *,
         mode: DeliveryMode,
+        model_info,
         generation_pipeline: GenerationPipeline,
         dsl_pipeline: DSLPipeline,
         duration_ms: int = 0,
-    ):
-        generation = generation_pipeline.last_stage
-
-        total = len(dsl_pipeline.stages)
-        canonical = dsl_pipeline.stages[0].result if total > 0 else None
-        machine_dsl = dsl_pipeline.stages[1].result if total > 1 else None
-        human_dsl = dsl_pipeline.stages[2].result if total > 2 else None
-        recognizer = dsl_pipeline.stages[3].result if total > 3 else None
-        state = (
-            dsl_pipeline.last_stage.name or generation_pipeline.last_stage.name
-            if generation_pipeline.last_stage
-            else ""
-        )
-        reason = dsl_pipeline.reason or generation_pipeline.reason
+        as_json: bool = False,
+    ) -> DeliveryOutput:
         pkg = build_delivery_package(
-            mode=mode,
-            model=self._model,
-            generation=generation,
-            canonical=canonical,
-            machine_dsl=machine_dsl,
-            human_dsl=human_dsl,
-            recognizer=recognizer,
-            state=state,
-            reason=reason,
+            model_info=model_info,
+            generation_pipeline=generation_pipeline,
+            dsl_pipeline=dsl_pipeline,
             duration_ms=duration_ms,
         )
 
-        validate_delivery_package(pkg)
-        return pkg
+        if mode is DeliveryMode.QUIET:
+            return DeliveryOutput(
+                mode=mode,
+                output=pkg.quiet.to_json() if as_json else pkg.quiet.to_string(),
+                passed=pkg.quiet.status.passed,
+                error=pkg.quiet.status.error,
+            )
+
+        elif mode is DeliveryMode.DEFAULT:
+            return DeliveryOutput(
+                mode=mode,
+                output=pkg.default.to_json() if as_json else pkg.default.to_string(),
+                passed=pkg.default.status.passed,
+                error=pkg.default.status.error,
+            )
+
+        elif mode is DeliveryMode.INFO:
+            return DeliveryOutput(
+                mode=mode,
+                output=pkg.info.to_json() if as_json else pkg.info.to_string(),
+                passed=pkg.info.status.passed,
+                error=pkg.info.status.error,
+            )
+
+        elif mode is DeliveryMode.DEBUG:
+            return DeliveryOutput(
+                mode=mode,
+                output=pkg.debug.to_json() if as_json else pkg.debug.to_string(),
+                passed=pkg.debug.status.passed,
+                error=pkg.debug.status.error,
+            )
+
+        return DeliveryOutput(
+            mode=mode,
+            output=pkg.default.to_json() if as_json else pkg.default.to_string(),
+            passed=pkg.default.status.passed,
+            error=pkg.default.status.error,
+        )

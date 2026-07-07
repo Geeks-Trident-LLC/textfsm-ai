@@ -1,6 +1,9 @@
-from unittest.mock import MagicMock, patch
+# tests/unit/dsl/controller/test_dsl_controller.py
+
+from unittest.mock import Mock, patch
 
 from textfsm_ai.dsl.controller.dsl_controller import DSLController
+from textfsm_ai.dsl.core.models import DSLParseResult, DSLPipeline
 from textfsm_ai.generation.core.models import GenerationPipeline, GenerationStage
 
 # ------------------------------------------------------------
@@ -8,173 +11,81 @@ from textfsm_ai.generation.core.models import GenerationPipeline, GenerationStag
 # ------------------------------------------------------------
 
 
-def make_gen_pipeline(ready=True, reason="", template="T", records=None, sample="S"):
-    """Create a minimal GenerationPipeline with a last_stage."""
+def make_gen(ready=True, reason="", template="T", records=None):
+    """Create a fake GenerationPipeline with minimal structure."""
+    if records is None:
+        records = [{"v1": "abc"}]
+
     last_stage = GenerationStage(
-        name="generation-final",
-        template=template,
-        records=records or [],
-        reason=reason,
-        ready=ready,
+        template=template, records=records, reason=reason, ready=ready
     )
 
-    return GenerationPipeline(
-        stages=[last_stage],
-        last_stage=last_stage,
-        reason=reason,
-        ready=ready,
-        sample=sample,
+    gen = Mock(spec=GenerationPipeline)
+    gen.ready = ready
+    gen.reason = reason
+    gen.last_stage = last_stage
+    return gen
+
+
+# ------------------------------------------------------------
+# Tests
+# ------------------------------------------------------------
+
+
+def test_dsl_controller_generation_not_ready():
+    """If generation failed, DSLController must return a failed DSLPipeline."""
+    gen = make_gen(ready=False, reason="GEN-FAIL")
+
+    controller = DSLController()
+    out = controller.run(gen)
+
+    assert isinstance(out, DSLPipeline)
+    assert out.dsl is None
+    assert out.ready is False
+    assert "GENERATION-ERROR: GEN-FAIL" in out.reason
+
+
+@patch("textfsm_ai.dsl.controller.dsl_controller.engine.run")
+def test_dsl_controller_engine_failure(mock_engine_run):
+    """If engine.run fails, DSLController must return a failed DSLPipeline."""
+    gen = make_gen(ready=True)
+
+    mock_engine_run.return_value = DSLParseResult(
+        raw_template="T", records=[{"v1": "abc"}], ready=False, reason="ENGINE-FAIL"
     )
 
-
-# ------------------------------------------------------------
-# Stage 0: validate-generation
-# ------------------------------------------------------------
-
-
-def test_dsl_controller_invalid_generation():
     controller = DSLController()
-    gen = make_gen_pipeline(ready=False, reason="bad generation")
+    out = controller.run(gen)
 
-    pipeline = controller.run(gen)
-    assert not pipeline.ready
-    assert pipeline.reason == "bad generation"
-    assert len(pipeline.stages) == 1
-    assert pipeline.stages[0].name == "validate-generation"
-
-
-# ------------------------------------------------------------
-# Stage 1: canonicalize-template
-# ------------------------------------------------------------
+    assert isinstance(out, DSLPipeline)
+    assert out.dsl.ready is False
+    assert out.ready is False
+    assert out.reason == "ENGINE-FAIL"
 
 
-@patch("textfsm_ai.dsl.controller.dsl_controller.engine.canonicalize_template")
-def test_dsl_controller_canonicalize_failure(mock_canon):
-    mock_canon.return_value = MagicMock(ready=False, reason="canon-fail")
+@patch("textfsm_ai.dsl.controller.dsl_controller.engine.run")
+def test_dsl_controller_success(mock_engine_run):
+    """If everything succeeds, DSLController must return a ready DSLPipeline."""
+    gen = make_gen(ready=True)
 
-    controller = DSLController()
-    gen = make_gen_pipeline()
-
-    pipeline = controller.run(gen)
-
-    mock_canon.assert_called_once_with("T", [])
-    assert not pipeline.ready
-    assert pipeline.reason == "canon-fail"
-    assert pipeline.stages[-1].name == "canonicalize-template"
-
-
-@patch("textfsm_ai.dsl.controller.dsl_controller.engine.canonicalize_template")
-def test_dsl_controller_canonicalize_success(mock_canon):
-    mock_canon.return_value = MagicMock(ready=True, reason="", template="C")
+    mock_engine_run.return_value = DSLParseResult(
+        raw_template="T",
+        records=[{"v1": "abc"}],
+        ast="AST",
+        canonical="CANONICAL",
+        readable="READABLE",
+        recognizers=["^foo$"],
+        ready=True,
+        reason="",
+    )
 
     controller = DSLController()
-    gen = make_gen_pipeline()
+    out = controller.run(gen)
 
-    func_name = "textfsm_ai.dsl.controller.dsl_controller.engine.build_machine_dsl"
-    with patch(func_name) as mock_machine:
-        mock_machine.return_value = MagicMock(ready=False, reason="stop")
-        pipeline = controller.run(gen)
-
-    assert pipeline.stages[0].name == "canonicalize-template"
-    assert mock_canon.called
-
-
-# ------------------------------------------------------------
-# Stage 2: extract-machine-dsl
-# ------------------------------------------------------------
-
-
-@patch("textfsm_ai.dsl.controller.dsl_controller.engine.build_machine_dsl")
-@patch("textfsm_ai.dsl.controller.dsl_controller.engine.canonicalize_template")
-def test_dsl_controller_machine_dsl_failure(mock_canon, mock_machine):
-    mock_canon.return_value = MagicMock(ready=True)
-    mock_machine.return_value = MagicMock(ready=False, reason="machine-fail")
-
-    controller = DSLController()
-    gen = make_gen_pipeline()
-
-    pipeline = controller.run(gen)
-
-    assert not pipeline.ready
-    assert pipeline.reason == "machine-fail"
-    assert pipeline.stages[-1].name == "extract-machine-dsl"
-
-
-# ------------------------------------------------------------
-# Stage 3: render-human-dsl
-# ------------------------------------------------------------
-
-
-@patch("textfsm_ai.dsl.controller.dsl_controller.engine.render_human_dsl")
-@patch("textfsm_ai.dsl.controller.dsl_controller.engine.build_machine_dsl")
-@patch("textfsm_ai.dsl.controller.dsl_controller.engine.canonicalize_template")
-def test_dsl_controller_human_dsl_failure(mock_canon, mock_machine, mock_human):
-    mock_canon.return_value = MagicMock(ready=True)
-    mock_machine.return_value = MagicMock(ready=True)
-    mock_human.return_value = MagicMock(ready=False, reason="human-fail")
-
-    controller = DSLController()
-    gen = make_gen_pipeline()
-
-    pipeline = controller.run(gen)
-
-    assert not pipeline.ready
-    assert pipeline.reason == "human-fail"
-    assert pipeline.stages[-1].name == "render-human-dsl"
-
-
-# ------------------------------------------------------------
-# Stage 4: recognize-patterns
-# ------------------------------------------------------------
-
-
-@patch("textfsm_ai.dsl.controller.dsl_controller.engine.recognize_patterns")
-@patch("textfsm_ai.dsl.controller.dsl_controller.engine.render_human_dsl")
-@patch("textfsm_ai.dsl.controller.dsl_controller.engine.build_machine_dsl")
-@patch("textfsm_ai.dsl.controller.dsl_controller.engine.canonicalize_template")
-def test_dsl_controller_full_success(mock_canon, mock_machine, mock_human, mock_rec):
-    mock_canon.return_value = MagicMock(ready=True)
-    mock_machine.return_value = MagicMock(ready=True)
-    mock_human.return_value = MagicMock(ready=True)
-    mock_rec.return_value = MagicMock(ready=True, reason="")
-
-    controller = DSLController()
-    gen = make_gen_pipeline()
-
-    pipeline = controller.run(gen)
-
-    assert pipeline.ready
-    assert pipeline.last_stage.name == "recognize-patterns"
-    assert len(pipeline.stages) == 4  # canonical → machine → human → recognizer
-
-    mock_rec.assert_called_once()
-
-
-# ------------------------------------------------------------
-# Argument passing
-# ------------------------------------------------------------
-@patch("textfsm_ai.dsl.controller.dsl_controller.engine.recognize_patterns")
-@patch("textfsm_ai.dsl.controller.dsl_controller.engine.render_human_dsl")
-@patch("textfsm_ai.dsl.controller.dsl_controller.engine.build_machine_dsl")
-@patch("textfsm_ai.dsl.controller.dsl_controller.engine.canonicalize_template")
-def test_dsl_controller_argument_passing(
-    mock_canon, mock_machine, mock_human, mock_rec
-):
-    mock_canon.return_value = MagicMock(ready=True, template="C")
-    mock_machine.return_value = MagicMock(ready=True, machine="M")
-    mock_human.return_value = MagicMock(ready=True, human="H")
-    mock_rec.return_value = MagicMock(ready=True)
-
-    controller = DSLController()
-    gen = make_gen_pipeline(template="T", records=[{"x": 1}], sample="S")
-
-    controller.run(gen, debug=True)
-
-    mock_canon.assert_called_once_with("T", [{"x": 1}])
-    mock_machine.assert_called_once_with(mock_canon.return_value)
-
-    # FIXED: render_human_dsl only receives (machine_dsl, sample)
-    mock_human.assert_called_once_with(mock_machine.return_value, "S")
-
-    # recognizer receives (canonical, sample, debug)
-    mock_rec.assert_called_once_with(mock_machine.return_value, "S", debug=True)
+    assert isinstance(out, DSLPipeline)
+    assert out.dsl is mock_engine_run.return_value
+    assert out.ready is True
+    assert out.reason == ""
+    assert out.dsl.canonical == "CANONICAL"
+    assert out.dsl.readable == "READABLE"
+    assert out.dsl.recognizers == ["^foo$"]

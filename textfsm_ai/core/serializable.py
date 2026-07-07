@@ -24,12 +24,11 @@ class Serializable:
             if isinstance(value, Enum):
                 return value.name
 
-            # OpenAI / Anthropic / Gemini objects
-            if hasattr(value, "model_dump"):
-                return value.model_dump()
-
-            if hasattr(value, "to_dict"):
-                return value.to_dict()
+            # Already a dict or convertible via helper
+            try:
+                return to_dict(value)
+            except TypeError:
+                pass  # Not convertible by helper, continue below
 
             # ChatCompletion (OpenAI v1)
             if hasattr(value, "choices") and hasattr(value, "usage"):
@@ -109,3 +108,59 @@ class Serializable:
                 init_kwargs[name] = value
 
         return cls(**init_kwargs)
+
+
+def to_dict(response):
+    """Convert various LLM response objects into a Python dict."""
+
+    # Primitive
+    if isinstance(response, (str, int, float, bool)) or response is None:
+        return response
+
+    # Native dict → normalize recursively
+    if isinstance(response, dict):
+        return {k: to_dict(v) for k, v in response.items()}
+
+    # Native list → normalize recursively
+    if isinstance(response, list):
+        return [to_dict(v) for v in response]
+
+    # Pydantic v2
+    if callable(getattr(response, "model_dump", None)):
+        return response.model_dump()
+
+    # Pydantic v1
+    if callable(getattr(response, "dict", None)):
+        return response.dict()
+
+    # Generic to_dict() (Gemini, Anthropic, custom classes)
+    if callable(getattr(response, "to_dict", None)):
+        return response.to_dict()
+
+    raise TypeError(f"Don't know how to convert LLM response {type(response)} to dict")
+
+
+def is_llm_response(response) -> bool:
+    """Return True if the object looks like an LLM response model."""
+
+    # Native dict → not an LLM response model
+    if isinstance(response, dict):
+        return False
+
+    # Native list → not an LLM response model
+    if isinstance(response, list):
+        return False
+
+    # Pydantic v2
+    if callable(getattr(response, "model_dump", None)):
+        return True
+
+    # Pydantic v1
+    if callable(getattr(response, "dict", None)):
+        return True
+
+    # Generic to_dict() (Gemini, Anthropic, custom classes)
+    if callable(getattr(response, "to_dict", None)):
+        return True
+
+    return False

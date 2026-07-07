@@ -35,20 +35,12 @@ def test_real(anthropic_key):
     dsl_pipeline = dsl.run(gen_pipeline)
 
     assert dsl_pipeline.ready, f"DSL pipeline failed: {dsl_pipeline.reason}"
-    assert (
-        len(dsl_pipeline.stages) == 4
-    ), f"Expected 4 DSL stages, got {len(dsl_pipeline.stages)}"
-
-    canonicalizer_stage = dsl_pipeline.stages[0]
-    machine_stage = dsl_pipeline.stages[1]
-    human_stage = dsl_pipeline.stages[2]
-    recognizer_stage = dsl_pipeline.stages[3]
 
     # ------------------------------------------------------------
     # 3. Canonicalizer checks
     # ------------------------------------------------------------
     llm_template = gen_pipeline.last_stage.template
-    canonical_template = canonicalizer_stage.result.template
+    canonical_template = dsl_pipeline.dsl.canonical
 
     expected_substrings = [
         "Value ",
@@ -65,41 +57,26 @@ def test_real(anthropic_key):
         )
 
     # ------------------------------------------------------------
-    # 4. Machine DSL checks
+    # 4. Readable DSL checks
     # ------------------------------------------------------------
-    machine_vars = str(machine_stage.result.dsl.variables)
-    expected_keyword = " 'keyword': 'mixed-word',"
+    readable_dsl = dsl_pipeline.dsl.readable
 
-    assert expected_keyword in machine_vars, (
-        f"Machine DSL missing keyword classification {expected_keyword!r}\n"
-        f"--- Machine DSL Variables ---\n{machine_vars}\n"
+    expected_readable = " start() interface mixed-word(var-"
+    assert expected_readable in readable_dsl, (
+        f"Readble DSL missing rule {expected_readable!r}\n"
+        f"--- Readable DSL ---\n{readable_dsl}\n"
         f"--- Canonical Template ---\n{canonical_template}"
     )
 
     # ------------------------------------------------------------
-    # 5. Human DSL checks
+    # 5. Recognizer checks
     # ------------------------------------------------------------
-    human_dsl = human_stage.result.human_dsl
-    repr_machine_dsl = machine_stage.result.dsl.to_json()
+    recognizers = dsl_pipeline.dsl.recognizers
 
-    expected_human = " start() interface mixed-word(var-"
-    assert expected_human in human_dsl, (
-        f"Human DSL missing readable rule {expected_human!r}\n"
-        f"--- Human DSL ---\n{human_dsl}\n"
-        f"--- Machine DSL ---\n{repr_machine_dsl}\n"
-        f"--- Canonical Template ---\n{canonical_template}"
-    )
-
-    # ------------------------------------------------------------
-    # 6. Recognizer checks
-    # ------------------------------------------------------------
-    recognizer_patterns = recognizer_stage.result.patterns
     expected_pattern = r"^interface\s+"
-
-    assert expected_pattern in recognizer_patterns, (
+    assert expected_pattern in recognizers[0], (
         f"Recognizer missing expected pattern {expected_pattern!r}\n"
-        f"--- Recognizer Patterns ---\n{recognizer_patterns}\n"
-        f"--- Human DSL ---\n{human_dsl}\n"
-        f"--- Machine DSL ---\n{repr_machine_dsl}\n"
+        f"--- Recognizer Patterns ---\n{recognizers}\n"
+        f"--- Human DSL ---\n{readable_dsl}\n"
         f"--- Canonical Template ---\n{canonical_template}"
     )

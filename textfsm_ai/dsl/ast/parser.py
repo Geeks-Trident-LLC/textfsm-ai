@@ -208,7 +208,7 @@ def parse_body_pattern(
     return nodes
 
 
-WS_RE = re.compile(r"\s+|\\s+")
+WS_RE = re.compile(r"\s+|\\s(?:[+*])?")
 PUNCTS_RE = re.compile(PATTERNS["puncts-group"].regex)
 
 

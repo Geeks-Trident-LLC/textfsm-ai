@@ -10,18 +10,34 @@ from textfsm_ai.generation.controller.generation_controller import GenerationCon
 
 class DeliveryController:
     def __init__(
-        self, provider_name: str, api_key: str, model: str, max_tries: int = 1
+        self,
+        provider_name: str,
+        api_key: str,
+        model: str,
+        endpoint: str = "",
+        api_version: str = "",
+        max_tries: int = 1,
     ):
+        self._model_info = dict(
+            provider_name=provider_name,
+            api_key=api_key,
+            model=model,
+            endpoint=endpoint,
+            api_version=api_version,
+        )
+
         self._gen = GenerationController(
             provider_name=provider_name,
             api_key=api_key,
             model=model,
+            endpoint=endpoint,
+            api_version=api_version,
             max_retries=max_tries,
         )
         self._dsl = DSLController()
-        self._engine = DeliveryEngine(model=model)
+        self._engine = DeliveryEngine()
 
-    def run(self, sample: str, mode: str):
+    def run(self, sample: str, mode: str, as_json=False):
         mode_enum = DeliveryMode.from_str(mode)
 
         start = time.perf_counter()
@@ -36,7 +52,9 @@ class DeliveryController:
         # 3. Delivery engine
         return self._engine.assemble(
             mode=mode_enum,
+            model_info=self._model_info,
             generation_pipeline=gen_pipeline,
             dsl_pipeline=dsl_pipeline,
             duration_ms=duration_ms,
+            as_json=as_json,
         )

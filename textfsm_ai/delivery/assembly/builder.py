@@ -1,133 +1,118 @@
 # textfsm_ai/delivery/assembly/builder.py
 
-from datetime import datetime, timezone
-from typing import Optional
-
-import textfsm
-
-import textfsm_ai
-from textfsm_ai.dsl.core.models import (
-    CanonicalTemplate,
-    HumanDSL,
-    MachineDSL,
-    RecognizerPatterns,
-)
-from textfsm_ai.generation.core.models import GenerationStage
-
-from ..core.modes import DeliveryMode
-from ..core.package import (
-    DeliveryDebug,
-    DeliveryExplanation,
-    DeliveryGeneral,
+from textfsm_ai.delivery.core.package import (
+    Debug,
+    Default,
     DeliveryPackage,
-    DeliveryStatus,
-    DeliveryTemplate,
-    DeliveryUsage,
+    Info,
+    LLMInfo,
+    LLMResponse,
+    LLMStructuredResponse,
+    Output,
+    Quiet,
+    Status,
+    Usage,
+    Version,
 )
-
-
-def _or_empty(value, default):
-    return value if value is not None else default
+from textfsm_ai.dsl.core.models import DSLPipeline
+from textfsm_ai.generation.core.models import GenerationPipeline
 
 
 def build_delivery_package(
     *,
-    mode: DeliveryMode,
-    model: str,
-    generation: Optional[GenerationStage],
-    canonical: Optional[CanonicalTemplate],
-    machine_dsl: Optional[MachineDSL],
-    human_dsl: Optional[HumanDSL],
-    recognizer: Optional[RecognizerPatterns],
-    state: str = "",
-    reason: str = "",
+    model_info: dict,
+    generation_pipeline: GenerationPipeline,
+    dsl_pipeline: DSLPipeline,
     duration_ms: int = 0,
 ) -> DeliveryPackage:
 
-    created_at = datetime.now(timezone.utc).isoformat()
+    llm_info = LLMInfo(**model_info)
+    gp_stage = generation_pipeline.last_stage
+    metadata = getattr(gp_stage, "metadata", None)
+    response = getattr(metadata, "response", None)
 
-    # ------------------------------------------------------------
-    # Template + Status
-    # ------------------------------------------------------------
-    template = DeliveryTemplate(
-        canonical_template=canonical.template if canonical else "",
-        human_template_dsl=human_dsl.human_dsl if human_dsl else "",
+    llm_response = LLMResponse(
+        max_retries=getattr(generation_pipeline, "max_retries", 1),
+        duration_ms=getattr(response, "duration_ms", 0),
+        raw=getattr(getattr(response, "raw", None), "raw", {}),
     )
 
-    status = DeliveryStatus(
-        state=state,
-        warnings=[],
-        errors=[reason] if reason else [],
+    llm_structured_response = LLMStructuredResponse(
+        template=getattr(metadata, "template", ""),
+        records=getattr(metadata, "records", []),
+        variables=getattr(metadata, "variables", {}),
+        handling=getattr(metadata, "handling", []),
     )
 
-    general: Optional[DeliveryGeneral] = None
-    explanation: Optional[DeliveryExplanation] = None
-    usage: Optional[DeliveryUsage] = None
-    debug: Optional[DeliveryDebug] = None
+    usage = Usage(
+        input_tokens=getattr(response, "input_tokens", 0),
+        output_tokens=getattr(response, "output_tokens", 0),
+        total_tokens=getattr(response, "total_tokens", 0),
+        llm_duration_ms=getattr(response, "duration_ms", 0),
+        currency="dollar",
+        input_per_million=0,
+        output_per_million=0,
+        estimated_cost=0,
+    )
 
-    metadata = generation.metadata if generation else None
+    dsl = dsl_pipeline.dsl or None
 
-    # ------------------------------------------------------------
-    # DEFAULT, INFO, DEBUG
-    # ------------------------------------------------------------
-    if mode >= DeliveryMode.DEFAULT:
-        general = DeliveryGeneral(
-            textfsm_version=textfsm.__version__,
-            textfsm_ai_version=textfsm_ai.__version__,
-            model=model,
-            created_at=created_at,
-        )
+    output = Output(
+        raw_template=getattr(dsl, "raw_template", ""),
+        template=dsl.canonical or "" if dsl else "",
+        readable_dsl=getattr(dsl, "readable", ""),
+        recognizers=getattr(dsl, "recognizers", []),
+    )
 
-        explanation = DeliveryExplanation(
-            variable_definitions=metadata.variables if metadata else {},
-            llm_parsing_explanation=metadata.handling if metadata else [],
-            template_generation_explanation=metadata.template if metadata else "",
-        )
+    errors = []
 
-    # ------------------------------------------------------------
-    # INFO, DEBUG
-    # ------------------------------------------------------------
-    if mode >= DeliveryMode.INFO:
-        if metadata and metadata.response:
-            input_tokens = metadata.response.input_tokens or 0
-            output_tokens = metadata.response.output_tokens or 0
-            total_tokens = metadata.response.total_tokens or 0
-            llm_duration_ms = metadata.response.duration_ms or 0
-        else:
-            input_tokens = output_tokens = total_tokens = 0
-            llm_duration_ms = 0
+    if dsl and dsl.reason:
+        errors.append(dsl.reason)
+    if gp_stage and gp_stage.reason:
+        errors.append(gp_stage.reason)
 
-        usage = DeliveryUsage(
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-            total_tokens=total_tokens,
-            llm_duration_ms=llm_duration_ms,
-            estimated_cost=None,
-            duration_ms=duration_ms,
-        )
+    status = Status(
+        state=dsl.name if dsl else gp_stage.name if gp_stage else "",
+        errors=errors,
+        passed=False if not dsl else dsl.ready,
+    )
 
-    # ------------------------------------------------------------
-    # DEBUG
-    # ------------------------------------------------------------
-    if mode == DeliveryMode.DEBUG:
-        debug = DeliveryDebug(
-            raw_llm_output=canonical.llm_template if canonical else "",
-            cleaned_template="",
-            canonical_template_internal=canonical.template if canonical else "",
-            machine_dsl=machine_dsl.dsl if machine_dsl else None,
-            human_template_dsl_internal=human_dsl.human_dsl if human_dsl else "",
-            recognizer_pattern=recognizer.patterns if recognizer else "",
-            validation_log=[],
-            canonicalization_log=[],
-            literal_regex_trace=[],
-        )
+    quiet = Quiet(
+        template=(
+            dsl.canonical or dsl.raw_template
+            if dsl
+            else metadata.template if metadata else ""
+        ),
+        status=status,
+    )
+
+    default = Default(output=output, status=status)
+
+    version = Version()
+
+    info = Info(
+        version=version,
+        llm_info=llm_info,
+        usage=usage,
+        llm_structured_response=llm_structured_response,
+        output=output,
+        status=status,
+    )
+
+    debug = Debug(
+        llm_info=llm_info,
+        llm_response=llm_response,
+        usage=usage,
+        generation_pipeline=generation_pipeline,
+        dsl_pipeline=dsl_pipeline,
+        version=version,
+        status=status,
+        duration_ms=duration_ms,
+    )
 
     return DeliveryPackage(
-        mode=mode,
-        general=general,
-        template=template,
-        explanation=explanation,
-        status=status,
-        usage=usage,
+        quiet=quiet,
+        default=default,
+        info=info,
         debug=debug,
     )

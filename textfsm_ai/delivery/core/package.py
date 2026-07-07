@@ -1,179 +1,363 @@
 # textfsm_ai/delivery/core/package.py
 
-from dataclasses import asdict, dataclass, field
+import json
+import platform
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from textfsm_ai.core.serializable import Serializable
-from textfsm_ai.dsl.core.models import DSLExtractorResult
+import textfsm
 
-from .modes import DeliveryMode
-
-
-@dataclass
-class DeliveryGeneral(Serializable):
-    """General metadata included in default/info/debug modes."""
-
-    textfsm_version: str
-    textfsm_ai_version: str
-    model: str
-    created_at: str
-
-    def __init__(
-        self,
-        *,
-        textfsm_version: str,
-        textfsm_ai_version: str,
-        model: str,
-        created_at: str,
-    ):
-        self.textfsm_version = textfsm_version
-        self.textfsm_ai_version = textfsm_ai_version
-        self.model = model
-        self.created_at = created_at
+import textfsm_ai
+from textfsm_ai.core.serializable import Serializable, to_dict
+from textfsm_ai.core.utils.text import format_block_title, mask_middle
+from textfsm_ai.delivery.core.modes import DeliveryMode
+from textfsm_ai.dsl.core.models import DSLPipeline
+from textfsm_ai.generation.core.models import GenerationPipeline
 
 
 @dataclass
-class DeliveryTemplate(Serializable):
-    canonical_template: Optional[str]
-    human_template_dsl: Optional[str]
+class Version(Serializable):
+    python_version: str = platform.python_version()
+    textfsm_version: str = textfsm.__version__
+    textfsm_ai_version: str = textfsm_ai.__version__
 
-    def __init__(
-        self,
-        *,
-        canonical_template: Optional[str],
-        human_template_dsl: Optional[str],
-    ):
-        self.canonical_template = canonical_template
-        self.human_template_dsl = human_template_dsl
-
-
-@dataclass
-class DeliveryExplanation(Serializable):
-    variable_definitions: Optional[dict]
-    llm_parsing_explanation: Optional[list]
-    template_generation_explanation: Optional[str]
-
-    def __init__(
-        self,
-        *,
-        variable_definitions: Optional[dict],
-        llm_parsing_explanation: Optional[list],
-        template_generation_explanation: Optional[str],
-    ):
-        self.variable_definitions = variable_definitions
-        self.llm_parsing_explanation = llm_parsing_explanation
-        self.template_generation_explanation = template_generation_explanation
+    def to_string(self) -> str:
+        return "\n".join(
+            [
+                format_block_title("Versions"),
+                f"Python     : {self.python_version}",
+                f"TextFSM    : {self.textfsm_version}",
+                f"TextFSM-AI : {self.textfsm_ai_version}",
+                format_block_title("Versions", ended=True),
+            ]
+        )
 
 
 @dataclass
-class DeliveryStatus(Serializable):
-    state: str
-    warnings: List[str] = field(default_factory=list)
+class LLMInfo(Serializable):
+    provider_name: str = ""
+    model: str = ""
+    api_key: str = ""
+    endpoint: str = ""
+    api_version: str = ""
+
+    def to_string(self) -> str:
+        """Return a clean, readable summary of LLM configuration."""
+        masked_key = mask_middle(self.api_key)
+
+        parts = [
+            format_block_title("LLM Info"),
+            f"API Key     : {masked_key}",
+            f"Provider    : {self.provider_name}",
+        ]
+
+        if self.endpoint:
+            parts.extend(
+                [
+                    f"Deployment  : {self.model}",
+                    f"Endpoint    : {self.endpoint}",
+                    f"API Version : {self.api_version}",
+                ]
+            )
+        else:
+            parts.append(f"Model       : {self.model}")
+
+        parts.append(format_block_title("LLM Info", ended=True))
+
+        return "\n".join(parts)
+
+
+@dataclass
+class LLMResponse(Serializable):
+    raw: Dict[str, Any] = field(default_factory=dict)
+    duration_ms: int = 0
+    max_retries: int = 1
+
+    def to_string(self) -> str:
+        """Return a readable summary of the LLM response with masked raw payload."""
+        parts = [
+            format_block_title("LLM Response"),
+            f"Duration (ms) : {self.duration_ms}",
+            f"Max Retries   : {self.max_retries}",
+            "Raw           :",
+        ]
+
+        # Pretty-print raw JSON payload
+        raw_text = json.dumps(
+            to_dict(self.raw), indent=2, sort_keys=True, ensure_ascii=False
+        )
+        parts.append(raw_text)
+
+        parts.append(
+            format_block_title("LLM Response", ended=True),
+        )
+
+        return "\n".join(parts)
+
+
+@dataclass
+class LLMStructuredResponse(Serializable):
+    template: str = ""
+    records: List[Dict[str, str]] = field(default_factory=list)
+    variables: Dict[str, str] = field(default_factory=dict)
+    handling: List[str] = field(default_factory=list)
+
+    def to_string(self) -> str:
+        """Return a readable summary of the structured LLM output."""
+        parts = [
+            format_block_title("LLM Structured Response"),
+            format_block_title("Template", bar_char="+", width=2),
+            f"{self.template or '<empty>'}",
+            format_block_title("Template", bar_char="+", width=2, ended=True),
+            "",
+            format_block_title("Records", bar_char="+", width=2),
+            json.dumps(self.records, indent=2, ensure_ascii=False),
+            format_block_title("Records", bar_char="+", width=2, ended=True),
+            "",
+            format_block_title("Variables", bar_char="+", width=2),
+            json.dumps(self.variables, indent=2, ensure_ascii=False),
+            format_block_title("Variables", bar_char="+", width=2, ended=True),
+            "",
+            format_block_title("Handling", bar_char="+", width=2),
+            json.dumps(self.handling, indent=2, ensure_ascii=False),
+            format_block_title("Handling", bar_char="+", width=2, ended=True),
+            "",
+            format_block_title("LLM Structured Response", ended=True),
+            "",
+        ]
+        return "\n".join(parts)
+
+
+@dataclass
+class Usage(Serializable):
+    input_tokens: int = 0
+    output_tokens: int = 0
+    total_tokens: int = 0
+    llm_duration_ms: float = 0.0
+    currency: str = "dollar"
+    input_per_million: float = 0.0
+    output_per_million: float = 0.0
+    estimated_cost: float = 0.0
+
+    def to_string(self) -> str:
+        """Return a readable summary of token usage and cost estimation."""
+        parts = [
+            format_block_title("LLM Usage"),
+            f"Input Tokens       : {self.input_tokens}",
+            f"Output Tokens      : {self.output_tokens}",
+            f"Total Tokens       : {self.total_tokens}",
+            f"LLM Duration (ms)  : {self.llm_duration_ms}",
+            f"Input per Million  : {self.input_per_million}",
+            f"Output per Million : {self.output_per_million}",
+            f"Estimated Cost     : {self.estimated_cost} {self.currency}",
+            format_block_title("LLM Usage", ended=True),
+        ]
+        return "\n".join(parts)
+
+
+@dataclass
+class Output(Serializable):
+    raw_template: str = ""
+    template: str = ""
+    readable_dsl: str = ""
+    recognizers: List[str] = field(default_factory=list)
+
+    def to_string(self) -> str:
+        """Return a readable summary of the final DSL output."""
+        parts = [
+            format_block_title("Output"),
+            format_block_title("Raw Template", bar_char="+", width=2),
+            f"{self.raw_template or '<empty>'}",
+            format_block_title("Raw Template", bar_char="+", width=2, ended=True),
+            "",
+            format_block_title("Template", bar_char="+", width=2),
+            f"{self.template or '<empty>'}",
+            format_block_title("Template", bar_char="+", width=2, ended=True),
+            "",
+            format_block_title("Readable DSL", bar_char="+", width=2),
+            self.readable_dsl or "<empty>",
+            format_block_title("Readable DSL", bar_char="+", width=2, ended=True),
+            "",
+            format_block_title("Recognizers", bar_char="+", width=2),
+        ]
+
+        if self.recognizers:
+            parts.append(
+                json.dumps(
+                    self.recognizers, indent=2, sort_keys=True, ensure_ascii=False
+                )
+            )
+        else:
+            parts.append("<none>")
+
+        parts.append(
+            format_block_title("Recognizers", bar_char="+", width=2, ended=True)
+        )
+        parts.append(
+            format_block_title("Output", ended=True),
+        )
+
+        return "\n".join(parts)
+
+
+@dataclass
+class Status(Serializable):
+    state: str = ""
     errors: List[str] = field(default_factory=list)
+    passed: bool = False
 
-    def __init__(
-        self,
-        *,
-        state: str,
-        warnings: Optional[List[str]] = None,
-        errors: Optional[List[str]] = None,
-    ):
-        self.state = state
-        self.warnings = warnings or []
-        self.errors = errors or []
+    def __bool__(self) -> bool:
+        return self.passed
 
+    @property
+    def error(self):
+        return "\n".join(self.errors)
 
-@dataclass
-class DeliveryUsage(Serializable):
-    input_tokens: Optional[int] = None
-    output_tokens: Optional[int] = None
-    total_tokens: Optional[int] = None
-    llm_duration_ms: Optional[float] = None
-    estimated_cost: Optional[float] = None
-    duration_ms: Optional[int] = None
+    @property
+    def exit_code(self) -> int:
+        return 0 if self.passed else 1
 
-    def __init__(
-        self,
-        *,
-        input_tokens: Optional[int] = None,
-        output_tokens: Optional[int] = None,
-        total_tokens: Optional[int] = None,
-        llm_duration_ms: Optional[float] = None,
-        estimated_cost: Optional[float] = None,
-        duration_ms: Optional[int] = None,
-    ):
-        self.input_tokens = input_tokens
-        self.output_tokens = output_tokens
-        self.total_tokens = total_tokens
-        self.llm_duration_ms = llm_duration_ms
-        self.estimated_cost = estimated_cost
-        self.duration_ms = duration_ms
+    def to_string(self) -> str:
+        """Return a readable summary of the status outcome."""
+        title = self.state or "<no-state>"
+
+        if self.passed:
+            return f"=== SUCCESS: {title} ==="
+
+        if self.errors:
+            error_block = "\n".join(self.errors)
+        else:
+            error_block = "<none>"
+
+        return f"=== FAIL: {title} ===\n{error_block}"
 
 
 @dataclass
-class DeliveryDebug(Serializable):
-    raw_llm_output: Optional[str] = None
-    cleaned_template: Optional[str] = None
-    canonical_template_internal: Optional[str] = None
-    machine_dsl: Optional[DSLExtractorResult] = None
-    human_template_dsl_internal: Optional[str] = None
-    recognizer_pattern: str = ""
-    validation_log: List[str] = field(default_factory=list)
-    canonicalization_log: List[str] = field(default_factory=list)
-    literal_regex_trace: List[str] = field(default_factory=list)
+class Quiet(Serializable):
+    template: str = ""
+    status: Status = field(default_factory=Status)
 
-    def __init__(
-        self,
-        *,
-        raw_llm_output: Optional[str] = None,
-        cleaned_template: Optional[str] = None,
-        canonical_template_internal: Optional[str] = None,
-        machine_dsl: Optional[DSLExtractorResult] = None,
-        human_template_dsl_internal: Optional[str] = None,
-        recognizer_pattern: str = "",
-        validation_log: Optional[List[str]] = None,
-        canonicalization_log: Optional[List[str]] = None,
-        literal_regex_trace: Optional[List[str]] = None,
-    ):
-        self.raw_llm_output = raw_llm_output
-        self.cleaned_template = cleaned_template
-        self.canonical_template_internal = canonical_template_internal
-        self.machine_dsl = machine_dsl
-        self.human_template_dsl_internal = human_template_dsl_internal
-        self.recognizer_pattern = recognizer_pattern
-        self.validation_log = validation_log or []
-        self.canonicalization_log = canonicalization_log or []
-        self.literal_regex_trace = literal_regex_trace or []
+    def to_string(self) -> str:
+        """Return template on success, or a formatted status message on failure."""
+        if self.status.passed:
+            return self.template or "<empty-template>"
+        return self.status.to_string()
 
 
 @dataclass
-class DeliveryPackage(Serializable):
+class Default(Serializable):
+    output: Output = field(default_factory=Output)
+    status: Status = field(default_factory=Status)
+
+    def to_string(self) -> str:
+        """Return output on success, or a formatted status message on failure."""
+        if self.status.passed:
+            text = self.output.to_string()
+            return text or "<empty-output>"
+        return self.status.to_string()
+
+
+@dataclass
+class Info(Serializable):
+    version: Version = field(default_factory=Version)
+    llm_info: LLMInfo = field(default_factory=LLMInfo)
+    usage: Usage = field(default_factory=Usage)
+    llm_structured_response: LLMStructuredResponse = field(
+        default_factory=LLMStructuredResponse
+    )
+    output: Output = field(default_factory=Output)
+    status: Status = field(default_factory=Status)
+
+    def to_string(self) -> str:
+        """Return a readable summary of pipeline information."""
+        parts = [
+            format_block_title("Info"),
+            f"Status : {'PASS' if self.status.passed else 'FAIL'}",
+            "",
+            self.version.to_string(),
+            "",
+            self.llm_info.to_string(),
+            "",
+            self.usage.to_string(),
+            "",
+            self.llm_structured_response.to_string(),
+            "",
+            self.output.to_string(),
+            format_block_title("Info", ended=True),
+        ]
+        return "\n".join(parts)
+
+
+@dataclass
+class Debug(Serializable):
+    llm_info: Optional[LLMInfo] = None
+    llm_response: Optional[LLMResponse] = None
+    usage: Optional[Usage] = None
+    generation_pipeline: Optional[GenerationPipeline] = None
+    dsl_pipeline: Optional[DSLPipeline] = None
+    version: Version = field(default_factory=Version)
+    status: Status = field(default_factory=Status)
+    duration_ms: float = 0.0
+
+    def to_string(self) -> str:
+        """Return a readable debug dump."""
+        parts = [format_block_title("Debug")]
+
+        parts.append(f"Status        : {'PASS' if self.status.passed else 'FAIL'}")
+        parts.append(f"Duration (ms) : {self.duration_ms}")
+        parts.append("")
+
+        parts.append(self.version.to_string())
+        parts.append("")
+
+        parts.append(self.llm_info.to_string() if self.llm_info else "<none>")
+        parts.append("")
+
+        parts.append(self.llm_response.to_string() if self.llm_response else "<none>")
+        parts.append("")
+
+        parts.append(self.usage.to_string() if self.usage else "<none>")
+        parts.append("")
+
+        parts.append(format_block_title("Generation Pipeline", bar_char="+", width=2))
+
+        parts.append(
+            self.generation_pipeline.to_json() if self.generation_pipeline else "<none>"
+        )
+        parts.append(
+            format_block_title("Generation Pipeline", bar_char="+", width=2, ended=True)
+        )
+        parts.append("")
+
+        parts.append(format_block_title("DSL Pipeline", bar_char="+", width=2))
+        parts.append(self.dsl_pipeline.to_json() if self.dsl_pipeline else "<none>")
+        parts.append(
+            format_block_title("DSL Pipeline", bar_char="+", width=2, ended=True)
+        )
+
+        parts.append(format_block_title("Debug", ended=True))
+
+        return "\n".join(parts)
+
+
+@dataclass
+class DeliveryPackage:
+    quiet: Quiet
+    default: Default
+    info: Info
+    debug: Debug
+
+
+@dataclass
+class DeliveryOutput:
     mode: DeliveryMode
-    general: Optional[DeliveryGeneral]
-    template: DeliveryTemplate
-    explanation: Optional[DeliveryExplanation]
-    status: DeliveryStatus
-    usage: Optional[DeliveryUsage]
-    debug: Optional[DeliveryDebug]
+    output: str = ""
+    passed: bool = False
+    error: str = ""
 
-    def __init__(
-        self,
-        *,
-        mode: DeliveryMode,
-        general: Optional[DeliveryGeneral],
-        template: DeliveryTemplate,
-        explanation: Optional[DeliveryExplanation],
-        status: DeliveryStatus,
-        usage: Optional[DeliveryUsage],
-        debug: Optional[DeliveryDebug],
-    ):
-        self.mode = mode
-        self.general = general
-        self.template = template
-        self.explanation = explanation
-        self.status = status
-        self.usage = usage
-        self.debug = debug
+    def __bool__(self):
+        return self.passed
 
-    def as_dict(self) -> Dict[str, Any]:
-        return asdict(self)
+    @property
+    def exit_code(self):
+        return 0 if self.passed else 1

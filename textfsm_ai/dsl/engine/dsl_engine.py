@@ -1,100 +1,64 @@
 # textfsm_ai/dsl/engine/dsl_engine.py
 
+from typing import Dict, List
 
-from textfsm_ai.dsl.core.models import (
-    CanonicalTemplate,
-    HumanDSL,
-    MachineDSL,
-    RecognizerPatterns,
-)
-from textfsm_ai.dsl.engine.format.dsl_renderer import (
-    render_dsl as _render_dsl,
-)
-from textfsm_ai.dsl.engine.parse.dsl_extractor import (
-    extract_machine_dsl as _extract_machine_dsl,
-)
-from textfsm_ai.dsl.engine.parse.template_canonicalizer import canonicalize
-from textfsm_ai.dsl.engine.recognizer.dsl_recognizer import (
-    recognize_dsl_patterns as _recognize_dsl_patterns,
-)
+from textfsm_ai.dsl.ast.parser import parse_textfsm
+from textfsm_ai.dsl.core.models import DSLParseResult
+from textfsm_ai.dsl.engine.render.readable import render_readable
+from textfsm_ai.dsl.engine.render.recognizer import render_recognizer
+from textfsm_ai.dsl.engine.render.template import render_template
 
 
-def canonicalize_template(llm_template: str, records: list) -> CanonicalTemplate:
-    """Normalize a raw TextFSM template and attach metadata/variables."""
-
-    result = canonicalize(llm_template=llm_template, records=records)
-
-    return CanonicalTemplate(
-        llm_template=llm_template,
+def run(raw_template: str, records: List[Dict[str, str]]) -> DSLParseResult:
+    result = DSLParseResult(
+        raw_template=raw_template,
         records=records,
-        template=result.return_text or "",
-        reason=result.reason,
-        ready=result.ready,
+        ready=False,
     )
-
-
-def build_machine_dsl(canonical: CanonicalTemplate) -> MachineDSL:
-    """Build a machine-readable DSL model from a canonical template."""
-    dsl = _extract_machine_dsl(canonical.template)
-    return MachineDSL(canonical=canonical, dsl=dsl, reason=dsl.reason, ready=dsl.ready)
-
-
-def render_human_dsl(machine: MachineDSL, sample: str = "") -> HumanDSL:
-    """Render a human-readable DSL representation from DSL/template/sample."""
-
-    # If only canonical is provided, build machine DSL first
-    dsl = machine.dsl
-    if dsl is None:
-        dsl = build_machine_dsl(machine.canonical)
-
-    template = machine.canonical.template
-    result = _render_dsl(dsl, template, sample)
-    return HumanDSL(
-        human_dsl=result.return_text or "",
-        template=template or None,
-        sample=sample or None,
-        reason=result.reason,
-        ready=result.ready,
-    )
-
-
-def recognize_patterns(
-    machine: MachineDSL,
-    sample: str = "",
-    debug: bool = False,
-) -> RecognizerPatterns:
-    """Recognize DSL-related patterns from DSL/template/sample."""
-
-    # If only canonical is provided, build machine DSL first
-    dsl = machine.dsl
-
-    if dsl is None:
-        dsl = build_machine_dsl(machine.canonical.template).dsl
-
+    sep = "----------------------"
+    # ------------------------------------------------------------
+    # Stage 1: Build AST
+    # ------------------------------------------------------------
     try:
-        patterns, debug_info = _recognize_dsl_patterns(
-            dsl=dsl,
-            template=machine.canonical.template,
-            sample=sample,
-            debug=debug,
-        )
+        result.name = "build-ast"
+        ast = parse_textfsm(raw_template, records)
+        result.ast = ast
     except Exception as ex:
-        failure = f"{type(ex).__name__}: {ex}"
-        return RecognizerPatterns(
-            dsl=machine.dsl,
-            template=machine.canonical.template,
-            sample=sample or None,
-            patterns="",
-            debug_info={"recognize_dsl_patterns": failure},
-            reason=failure,
-            ready=False,
-        )
+        result.reason = f"BUILD-AST-ERROR\n{sep}\n{type(ex).__name__}: {ex}"
+        return result
 
-    return RecognizerPatterns(
-        dsl=machine.dsl,
-        template=machine.canonical.template,
-        sample=sample or None,
-        patterns=patterns,
-        debug_info=debug_info if debug else None,
-        ready=True,
-    )
+    # ------------------------------------------------------------
+    # Stage 2: Canonical template
+    # ------------------------------------------------------------
+    try:
+        result.name = "render-canonical-template"
+        result.canonical = render_template(result.ast, canonicalized=True)
+    except Exception as ex:
+        result.reason = f"RENDER-CANONICAL-ERROR\n{sep}\n{type(ex).__name__}: {ex}"
+        return result
+
+    # ------------------------------------------------------------
+    # Stage 3: Readable DSL
+    # ------------------------------------------------------------
+    try:
+        result.name = "render-readable-dsl"
+        result.readable = render_readable(result.ast)
+    except Exception as ex:
+        result.reason = f"RENDER-READABLE-ERROR\n{sep}\n{type(ex).__name__}: {ex}"
+        return result
+
+    # ------------------------------------------------------------
+    # Stage 4: Recognizer patterns
+    # ------------------------------------------------------------
+    try:
+        result.name = "render-recognizer-patterns"
+        result.recognizers = render_recognizer(result.ast)
+    except Exception as ex:
+        result.reason = f"RENDER-RECOGNIZER-ERROR\n{sep}\n{type(ex).__name__}: {ex}"
+        return result
+
+    # ------------------------------------------------------------
+    # Success
+    # ------------------------------------------------------------
+    result.ready = True
+    return result
