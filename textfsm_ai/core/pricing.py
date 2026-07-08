@@ -170,11 +170,7 @@ def extract_base_model(provider: str, full_model: str) -> str:
     """
     Extract the pricing base model (family) from a full model name.
 
-    Example:
-        full_model="claude-3-opus-20240229" → "claude-opus"
-        full_model="gpt-4o-2024-08-06"      → "gpt-4o"
-        full_model="gpt-4o-mini-2024-09-12" → "gpt-4o-mini"
-        full_model="deepseek-v4-flash"      → "deepseek-v4-flash"
+    Returns the *longest* matching prefix from PRICING_TABLE[provider].
     """
 
     if provider not in PRICING_TABLE:
@@ -182,11 +178,12 @@ def extract_base_model(provider: str, full_model: str) -> str:
 
     families = PRICING_TABLE[provider].keys()
 
-    for family in families:
-        if full_model.startswith(family):
-            return family
+    matches = [f for f in families if full_model.startswith(f)]
+    if not matches:
+        return ""
 
-    return ""
+    # Return longest match
+    return max(matches, key=len)
 
 
 # ---------------------------------------------------------------------------
