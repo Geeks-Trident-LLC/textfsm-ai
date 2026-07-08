@@ -138,6 +138,7 @@ class Usage(Serializable):
     input_per_million: float = 0.0
     output_per_million: float = 0.0
     estimated_cost: float = 0.0
+    warning: str = ""
 
     def to_string(self) -> str:
         """Return a readable summary of token usage and cost estimation."""
@@ -149,9 +150,14 @@ class Usage(Serializable):
             f"LLM Duration (ms)  : {self.llm_duration_ms}",
             f"Input per Million  : {self.input_per_million}",
             f"Output per Million : {self.output_per_million}",
-            f"Estimated Cost     : {self.estimated_cost} {self.currency}",
-            format_block_title("LLM Usage", ended=True),
+            f"Estimated Cost     : ${self.estimated_cost:.6f}",
         ]
+
+        if self.warning:
+            parts.append(f"Warning            : {self.warning}")
+
+        parts.append(format_block_title("LLM Usage", ended=True))
+
         return "\n".join(parts)
 
 
