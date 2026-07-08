@@ -1,30 +1,41 @@
 ## Summary
 
-This PR introduces the new **DSL Recognizer** subsystem, including the literal regex builder, improved tokenization logic, and a comprehensive test suite. This feature enables the engine to generalize literal matched text into stable, reusable regex patterns.
+This PR prepares the v0.4.0 release, introducing the new template‑delivery pipeline,
+expanded DSL rendering capabilities, unified generation architecture, and the new
+pricing engine with Azure/Anthropic/DeepSeek support.
 
-## Key Changes
+## What’s Included
 
-### ✨ New: DSL Recognizer
-- Implemented `_build_literal_regex()` with:
-  - puncts‑group recursion
-  - whitespace normalization
-  - literal `\s+` handling
-  - digit and punctuation classification
-  - fallback NUMBER pattern
-- Added `_build_variable_pattern()` integration
-- Added visualizers for literal → regex and pattern → match previews
+### Delivery & DSL
+- Unified template‑delivery pipeline across DSL, generation, and orchestrator layers
+- Canonicalized pattern rendering and improved EndNode handling
+- New readable and recognizer renderers
+- Updated AST parser with nested pattern/action support
+- Illegal dollar validator and expanded syntax checks
 
-### 🧪 Test Coverage
-- Added `test_literal_regex.py` (unit tests)
-- Added `test_dsl_recognizer.py` (integration tests)
-- Added golden‑file snapshot tests for recognizer output
+### Generation & Providers
+- New GenerationController replacing legacy engines
+- Unified provider selection and retry logic
+- Updated Azure provider integration and endpoint handling
+- Expanded provider model registry and CLI output modes
 
-### 🧹 Cleanup
-- Normalized line endings
-- Removed `.vscode/` from repo and updated `.gitignore`
+### Pricing Engine
+- New pricing subsystem with:
+  - OpenAI, Azure, Anthropic, DeepSeek, Gemini pricing tables
+  - Longest‑prefix model family resolution
+  - Reasoning‑token billing
+  - Sonnet‑5 auto‑update logic
+- Full pytest suite for pricing
 
-## Versioning
-- Bumped version: `0.3.6` → `0.3.7`
+### CLI
+- Updated `generate` command with advanced output modes
+- Updated provider configuration and integration tests
 
-## Notes
-This PR is foundational for upcoming DSL inference improvements and recognizer stability work.
+## Release Artifacts
+- CHANGELOG updated for v0.4.0
+- Release notes generated
+- Version bumped from 0.3.8 → 0.4.0
+
+## Testing
+- Full unit and integration suite passing
+- TestPyPI release validated (`v0.3.8-test`)

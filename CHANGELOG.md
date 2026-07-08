@@ -1,18 +1,25 @@
-## [0.3.7] - 2026-06-12
+## v0.4.0 — 2026‑07‑08
 
 ### Added
-- Introduced the new DSL Recognizer subsystem:
-  - Literal regex builder with puncts‑group recursion
-  - Tokenizer improvements for whitespace, literal `\s+`, digits, punctuation, and fallback patterns
-  - Full unit test suite for literal recognizer and DSL recognizer
-  - Golden‑file tests for recognizer stability
+- New template‑delivery pipeline with canonicalized rendering
+- Recognizer and readable DSL renderers
+- Unified GenerationController replacing legacy engines
+- Full pricing engine with OpenAI, Azure, Anthropic, DeepSeek, Gemini support
+- Longest‑prefix model family resolution
+- Illegal dollar validator and expanded DSL syntax rules
+- Full pytest suite for pricing
 
 ### Changed
-- Normalized line endings across the repository for consistency
+- Updated provider model registry and CLI output modes
+- Updated Azure provider endpoint handling
+- Updated generation pipeline retry logic
+- Updated AST parser with nested pattern/action support
+- Updated CLI provider commands and integration tests
 
 ### Removed
-- Removed `.vscode/` directory from version control and added it to `.gitignore`
+- Legacy DSL engine and old generation pipeline
+- Legacy delivery modules
 
-### Internal
-- Merged `feature/dsl-recognizer` into `develop`
-- Version bump: `0.3.6` → `0.3.7`
+### Fixed
+- EndNode.textfsm_repr canonicalization bug
+- Provider config defaults and Azure api_version mapping
