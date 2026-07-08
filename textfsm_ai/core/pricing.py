@@ -91,11 +91,14 @@ PRICING_TABLE: Dict[str, Dict[str, Dict[str, float]]] = {
 
 
 PRICING_TABLE.setdefault("azure", copy.deepcopy(PRICING_TABLE["openai"]))
-PRICING_TABLE["azure"].update({
-    k: copy.deepcopy(v) for k, v in PRICING_TABLE["anthropic"].items()
-    if k in ("claude-opus-4-8", "claude-haiku-4-5")  
-    # only models GA on Azure-hosted Foundry
-})
+PRICING_TABLE["azure"].update(
+    {
+        k: copy.deepcopy(v)
+        for k, v in PRICING_TABLE["anthropic"].items()
+        if k in ("claude-opus-4-8", "claude-haiku-4-5")
+        # only models GA on Azure-hosted Foundry
+    }
+)
 PRICING_TABLE["azure"].update(copy.deepcopy(PRICING_TABLE["deepseek"]))
 
 

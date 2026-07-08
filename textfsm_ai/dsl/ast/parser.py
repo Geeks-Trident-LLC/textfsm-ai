@@ -164,7 +164,7 @@ def parse_pattern(pattern: str, values_by_name: Dict[str, ValueNode]) -> Pattern
         nodes.append(
             EndNode(
                 raw="$$",
-                textfsm_repr="$",
+                textfsm_repr="$$",
                 expression="end()",
                 regex="$",
             )

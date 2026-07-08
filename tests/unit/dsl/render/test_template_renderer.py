@@ -106,14 +106,60 @@ def test_render_template_canonical():
         Value Required v1 (\S+)
 
         Start
-          ^foo ${v1}
+          ^foo ${v1}$$
     """).strip()
 
     expected = textwrap.dedent(r"""
         Value Required v1 ([A-Za-z0-9_]*[A-Za-z][A-Za-z0-9_]*)
 
         Start
-          ^foo\s+${v1}
+          ^foo\s+${v1}$$
+    """).strip()
+
+    records = [{"v1": "abc"}]
+    ast = parse_textfsm(template, records)
+    out = render_template(ast, canonicalized=True)
+    assert out == expected
+
+
+def test_render_template_canonical_1():
+
+    template = textwrap.dedent(r"""
+        Value Required v1 (\S+)
+
+        Start
+          ^foo ${v1}\$
+    """).strip()
+
+    expected = textwrap.dedent(r"""
+        Value Required v1 ([A-Za-z0-9_]*[A-Za-z][A-Za-z0-9_]*)
+
+        Start
+          ^foo\s+${v1}\$
+    """).strip()
+
+    records = [{"v1": "abc"}]
+    ast = parse_textfsm(template, records)
+    out = render_template(ast, canonicalized=True)
+    assert out == expected
+
+
+def test_render_template_canonical_2():
+
+    template = textwrap.dedent(r"""
+        Value Required v1 (\S+)
+
+        Start
+          ^foo \$ bar$$
+          ^foo ${v1}$$
+    """).strip()
+
+    expected = textwrap.dedent(r"""
+        Value Required v1 ([A-Za-z0-9_]*[A-Za-z][A-Za-z0-9_]*)
+
+        Start
+          ^foo\s+\$\s+bar$$
+          ^foo\s+${v1}$$
     """).strip()
 
     records = [{"v1": "abc"}]
