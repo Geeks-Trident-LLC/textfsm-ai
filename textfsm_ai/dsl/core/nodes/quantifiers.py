@@ -1,337 +1,7 @@
-import re
-from enum import Enum, auto
 from typing import Optional
 
-from textfsm_ai.dsl.core.patterns import PATTERNS
-
-# ------------------------------------------------------------
-# Keyword semantic groups
-# ------------------------------------------------------------
-
-WS = r"\s"
-WSS = r"\s+"
-
-
-class KeywordGroup(Enum):
-    ATOMIC = auto()  # digit, letter, alnum, punct, non-ws
-    ATOMIC_PLUS = auto()  # digits, puncts, non-wss
-    WORDLIKE = auto()  # word, mixed-word, number, mixed-number
-    ITEM = auto()  # words, word-item, puncts-item, etc.
-    GROUP = auto()  # word-group, mixed-word-group, puncts-group, etc.
-
-
-CUSTOM_KEYWORD_MAPPING = {
-    "char": ".",
-    "any": ".*",
-    "some": ".+",
-    "ws": WS,
-    "wss": WSS,
-    "whitespace": WS,
-    "whitespaces": WSS,
-}
-
-KEYWORD_GROUP = {
-    # -------------------------
-    # atomic-group
-    # -------------------------
-    "digit": KeywordGroup.ATOMIC,
-    "letter": KeywordGroup.ATOMIC,
-    "alnum": KeywordGroup.ATOMIC,
-    "punct": KeywordGroup.ATOMIC,
-    "non-ws": KeywordGroup.ATOMIC,
-    "char": KeywordGroup.ATOMIC,
-    "ws": KeywordGroup.ATOMIC,
-    "whitespace": KeywordGroup.ATOMIC,
-    # -------------------------
-    # atomic-plus-group
-    # -------------------------
-    "digits": KeywordGroup.ATOMIC_PLUS,
-    "puncts": KeywordGroup.ATOMIC_PLUS,
-    "non-wss": KeywordGroup.ATOMIC_PLUS,
-    "any": KeywordGroup.ATOMIC_PLUS,
-    "some": KeywordGroup.ATOMIC_PLUS,
-    "wss": KeywordGroup.ATOMIC_PLUS,
-    "whitespaces": KeywordGroup.ATOMIC_PLUS,
-    # -------------------------
-    # word-like-group
-    # -------------------------
-    "word": KeywordGroup.WORDLIKE,
-    "mixed-word": KeywordGroup.WORDLIKE,
-    "number": KeywordGroup.WORDLIKE,
-    "mixed-number": KeywordGroup.WORDLIKE,
-    # -------------------------
-    # item-group
-    # <base>(<wss><base>)*
-    # -------------------------
-    "words": KeywordGroup.ITEM,
-    "mixed-words": KeywordGroup.ITEM,
-    "numbers": KeywordGroup.ITEM,
-    "mixed-numbers": KeywordGroup.ITEM,
-    "word-item": KeywordGroup.ITEM,
-    "mixed-word-item": KeywordGroup.ITEM,
-    "number-item": KeywordGroup.ITEM,
-    "mixed-number-item": KeywordGroup.ITEM,
-    "puncts-item": KeywordGroup.ITEM,
-    "non-wss-item": KeywordGroup.ITEM,
-    # -------------------------
-    # group-group
-    # <base>(<wss><base>)+
-    # -------------------------
-    "word-group": KeywordGroup.GROUP,
-    "mixed-word-group": KeywordGroup.GROUP,
-    "number-group": KeywordGroup.GROUP,
-    "mixed-number-group": KeywordGroup.GROUP,
-    "puncts-group": KeywordGroup.GROUP,
-    "non-wss-group": KeywordGroup.GROUP,
-}
-
-
-def keyword_group(name: str) -> KeywordGroup:
-    return KEYWORD_GROUP.get(name, KeywordGroup.WORDLIKE)
-
-
-def base_keyword(name: str) -> str:
-    if name.endswith("-group"):
-        return name[:-6]  # remove "-group"
-    if name.endswith("-item"):
-        return name[:-5]  # remove "-item"
-
-    mapping = {
-        "words": "word",
-        "mixed-words": "mixed-word",
-        "numbers": "number",
-        "mixed-numbers": "mixed-number",
-    }
-
-    return mapping.get(name, name)
-
-
-# ------------------------------------------------------------
-# Base Node
-# ------------------------------------------------------------
-
-
-class BaseNode:
-    name: str
-
-    def to_regex(self, include_var: bool = False) -> str:
-        raise NotImplementedError
-
-    def to_expression(self) -> str:
-        raise NotImplementedError
-
-    def to_expression_regex(self) -> str:
-        return self.to_regex(include_var=False)
-
-    # def as_keyword_expression(self):
-    #     return keyword_expression_from(self.to_expression())
-
-    def __str__(self):
-        return self.to_expression()
-
-
-# ------------------------------------------------------------
-# Literal
-# ------------------------------------------------------------
-
-
-class LiteralNode(BaseNode):
-    def __init__(self, text: str):
-        self.text = text
-        self.name = "literal"
-        self.regex = re.escape(self.text)
-
-    def to_regex(self, include_var=False):
-        return self.regex
-
-    def to_expression(self):
-        return self.text
-
-
-# ------------------------------------------------------------
-# Keyword
-# ------------------------------------------------------------
-
-
-class KeywordNode(BaseNode):
-    def __init__(self, keyword: str, generalize: bool = False):
-        self.keyword = keyword
-        self.generalize = generalize
-        self.name = self._generalized_keyword()
-        self.regex = PATTERNS[self.name].regex
-
-    def _generalized_keyword(self):
-        if not self.generalize:
-            return self.keyword
-
-        if self.keyword == "digit":
-            return "digits"
-        if self.keyword == "letter":
-            return "word"
-        if self.keyword == "punct":
-            return "puncts"
-
-        return self.keyword
-
-    def to_regex(self, include_var=False):
-        return self.regex
-
-    def to_expression(self):
-        return f"{self.name}()"
-
-
-# ------------------------------------------------------------
-# Variable Keyword
-# ------------------------------------------------------------
-
-
-class VariableKeywordNode(BaseNode):
-    def __init__(
-        self, keyword: str, varname: str, extra: str = "", generalize: bool = False
-    ):
-        self.keyword = keyword
-        self.varname = varname
-        self.extra = extra
-        self.generalize = generalize
-        self.name = self._generalized_keyword()
-        self.regex = PATTERNS[self.name].regex
-
-    def _generalized_keyword(self):
-        if not self.generalize:
-            return self.keyword
-
-        if self.keyword == "digit":
-            return "digits"
-        if self.keyword == "letter":
-            return "word"
-        if self.keyword == "punct":
-            return "puncts"
-
-        return self.keyword
-
-    def to_regex(self, include_var=False):
-        if include_var:
-            return f"(?P<{self.varname}>{self.regex})"
-        return self.regex
-
-    def to_expression(self):
-        if self.extra:
-            return f"{self.name}(var-{self.varname}, options-{self.extra})"
-        return f"{self.name}(var-{self.varname})"
-
-    def to_expression_regex(self):
-        return self.regex
-
-
-def check_custom_keyword(keyword):
-    return keyword in CUSTOM_KEYWORD_MAPPING
-
-
-class CustomKeywordNode(BaseNode):
-    def __init__(
-        self,
-        keyword: str,
-        varname: Optional[str] = None,
-        extra: str = "",
-        generalize: bool = False,
-    ):
-        if not check_custom_keyword(keyword):
-            custom_keywords = list(CUSTOM_KEYWORD_MAPPING)
-            raise ValueError(
-                f"Unknown custom keyword: {keyword}.  Must be {custom_keywords}"
-            )
-        self.keyword = keyword
-        self.varname = varname
-        self.extra = extra
-        self.generalize = generalize
-        self.name = self._generalized_keyword()
-        self.regex = CUSTOM_KEYWORD_MAPPING[self.name]
-
-    def _generalized_keyword(self):
-        if not self.generalize:
-            return self.keyword
-
-        if self.keyword == "char":
-            return "any"
-        if self.keyword == "ws":
-            return "wss"
-        if self.keyword == "whitespace":
-            return "whitespaces"
-
-        return self.keyword
-
-    def to_regex(self, include_var=False):
-        if self.varname and include_var:
-            return f"(?P<{self.varname}>{self.regex})"
-        return self.regex
-
-    def to_expression(self):
-        if self.varname:
-            if self.extra:
-                return f"{self.name}(var-{self.varname}, options-{self.extra})"
-            return f"{self.name}(var-{self.varname})"
-        return f"{self.name}()"
-
-    def to_expression_regex(self):
-        return self.regex
-
-
-# ------------------------------------------------------------
-# Optional
-# ------------------------------------------------------------
-
-
-class OptionalNode(BaseNode):
-    def __init__(self, keyword_node: BaseNode):
-        self.keyword_node = keyword_node
-        self.name = f"optional-{keyword_node.name}"
-
-    def to_regex(self, include_var=False):
-        base = self.keyword_node.to_regex(include_var)
-        g = keyword_group(self.keyword_node.name)
-
-        if g == KeywordGroup.ATOMIC:
-            return f"{base}?"
-
-        if g == KeywordGroup.ATOMIC_PLUS:
-            return f"{base[:-1]}*"
-
-        return f"(?:{base})?"
-
-    def to_expression(self):
-        return f"optional-{self.keyword_node.to_expression()}"
-
-
-# ------------------------------------------------------------
-# Maybe (alias for optional)
-# ------------------------------------------------------------
-
-
-class MaybeNode(OptionalNode):
-    def __init__(self, keyword_node: BaseNode):
-        super().__init__(keyword_node)
-        self.name = f"maybe-{keyword_node.name}"
-
-    def to_expression(self):
-        return f"maybe-{self.keyword_node.to_expression()}"
-
-
-# ------------------------------------------------------------
-# Negative Lookahead
-# ------------------------------------------------------------
-
-
-class NotNode(BaseNode):
-    def __init__(self, keyword_node: BaseNode):
-        self.keyword_node = keyword_node
-        self.name = f"not-{keyword_node.name}"
-
-    def to_regex(self, include_var=False):
-        return f"(?!{self.keyword_node.to_regex(include_var)})"
-
-    def to_expression(self):
-        return f"not-{self.keyword_node.to_expression()}"
-
+from .base import BaseNode
+from .groups import KEYWORD_GROUP, WSS, KeywordGroup, base_keyword
 
 # ------------------------------------------------------------
 # Zero-or-more
@@ -349,6 +19,8 @@ class ZeroOrMoreNode(BaseNode):
         self.group = KEYWORD_GROUP[keyword_node.keyword]
 
     def to_regex(self, include_var=False) -> str:
+        from .factory import create_node
+
         base = self.keyword_node.to_regex(include_var=include_var)
 
         if self.group == KeywordGroup.ATOMIC:
@@ -397,6 +69,8 @@ class OneOrMoreNode(BaseNode):
         self.group = KEYWORD_GROUP[keyword_node.keyword]
 
     def to_regex(self, include_var=False) -> str:
+        from .factory import create_node
+
         base = self.keyword_node.to_regex(include_var=include_var)
 
         if self.group == KeywordGroup.ATOMIC:
@@ -466,6 +140,8 @@ class SomeNode(BaseNode):
         self.group = KEYWORD_GROUP[keyword_node.keyword]
 
     def to_regex(self, include_var=False) -> str:
+        from .factory import create_node
+
         base = self.keyword_node.to_regex(include_var=include_var)
 
         # -----------------------------------------
@@ -522,6 +198,8 @@ class ExactCountNode(BaseNode):
         number-item -> number
         etc.
         """
+        from .factory import create_node
+
         base_kw = base_keyword(self.keyword_node.name)
         node = create_node(
             base_kw,
@@ -628,6 +306,7 @@ class RangeQuantityNode(BaseNode):
         mixed-word-item -> mixed-word
         etc.
         """
+        from .factory import create_node
 
         base_kw = base_keyword(self.keyword_node.name)
         node = create_node(
@@ -751,117 +430,3 @@ class RangeQuantityNode(BaseNode):
         if self.hi is None:
             return f"range-{self.lo}-inf-{self.keyword_node.to_expression()}"
         return f"range-{self.lo}-{self.hi}-{self.keyword_node.to_expression()}"
-
-
-# ------------------------------------------------------------
-# Node Factory
-# ------------------------------------------------------------
-
-
-def create_node(
-    keyword: str,
-    varname: Optional[str] = None,
-    extra: str = "",
-    generalize: bool = False,
-    literal: bool = False,
-) -> BaseNode:
-    if literal:
-        return LiteralNode(keyword)
-
-    if check_custom_keyword(keyword):
-        return CustomKeywordNode(
-            keyword, varname=varname, extra=extra, generalize=generalize
-        )
-
-    # ------------------------------------------------------------
-    # range-lo-hi-keyword
-    # range-lo-inf-keyword
-    # ------------------------------------------------------------
-    if keyword.startswith("range-"):
-        # pattern: range-<lo>-<hi>-<keyword>
-        m = re.match(r"range-(\d+)-(inf|\d+)-(.+)", keyword)
-        if not m:
-            raise ValueError(f"Invalid range syntax: {keyword}")
-
-        lo = int(m.group(1))
-        hi_raw = m.group(2)
-        hi = None if hi_raw == "inf" else int(hi_raw)
-        inner_kw = m.group(3)
-
-        inner_node = create_node(inner_kw, varname, extra, generalize)
-        return RangeQuantityNode(inner_node, lo, hi)
-
-    # ------------------------------------------------------------
-    # exact-n-keyword
-    # ------------------------------------------------------------
-    if keyword.startswith("exact-"):
-        # pattern: exact-<n>-<keyword>
-        m = re.match(r"exact-(\d+)-(.+)", keyword)
-        if not m:
-            raise ValueError(f"Invalid exact syntax: {keyword}")
-
-        count = int(m.group(1))
-        inner_kw = m.group(2)
-
-        inner_node = create_node(inner_kw, varname, extra, generalize)
-        return ExactCountNode(inner_node, count)
-
-    # ------------------------------------------------------------
-    # any-<keyword>  → zero-or-more
-    # ------------------------------------------------------------
-    if keyword.startswith("any-"):
-        inner_kw = keyword[len("any-") :]
-        return ZeroOrMoreNode(create_node(inner_kw, varname, extra, generalize))
-
-    # ------------------------------------------------------------
-    # some-<keyword> → one-or-more
-    # ------------------------------------------------------------
-    if keyword.startswith("some-"):
-        inner_kw = keyword[len("some-") :]
-        return OneOrMoreNode(create_node(inner_kw, varname, extra, generalize))
-
-    # ------------------------------------------------------------
-    # maybe-<keyword> → optional
-    # ------------------------------------------------------------
-    if keyword.startswith("maybe-"):
-        inner_kw = keyword[len("maybe-") :]
-        return OptionalNode(create_node(inner_kw, varname, extra, generalize))
-
-    # ------------------------------------------------------------
-    # optional-<keyword>
-    # ------------------------------------------------------------
-    if keyword.startswith("optional-"):
-        inner_kw = keyword[len("optional-") :]
-        return OptionalNode(create_node(inner_kw, varname, extra, generalize))
-
-    # ------------------------------------------------------------
-    # zero-or-more-<keyword>
-    # ------------------------------------------------------------
-    if keyword.startswith("zero-or-more-"):
-        inner_kw = keyword[len("zero-or-more-") :]
-        return ZeroOrMoreNode(create_node(inner_kw, varname, extra, generalize))
-
-    # ------------------------------------------------------------
-    # one-or-more-<keyword>
-    # ------------------------------------------------------------
-    if keyword.startswith("one-or-more-"):
-        inner_kw = keyword[len("one-or-more-") :]
-        return OneOrMoreNode(create_node(inner_kw, varname, extra, generalize))
-
-    # ------------------------------------------------------------
-    # not-<keyword>
-    # ------------------------------------------------------------
-    if keyword.startswith("not-"):
-        inner_kw = keyword[len("not-") :]
-        return NotNode(create_node(inner_kw, varname, extra, generalize))
-
-    # ------------------------------------------------------------
-    # variable keyword
-    # ------------------------------------------------------------
-    if varname is not None:
-        return VariableKeywordNode(keyword, varname, extra, generalize)
-
-    # ------------------------------------------------------------
-    # plain keyword
-    # ------------------------------------------------------------
-    return KeywordNode(keyword, generalize)
