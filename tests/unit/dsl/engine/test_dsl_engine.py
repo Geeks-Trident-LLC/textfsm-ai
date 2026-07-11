@@ -6,7 +6,8 @@ from textfsm_ai.dsl.engine.dsl_engine import run
 
 
 def test_run():
-    llm_template = textwrap.dedent(r"""
+    llm_template = textwrap.dedent(
+        r"""
         Value Required v1 (\S+)
         Value v2 (\S+)
         Value Filldown,Fillup v3 (\S+)
@@ -17,12 +18,16 @@ def test_run():
 
         Table
           ^foobar ${v3} -> Start
-    """).strip()
+    """
+    ).strip()
 
     records = [{"v1": "abc", "v2": "12", "v3": "1.1"}]
     result = run(llm_template, records)
     assert result.ready
-    assert result.canonical == textwrap.dedent(r"""
+    assert (
+        result.canonical
+        == textwrap.dedent(
+            r"""
         Value Required v1 ([A-Za-z0-9_]*[A-Za-z][A-Za-z0-9_]*)
         Value v2 ([0-9]+)
         Value Filldown,Fillup v3 ((?:[0-9]+\.[0-9]+|[0-9]+\.|\.[0-9]+|[0-9]+))
@@ -33,16 +38,23 @@ def test_run():
 
         Table
           ^foobar\s+${v3} -> Start
-        """).strip()
+        """
+        ).strip()
+    )
 
-    assert result.readable == textwrap.dedent("""
+    assert (
+        result.readable
+        == textwrap.dedent(
+            """
         state Start:
           start() foo word(var-v1, options-Required) -> Next
           start() bar digits(var-v2) -> Continue.Record(Table)
 
         state Table:
           start() foobar number(var-v3, options-Filldown,Fillup) -> Start
-        """).strip()
+        """
+        ).strip()
+    )
 
     assert result.recognizers == [
         r"^foo\s+[A-Za-z0-9_]*[A-Za-z][A-Za-z0-9_]*",

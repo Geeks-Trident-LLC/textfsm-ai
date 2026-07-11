@@ -18,12 +18,14 @@ from textfsm_ai.dsl.engine.render.template import (
 
 
 def test_render_pattern_canonical():
-    template = textwrap.dedent(r"""
+    template = textwrap.dedent(
+        r"""
         Value Required v1 (\S+)
 
         Start
           ^foo ${v1}
-    """).strip()
+    """
+    ).strip()
 
     expected = r"^foo\s+${v1}"
 
@@ -35,12 +37,14 @@ def test_render_pattern_canonical():
 
 
 def test_render_pattern_raw():
-    template = textwrap.dedent(r"""
+    template = textwrap.dedent(
+        r"""
         Value Required v1 (\S+)
 
         Start
           ^foo ${v1}
-    """).strip()
+    """
+    ).strip()
 
     expected = r"^foo ${v1}"
 
@@ -102,19 +106,23 @@ def test_render_action_error():
 
 def test_render_template_canonical():
 
-    template = textwrap.dedent(r"""
+    template = textwrap.dedent(
+        r"""
         Value Required v1 (\S+)
 
         Start
           ^foo ${v1}$$
-    """).strip()
+    """
+    ).strip()
 
-    expected = textwrap.dedent(r"""
+    expected = textwrap.dedent(
+        r"""
         Value Required v1 ([A-Za-z0-9_]*[A-Za-z][A-Za-z0-9_]*)
 
         Start
           ^foo\s+${v1}$$
-    """).strip()
+    """
+    ).strip()
 
     records = [{"v1": "abc"}]
     ast = parse_textfsm(template, records)
@@ -124,19 +132,23 @@ def test_render_template_canonical():
 
 def test_render_template_canonical_1():
 
-    template = textwrap.dedent(r"""
+    template = textwrap.dedent(
+        r"""
         Value Required v1 (\S+)
 
         Start
           ^foo ${v1}\$
-    """).strip()
+    """
+    ).strip()
 
-    expected = textwrap.dedent(r"""
+    expected = textwrap.dedent(
+        r"""
         Value Required v1 ([A-Za-z0-9_]*[A-Za-z][A-Za-z0-9_]*)
 
         Start
           ^foo\s+${v1}\$
-    """).strip()
+    """
+    ).strip()
 
     records = [{"v1": "abc"}]
     ast = parse_textfsm(template, records)
@@ -146,21 +158,25 @@ def test_render_template_canonical_1():
 
 def test_render_template_canonical_2():
 
-    template = textwrap.dedent(r"""
+    template = textwrap.dedent(
+        r"""
         Value Required v1 (\S+)
 
         Start
           ^foo \$ bar$$
           ^foo ${v1}$$
-    """).strip()
+    """
+    ).strip()
 
-    expected = textwrap.dedent(r"""
+    expected = textwrap.dedent(
+        r"""
         Value Required v1 ([A-Za-z0-9_]*[A-Za-z][A-Za-z0-9_]*)
 
         Start
           ^foo\s+\$\s+bar$$
           ^foo\s+${v1}$$
-    """).strip()
+    """
+    ).strip()
 
     records = [{"v1": "abc"}]
     ast = parse_textfsm(template, records)
@@ -170,19 +186,23 @@ def test_render_template_canonical_2():
 
 def test_render_template_raw():
 
-    template = textwrap.dedent(r"""
+    template = textwrap.dedent(
+        r"""
         Value Required v1 (\S+)
 
         Start
           ^foo ${v1}
-    """).strip()
+    """
+    ).strip()
 
-    expected = textwrap.dedent(r"""
+    expected = textwrap.dedent(
+        r"""
         Value Required v1 (\S+)
 
         Start
           ^foo ${v1}
-    """).strip()
+    """
+    ).strip()
 
     records = [{"v1": "abc"}]
     ast = parse_textfsm(template, records)
@@ -192,7 +212,8 @@ def test_render_template_raw():
 
 def test_render_template_multiple_states():
 
-    template = textwrap.dedent(r"""
+    template = textwrap.dedent(
+        r"""
         Value Required v1 (\S+)
         Value v2 (\S+)
         Value Filldown,Fillup v3 (\S+)
@@ -203,9 +224,11 @@ def test_render_template_multiple_states():
 
         Table
           ^foobar ${v3} -> Start
-    """).strip()
+    """
+    ).strip()
 
-    expected = textwrap.dedent(r"""
+    expected = textwrap.dedent(
+        r"""
         Value Required v1 ([A-Za-z0-9_]*[A-Za-z][A-Za-z0-9_]*)
         Value v2 ([0-9]+)
         Value Filldown,Fillup v3 ((?:[0-9]+\.[0-9]+|[0-9]+\.|\.[0-9]+|[0-9]+))
@@ -216,7 +239,8 @@ def test_render_template_multiple_states():
 
         Table
           ^foobar\s+${v3} -> Start
-    """).strip()
+    """
+    ).strip()
 
     records = [{"v1": "abc", "v2": "12", "v3": "1.1"}]
 

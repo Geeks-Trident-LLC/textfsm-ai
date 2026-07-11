@@ -11,11 +11,11 @@ pytest-cov
 pytest-asyncio>=0.23.0
 
 # Linting & formatting
-ruff
-black
+ruff==0.4.8
+black==24.4.2
 
 # Type checking
-mypy
+mypy==1.10.0
 types-PyYAML
 
 # Documentation

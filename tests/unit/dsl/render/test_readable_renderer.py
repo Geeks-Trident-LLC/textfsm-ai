@@ -19,12 +19,14 @@ from textfsm_ai.dsl.engine.render.readable import (
 
 def test_render_pattern_readable_simple():
 
-    template = textwrap.dedent(r"""
+    template = textwrap.dedent(
+        r"""
         Value Required v1 (\S+)
 
         Start
           ^foo ${v1}
-    """).strip()
+    """
+    ).strip()
     expected = "start() foo word(var-v1, options-Required)"
     records = [{"v1": "abc"}]
 
@@ -99,16 +101,20 @@ def test_render_action_readable_state_only():
 
 
 def test_render_readable_single_state():
-    template = textwrap.dedent(r"""
+    template = textwrap.dedent(
+        r"""
         Value Required v1 (\S+)
 
         Start
           ^foo ${v1}
-    """).strip()
-    expected = textwrap.dedent("""
+    """
+    ).strip()
+    expected = textwrap.dedent(
+        """
         state Start:
           start() foo word(var-v1, options-Required)
-    """).strip()
+    """
+    ).strip()
 
     records = [{"v1": "abc"}]
 
@@ -120,7 +126,8 @@ def test_render_readable_single_state():
 
 def test_render_readable_multiple_states():
 
-    template = textwrap.dedent(r"""
+    template = textwrap.dedent(
+        r"""
         Value Required v1 (\S+)
         Value v2 (\S+)
         Value Filldown,Fillup v3 (\S+)
@@ -131,16 +138,19 @@ def test_render_readable_multiple_states():
 
         Table
           ^foobar ${v3} -> Start
-    """).strip()
+    """
+    ).strip()
 
-    expected = textwrap.dedent(r"""
+    expected = textwrap.dedent(
+        r"""
     state Start:
       start() foo word(var-v1, options-Required) -> Next
       start() bar digits(var-v2) -> Continue.Record(Table)
 
     state Table:
       start() foobar number(var-v3, options-Filldown,Fillup) -> Start
-    """).strip()
+    """
+    ).strip()
 
     records = [{"v1": "abc", "v2": "12", "v3": "1.1"}]
 
