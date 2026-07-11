@@ -122,6 +122,9 @@ filterwarnings = [
     "ignore::DeprecationWarning:google\\.genai\\.",
 ]
 
+[tool.coverage.report]
+fail_under = 70
+
 [tool.black]
 line-length = 88
 target-version = ["py39"]

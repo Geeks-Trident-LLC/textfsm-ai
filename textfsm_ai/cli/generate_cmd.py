@@ -75,27 +75,11 @@ def generate(
     pconf = providers[provider]
     params = pconf.params.copy()
 
-    # CLI overrides
-    if api_key:
-        params["api_key"] = api_key
-    if model:
-        params["model"] = model
-    if endpoint:
-        params["endpoint"] = endpoint
-    if api_version:
-        params["api_version"] = api_version
-
-    # Azure validation
-    if provider == "azure":
-        if "endpoint" not in params:
-            raise click.ClickException(
-                "Azure requires --endpoint or AZURE_OPENAI_ENDPOINT"
-            )
-        if "model" not in params:
-            raise click.ClickException(
-                "Azure requires --model or AZURE_OPENAI_DEPLOYMENT"
-            )
-        params.setdefault("api_version", "2024-02-15-preview")
+    # Resolve each field: CLI flag > provider-specific env var > providers.yaml
+    params["api_key"] = resolve_api_key(provider, api_key, pconf)
+    params["model"] = resolve_model(provider, model, pconf)
+    params["endpoint"] = resolve_endpoint(provider, endpoint, pconf)
+    params["api_version"] = resolve_api_version(provider, api_version, pconf)
 
     # -----------------------------
     # 3. Debug output
@@ -251,7 +235,7 @@ def resolve_api_key(provider, api_key, pconf):
     env_map = {
         "openai": "OPENAI_API_KEY",
         "anthropic": "ANTHROPIC_API_KEY",
-        "gemini": "GOOGLE_API_KEY",
+        "gemini": "GEMINI_API_KEY",
         "deepseek": "DEEPSEEK_API_KEY",
         "azure": "AZURE_OPENAI_API_KEY",
     }
@@ -263,8 +247,8 @@ def resolve_api_key(provider, api_key, pconf):
             return key
 
     # providers.yaml fallback
-    if pconf and pconf.api_key:
-        return pconf.api_key
+    if pconf and pconf.params.get("api_key"):
+        return pconf.params["api_key"]
 
     raise click.ClickException(
         f"API key not provided. Use --api-key or set {env_var} or providers.yaml"
