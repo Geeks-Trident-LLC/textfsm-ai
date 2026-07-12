@@ -17,9 +17,10 @@ def create_orchestrator_from_config(cfg: OrchestratorConfig) -> Orchestrator:
                 f"Invalid provider entry: expected ProviderConfig, got {type(entry)}"
             )
 
-        provider_cls = registry.get(entry.type)
-        if provider_cls is None:
-            raise ValueError(f"Unknown provider type: {entry.type}")
+        try:
+            provider_cls = registry.get(entry.type)
+        except KeyError:
+            raise ValueError(f"Unknown provider type: {entry.type}") from None
 
         params = entry.params or {}
         instance = provider_cls(**params)
