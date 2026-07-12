@@ -79,3 +79,39 @@ def test_parse_to_dicts_invalid_template():
 
     with pytest.raises(Exception):
         template.parse_to_dicts(bad_template, SAMPLE_SINGLE)
+
+
+# ---------------------------------------------------------
+# validate_template
+# ---------------------------------------------------------
+def test_validate_template_empty_string():
+    result = template.validate_template("")
+
+    assert result.ready is False
+    assert result.reason == "template_empty"
+    assert result.data == ""
+
+
+def test_validate_template_whitespace_only():
+    result = template.validate_template("   \n\t  ")
+
+    assert result.ready is False
+    assert result.reason == "template_empty"
+
+
+def test_validate_template_valid_template():
+    result = template.validate_template(VALID_TEMPLATE)
+
+    assert result.ready is True
+    assert result.reason == ""
+    assert result.data == VALID_TEMPLATE
+
+
+def test_validate_template_syntax_error():
+    bad_template = "Value iface (\\S+)\nStart\n  ^ -> Record"
+
+    result = template.validate_template(bad_template)
+
+    assert result.ready is False
+    assert result.data == bad_template
+    assert result.reason.startswith("template_syntax_error: ")
