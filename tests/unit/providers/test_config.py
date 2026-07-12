@@ -1,0 +1,171 @@
+import pytest
+
+from textfsm_ai.providers.config import load_config_from_env, load_config_from_file
+
+_ENV_VARS = [
+    "OPENAI_API_KEY",
+    "ANTHROPIC_API_KEY",
+    "GEMINI_API_KEY",
+    "DEEPSEEK_API_KEY",
+    "AZURE_OPENAI_ENDPOINT",
+    "AZURE_OPENAI_API_KEY",
+    "AZURE_OPENAI_API_VERSION",
+]
+
+
+@pytest.fixture(autouse=True)
+def _clear_env(monkeypatch):
+    for var in _ENV_VARS:
+        monkeypatch.delenv(var, raising=False)
+
+
+# ============================================================
+# load_config_from_file
+# ============================================================
+
+
+def test_load_config_from_file_nonexistent_path_returns_empty():
+    cfg = load_config_from_file("does/not/exist.yaml")
+    assert cfg.providers == {}
+
+
+def test_load_config_from_file_parses_providers(tmp_path):
+    yaml_file = tmp_path / "providers.yaml"
+    yaml_file.write_text(
+        """
+providers:
+  openai:
+    type: openai
+    params:
+      api_key: sk-abc
+      model: gpt-4o-mini
+  anthropic:
+    type: anthropic
+    params: {}
+""",
+        encoding="utf-8",
+    )
+
+    cfg = load_config_from_file(str(yaml_file))
+
+    assert set(cfg.providers.keys()) == {"openai", "anthropic"}
+    assert cfg.providers["openai"].type == "openai"
+    assert cfg.providers["openai"].params == {
+        "api_key": "sk-abc",
+        "model": "gpt-4o-mini",
+    }
+    assert cfg.providers["anthropic"].params == {}
+
+
+def test_load_config_from_file_empty_yaml(tmp_path):
+    yaml_file = tmp_path / "empty.yaml"
+    yaml_file.write_text("", encoding="utf-8")
+
+    cfg = load_config_from_file(str(yaml_file))
+    assert cfg.providers == {}
+
+
+def test_load_config_from_file_no_providers_key(tmp_path):
+    yaml_file = tmp_path / "no_providers.yaml"
+    yaml_file.write_text("other_key: value\n", encoding="utf-8")
+
+    cfg = load_config_from_file(str(yaml_file))
+    assert cfg.providers == {}
+
+
+def test_load_config_from_file_default_path_uses_real_providers_yaml():
+    # No explicit path -> resolves to BASE_DIR / models / providers.yaml.
+    # Just confirm it doesn't blow up and returns a config object.
+    cfg = load_config_from_file()
+    assert cfg.providers is not None
+
+
+# ============================================================
+# load_config_from_env
+# ============================================================
+
+
+def test_load_config_from_env_no_vars_set_returns_empty():
+    cfg = load_config_from_env()
+    assert cfg.providers == {}
+
+
+def test_load_config_from_env_openai(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-openai")
+    cfg = load_config_from_env()
+
+    assert set(cfg.providers.keys()) == {"openai"}
+    assert cfg.providers["openai"].type == "openai"
+    assert cfg.providers["openai"].params == {"api_key": "sk-openai"}
+
+
+def test_load_config_from_env_anthropic(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-anthropic")
+    cfg = load_config_from_env()
+
+    assert set(cfg.providers.keys()) == {"anthropic"}
+    assert cfg.providers["anthropic"].params == {"api_key": "sk-anthropic"}
+
+
+def test_load_config_from_env_gemini(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "sk-gemini")
+    cfg = load_config_from_env()
+
+    assert set(cfg.providers.keys()) == {"gemini"}
+    assert cfg.providers["gemini"].params == {"api_key": "sk-gemini"}
+
+
+def test_load_config_from_env_deepseek(monkeypatch):
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-deepseek")
+    cfg = load_config_from_env()
+
+    assert set(cfg.providers.keys()) == {"deepseek"}
+    assert cfg.providers["deepseek"].params == {"api_key": "sk-deepseek"}
+
+
+def test_load_config_from_env_azure_requires_both_endpoint_and_key(monkeypatch):
+    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
+    # api key missing -> azure should NOT appear
+    cfg = load_config_from_env()
+    assert "azure" not in cfg.providers
+
+
+def test_load_config_from_env_azure_with_both_vars(monkeypatch):
+    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
+    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "sk-azure")
+    cfg = load_config_from_env()
+
+    assert set(cfg.providers.keys()) == {"azure"}
+    assert cfg.providers["azure"].params == {
+        "endpoint": "https://example.azure.com",
+        "api_key": "sk-azure",
+        "api_version": "2024-02-15-preview",
+    }
+
+
+def test_load_config_from_env_azure_custom_api_version(monkeypatch):
+    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
+    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "sk-azure")
+    monkeypatch.setenv("AZURE_OPENAI_API_VERSION", "2024-06-01")
+    cfg = load_config_from_env()
+
+    assert cfg.providers["azure"].params["api_version"] == "2024-06-01"
+
+
+def test_load_config_from_env_all_providers_at_once(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "k1")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "k2")
+    monkeypatch.setenv("GEMINI_API_KEY", "k3")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "k4")
+    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
+    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "k5")
+
+    cfg = load_config_from_env()
+
+    assert set(cfg.providers.keys()) == {
+        "openai",
+        "anthropic",
+        "gemini",
+        "deepseek",
+        "azure",
+    }
