@@ -1,40 +1,41 @@
-# v0.4.0 — Template Delivery, Unified Generation, Pricing Engine
+# v0.4.1 — Package Refactor, CI Fix, ~95% Test Coverage
 
-## 🚀 New Delivery Pipeline
-A fully unified template‑delivery subsystem now powers all DSL → AST → render →
-package assembly flows. This replaces the legacy delivery modules and provides:
+## 🧹 DSL Package Refactor
+`dsl/core/nodes.py`, the largest module in the codebase, has been split into a
+proper package (`dsl/core/nodes/`) organized by responsibility:
 
-- Canonicalized pattern rendering
-- Recognizer and readable renderers
-- Strict typing across DSL, generation, and orchestrator layers
-- Updated AST parser with nested pattern/action rules
+- `groups.py` — keyword group constants and lookup
+- `base.py` — `BaseNode`
+- `leaf.py` — literal and keyword node types
+- `modifiers.py` — optional/maybe/not node types
+- `quantifiers.py` — zero‑or‑more, one‑or‑more, exact, and range node types
+- `factory.py` — `create_node()`
 
-## 🧠 Unified Generation Architecture
-The old generation engines have been removed and replaced with the new
-GenerationController, featuring:
+All existing import paths continue to work unchanged.
 
-- Structured retry logic with retryable/unretryable error gating
-- Provider‑aware generation pipeline
-- Updated provider registry and CLI integration
+## 🛠 CLI & Packaging Fixes
+- Added a `--version` CLI flag
+- Removed a stray `pytest.ini` that was silently shadowing the project's real
+  pytest configuration in `pyproject.toml` (including coverage options)
+- Fixed Makefile recipe tabs and aligned `pre-commit` hooks with pinned tox
+  lint/format/typecheck versions
+- CI now also triggers on pushes to `develop`, not just `main`
 
-## 💵 New Pricing Engine
-A complete pricing subsystem is now available:
+## 🐛 Bug Fixes
+- Fixed an unreachable error branch in `orchestrator/factory.py` for unknown
+  provider types — now correctly raises `ValueError`
+- Fixed `generate_cmd.py` referencing a nonexistent `pconf.api_key` attribute
+  and mapping Gemini's API key to the wrong environment variable
 
-- OpenAI, Azure, Anthropic, DeepSeek, Gemini pricing tables
-- Longest‑prefix model family resolution
-- Reasoning‑token billing
-- Sonnet‑5 intro‑pricing auto‑update
-- Full pytest suite
+## 🧪 Test Coverage
+Overall test coverage raised to ~95%, with dedicated new test suites added for:
 
-## 🛠 Provider Improvements
-- Azure provider endpoint fixes and unified model mapping
-- Updated providers.yaml defaults
-- Expanded CLI provider commands and tests
-
-## 🧪 Testing
-- New pricing tests
-- Updated CLI tests for all providers
-- Updated integration tests for generation and delivery
+- All provider modules (OpenAI, Azure, Anthropic, DeepSeek, Gemini, OpenAI‑compatible)
+- Delivery assembly, controller, and engine modules
+- `dsl/core/nodes/factory.py`
+- `generation/support/llm_extractor.py` and `dsl/engine/dsl_engine.py`
+- `core/serializable.py`, `core/dotdict.py`, `core/utils/template.py`
+- Remaining CLI and packaging gaps
 
 ## 📦 Version
-`0.3.8 → 0.4.0`
+`0.4.0 → 0.4.1`
