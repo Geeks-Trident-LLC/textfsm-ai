@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Mapping, Optional
+from typing import Mapping
 
 from .errors import ProviderNotFoundError
 from .provider import Provider
@@ -53,20 +53,6 @@ class RoutingTable:
                 return provider
 
         raise ProviderNotFoundError(f"No provider found for model: {model}")
-
-    def select_fallback_provider(
-        self,
-        request: OrchestratorRequest,
-        providers: Mapping[str, Provider],
-        primary: Provider,
-    ) -> Optional[Provider]:
-        # naive: first other provider that supports the model
-        for provider in providers.values():
-            if provider is primary:
-                continue
-            if provider.supports(request.model):
-                return provider
-        return None
 
 
 # ---------------------------------------------------------------------------

@@ -46,6 +46,8 @@ class Orchestrator:
                     raw = await provider.generate(
                         req.prompt,
                         model=req.model,
+                        temperature=req.temperature,
+                        max_tokens=req.max_tokens,
                     )
                     return OrchestratorResponse(
                         provider=provider.name,

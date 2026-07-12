@@ -13,10 +13,3 @@ class ValidationResult(Serializable):
     kwargs: Optional[dict] = None
     reason: str = ""
     ready: bool = False
-
-
-@dataclass(frozen=True)
-class ReturnText(Serializable):
-    return_text: Optional[str] = None
-    reason: str = ""
-    ready: bool = False

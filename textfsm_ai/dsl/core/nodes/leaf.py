@@ -95,9 +95,6 @@ class VariableKeywordNode(BaseNode):
             return f"{self.name}(var-{self.varname}, options-{self.extra})"
         return f"{self.name}(var-{self.varname})"
 
-    def to_expression_regex(self):
-        return self.regex
-
 
 def check_custom_keyword(keyword):
     return keyword in CUSTOM_KEYWORD_MAPPING
@@ -147,6 +144,3 @@ class CustomKeywordNode(BaseNode):
                 return f"{self.name}(var-{self.varname}, options-{self.extra})"
             return f"{self.name}(var-{self.varname})"
         return f"{self.name}()"
-
-    def to_expression_regex(self):
-        return self.regex
