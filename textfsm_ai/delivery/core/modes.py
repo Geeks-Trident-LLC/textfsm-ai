@@ -21,6 +21,3 @@ class DeliveryMode(IntEnum):
         if value not in mapping:
             raise ValueError(f"Invalid delivery mode: {value}")
         return mapping[value]
-
-    def is_at_least(self, other: "DeliveryMode") -> bool:
-        return self.value >= other.value

@@ -63,16 +63,29 @@ function Publish-Prod {
     if ($localTagExists -and -not $remoteTagExists) {
         Write-Host "Local tag $tag exists but remote tag does not. Deleting local tag and continuing..."
         git tag -d $tag | Out-Null
+        $localTagExists = $null
     }
 
-    Write-Host "Creating production tag $tag"
-    git tag $tag
+    if (-not $localTagExists) {
+        Write-Host "Creating production tag $tag"
+        git tag $tag
+    }
 
-    Write-Host "Pushing tag $tag"
-    git push origin $tag
+    if ($remoteTagExists) {
+        Write-Host "Remote tag $tag already exists. Skipping push."
+    } else {
+        Write-Host "Pushing tag $tag"
+        git push origin $tag
+    }
 
-    Write-Host "Creating GitHub Release for $tag"
-    gh release create $tag --generate-notes
+    gh release view $tag *>$null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "GitHub Release $tag already exists. Updating notes."
+        gh release edit $tag --generate-notes
+    } else {
+        Write-Host "Creating GitHub Release for $tag"
+        gh release create $tag --generate-notes
+    }
 }
 
 switch ($Command) {

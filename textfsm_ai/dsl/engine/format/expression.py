@@ -1,4 +1,3 @@
-import functools
 import re
 from dataclasses import dataclass
 from typing import Optional
@@ -139,12 +138,3 @@ def keyword_expression_from(expr: str) -> KeywordExpression:
         varname=varname,
         options=options,
     )
-
-
-def wrap_keyword_call(func):
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        expr_str = func(*args, **kwargs)
-        return keyword_expression_from(expr_str)
-
-    return wrapper

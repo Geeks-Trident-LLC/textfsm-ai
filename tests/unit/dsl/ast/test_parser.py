@@ -106,11 +106,13 @@ def test_parse_rule_line_eof():
 
 
 def test_parse_textfsm_single_state():
-    text = textwrap.dedent("""
+    text = textwrap.dedent(
+        """
         Start
           ^foo -> Next
           ^bar -> Record
-    """).strip()
+    """
+    ).strip()
     ast = parse_textfsm(text, [])
 
     assert isinstance(ast, TemplateAST)
@@ -128,7 +130,8 @@ def test_parse_textfsm_single_state():
 
 
 def test_parse_textfsm_multiple_states():
-    text = textwrap.dedent(r"""
+    text = textwrap.dedent(
+        r"""
         Value Required v1 (\S+)
         Value v2 (\S+)
         Value Filldown,Fillup v3 (\S+)
@@ -139,7 +142,8 @@ def test_parse_textfsm_multiple_states():
 
         Table
           ^foobar ${v3} -> Start
-    """).strip()
+    """
+    ).strip()
     records = [{"v1": "abc", "v2": "12", "v3": "1.1"}]
 
     ast = parse_textfsm(text, records)

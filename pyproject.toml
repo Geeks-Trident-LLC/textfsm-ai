@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "textfsm_ai"
-version = "0.4.0"
+version = "0.4.1"
 description = "AI-powered TextFSM template generator with multi-provider routing"
 readme = "README.md"
 license = { text = "MIT" }
@@ -59,19 +59,17 @@ keywords = [
     "llm",
     "openai",
     "claude",
+    "anthropic",
     "gemini",
     "azure-ai-inference",
     "deepseek",
-    "router",
-    "quota manager",
+    "device output parsing",
+    "log extraction",
+    "structured data extraction",
+    "screen scraping",
 ]
 
 [project.optional-dependencies]
-openai = ["openai>=1.0.0"]
-azure = ["azure-ai-inference>=1.0.0b9"]
-anthropic = ["anthropic>=0.8.0"]
-gemini = ["google-genai>=0.2.0"]
-
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
@@ -85,10 +83,6 @@ dev = [
 build = ["build", "twine"]
 
 all = [
-    "openai>=1.0.0",
-    "azure-ai-inference>=1.0.0b9",
-    "anthropic>=0.8.0",
-    "google-genai>=0.2.0",
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
     "pytest-cov>=5.0.0",
@@ -96,6 +90,8 @@ all = [
     "black>=24.0.0",
     "mypy>=1.10.0",
     "respx",
+    "build",
+    "twine",
 ]
 
 [project.scripts]
@@ -118,6 +114,16 @@ exclude = ["tests*", "docs*", "examples*", "scripts*"]
 [tool.pytest.ini_options]
 addopts = "-ra --cov=textfsm_ai --cov-report=term-missing"
 testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+    "integration: marks tests that require real API calls or external services",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:google\\.genai\\.",
+]
+
+[tool.coverage.report]
+fail_under = 70
 
 [tool.black]
 line-length = 88
@@ -126,6 +132,7 @@ target-version = ["py39"]
 [tool.ruff]
 line-length = 88
 fix = true
+force-exclude = true
 
 [tool.ruff.lint]
 select = [

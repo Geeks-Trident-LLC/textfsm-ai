@@ -5,12 +5,14 @@ from textfsm_ai.dsl.engine.render.recognizer import render_recognizer
 
 
 def test_render_recognizer_single_state():
-    template = textwrap.dedent(r"""
+    template = textwrap.dedent(
+        r"""
         Value Required v1 (\S+)
 
         Start
           ^foo ${v1}
-    """).strip()
+    """
+    ).strip()
 
     expected = ["^foo\\s+[A-Za-z0-9_]*[A-Za-z][A-Za-z0-9_]*"]
 
@@ -23,7 +25,8 @@ def test_render_recognizer_single_state():
 
 def test_render_recognizer_multiple_states():
 
-    template = textwrap.dedent(r"""
+    template = textwrap.dedent(
+        r"""
         Value Required v1 (\S+)
         Value v2 (\S+)
         Value Filldown,Fillup v3 (\S+)
@@ -34,7 +37,8 @@ def test_render_recognizer_multiple_states():
 
         Table
           ^foobar ${v3} -> Start
-    """).strip()
+    """
+    ).strip()
 
     expected = [
         "^foo\\s+[A-Za-z0-9_]*[A-Za-z][A-Za-z0-9_]*",

@@ -1,41 +1,45 @@
 ## Summary
 
-This PR prepares the v0.4.0 release, introducing the new template‑delivery pipeline,
-expanded DSL rendering capabilities, unified generation architecture, and the new
-pricing engine with Azure/Anthropic/DeepSeek support.
+This PR prepares the v0.4.1 release: a maintainability and quality‑focused release
+following v0.4.0, adding a `--version` CLI flag, refactoring the DSL node module into
+a package, fixing a packaging/CI gap, and raising unit test coverage to ~95% across
+nearly every module in the codebase.
 
-## What’s Included
-
-### Delivery & DSL
-- Unified template‑delivery pipeline across DSL, generation, and orchestrator layers
-- Canonicalized pattern rendering and improved EndNode handling
-- New readable and recognizer renderers
-- Updated AST parser with nested pattern/action support
-- Illegal dollar validator and expanded syntax checks
-
-### Generation & Providers
-- New GenerationController replacing legacy engines
-- Unified provider selection and retry logic
-- Updated Azure provider integration and endpoint handling
-- Expanded provider model registry and CLI output modes
-
-### Pricing Engine
-- New pricing subsystem with:
-  - OpenAI, Azure, Anthropic, DeepSeek, Gemini pricing tables
-  - Longest‑prefix model family resolution
-  - Reasoning‑token billing
-  - Sonnet‑5 auto‑update logic
-- Full pytest suite for pricing
+## What's Included
 
 ### CLI
-- Updated `generate` command with advanced output modes
-- Updated provider configuration and integration tests
+- New `--version` flag
+
+### DSL
+- `dsl/core/nodes.py` split into a `dsl/core/nodes/` package (`groups`, `base`, `leaf`,
+  `modifiers`, `quantifiers`, `factory`) — no change to public import paths or behavior
+
+### Packaging & CI
+- Consolidated pytest configuration into `pyproject.toml` (removed a `pytest.ini` that
+  was silently shadowing it, including coverage options)
+- Fixed Makefile recipe tabs and aligned `pre-commit` hooks with pinned `tox`
+  lint/format/typecheck versions
+- CI workflow now also triggers on `develop` pushes, not just `main`
+
+### Bug Fixes
+- `orchestrator/factory.py`: unreachable error branch for unknown provider types now
+  correctly raises `ValueError`
+- `generate_cmd.py`: incorrect `pconf.api_key` attribute reference and wrong
+  `GEMINI_API_KEY` env var mapping
+
+### Test Coverage
+- Added dedicated unit test suites for: all provider modules, delivery
+  assembly/controller/engine, `dsl/core/nodes/factory.py`, `generation/support/llm_extractor.py`,
+  `dsl/engine/dsl_engine.py`, `core/serializable.py`, `core/dotdict.py`,
+  `core/utils/template.py`, and CLI/package coverage gaps
+- Overall coverage raised from the low‑80s to ~95%
 
 ## Release Artifacts
-- CHANGELOG updated for v0.4.0
+- CHANGELOG updated for v0.4.1
 - Release notes generated
-- Version bumped from 0.3.8 → 0.4.0
+- Version bumped from 0.4.0 → 0.4.1
 
 ## Testing
-- Full unit and integration suite passing
-- TestPyPI release validated (`v0.3.8-test`)
+- Full unit and integration suite passing (562 passed, 18 skipped)
+- `tox -e format,lint,typecheck` clean
+- TestPyPI release validated (`v0.4.1-test`)

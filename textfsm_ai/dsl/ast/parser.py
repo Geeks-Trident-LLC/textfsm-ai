@@ -118,13 +118,6 @@ def parse_action_expr(expr: str) -> Action:
 # ------------------------------------------------------------
 
 
-def _lookup_value(values_by_name: Dict[str, ValueNode], name: str) -> ValueNode:
-    try:
-        return values_by_name[name]
-    except KeyError:
-        raise KeyError(f"Unknown variable: {name!r}")
-
-
 def parse_pattern(pattern: str, values_by_name: Dict[str, ValueNode]) -> PatternNode:
     nodes: List[PatternItem] = []
 

@@ -1,12 +1,11 @@
 PyYAML>=6.0
-textfsm
 requests>=2.32
 click>=8.1
+textfsm>=1.1.0
 
 openai>=1.0.0
 google-genai>=0.2.0
-azure-ai-inference
+azure-ai-inference>=1.0.0b9
 anthropic>=0.8.0
 
-# Only if Python < 3.11
-tomli
+tomli; python_version < '3.11'
