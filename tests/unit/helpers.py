@@ -34,6 +34,7 @@ class MockProvider(Provider):
         prompt: str,
         *,
         model: str,
+        **kwargs: Any,
     ) -> Dict[str, Any]:
         """
         Async generate method used by the async-first orchestrator.

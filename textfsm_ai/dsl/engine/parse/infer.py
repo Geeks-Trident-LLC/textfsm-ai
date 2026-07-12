@@ -4,7 +4,6 @@ from typing import Iterable
 
 from ...core.category_matcher import match_token_categories
 from ...core.patterns import KEYWORD_TO_BASE, PATTERNS_MAPPING
-from ..format.expression import KeywordExpression
 
 
 def infer_base_keyword(tokens):
@@ -28,25 +27,3 @@ def infer_base_category(tokens: Iterable[str]):
     if kw is None:
         return None
     return KEYWORD_TO_BASE.get(kw)
-
-
-def infer_keyword_expression_from_tokens(tokens: Iterable[str]):
-    toks = [t for t in tokens if t != ""]
-    if not toks:
-        return None
-
-    base = infer_base_category(toks)
-    if base is None:
-        return None
-
-    count = len(toks)
-    is_group = count >= 2
-
-    return KeywordExpression(
-        expression=f"{base}()",
-        base=base,
-        min_count=count,
-        max_count=count,
-        optional=False,
-        is_group=is_group,
-    )
