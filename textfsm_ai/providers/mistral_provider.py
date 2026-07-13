@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from typing import Any, List, Optional
 
-from mistralai.client import Mistral
+from mistralai import Mistral
 
 from textfsm_ai.models import model as MODEL
 from textfsm_ai.orchestrator.errors import ProviderError
