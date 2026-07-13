@@ -209,6 +209,27 @@ perplexity:
       chat:
         - sonar-reasoning
 
+openrouter:
+  quality:
+    chat:
+      - anthropic/claude-3.5-sonnet
+  balance:
+    chat:
+      - openai/gpt-4o
+  speed:
+    chat:
+      - google/gemini-2.5-flash-lite
+  thinking:
+    quality:
+      chat:
+        - deepseek/deepseek-r1
+    balance:
+      chat:
+        - deepseek/deepseek-r1
+    speed:
+      chat:
+        - deepseek/deepseek-r1
+
 aliases:
   openai_default: gpt-4o-mini
   anthropic_default: claude-haiku-4-5-20251001
@@ -220,3 +241,4 @@ aliases:
   fireworks_default: accounts/fireworks/models/llama-v3p1-8b-instruct
   cerebras_default: llama3.1-8b
   perplexity_default: sonar
+  openrouter_default: google/gemini-2.5-flash-lite

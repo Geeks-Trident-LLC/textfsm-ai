@@ -93,6 +93,26 @@ def create_default_routing_table() -> RoutingTable:
     # of Cerebras' curated/default set until routing supports more than
     # simple prefix matching.
     #
+    # OpenRouter is a model AGGREGATOR - it re-exposes nearly every
+    # other provider's catalog under "vendor/model" namespaces (e.g.
+    # "openai/gpt-4o", "meta-llama/llama-3.3-70b-instruct"), plus its
+    # own "openrouter/auto" meta-model. Vendor slugs like "openai/",
+    # "anthropic/", "google/", "deepseek/" (note: slash, not hyphen -
+    # doesn't collide with the native "deepseek-" rule), "x-ai/", and
+    # lowercase "qwen/" (doesn't collide with Together's capitalized
+    # "Qwen/" - startswith() is case-sensitive) are all safe to claim.
+    # "meta-llama/" and "mistralai/" are DELIBERATELY NOT claimed here
+    # even though OpenRouter hosts models under those same slugs too -
+    # Together already claims those exact prefixes, and a model string
+    # like "meta-llama/Llama-3.3-70b-Instruct-Turbo" is inherently
+    # ambiguous between "call via Together" and "call via OpenRouter"
+    # under simple prefix matching; there is no ordering fix for a
+    # true shared-prefix collision like this (unlike Cerebras' cases,
+    # where a more specific sub-prefix existed). OpenRouter's curated
+    # and default models are deliberately chosen to avoid this pair of
+    # vendor slugs. Explicit `--provider openrouter` selection (which
+    # doesn't consult this routing table) is unaffected either way.
+    #
     # route() and select_provider() both return on the FIRST matching
     # rule (order matters, this is not longest-prefix-match), so a more
     # specific prefix (e.g. "deepseek-ai/") must be listed before a
@@ -123,5 +143,12 @@ def create_default_routing_table() -> RoutingTable:
             RoutingRule("accounts/fireworks/models/", "fireworks"),
             RoutingRule("llama3.", "cerebras"),  # e.g. "llama3.1-8b" (no hyphen)
             RoutingRule("sonar", "perplexity"),
+            RoutingRule("openrouter/", "openrouter"),
+            RoutingRule("openai/", "openrouter"),
+            RoutingRule("anthropic/", "openrouter"),
+            RoutingRule("google/", "openrouter"),
+            RoutingRule("deepseek/", "openrouter"),
+            RoutingRule("x-ai/", "openrouter"),
+            RoutingRule("qwen/", "openrouter"),
         ]
     )

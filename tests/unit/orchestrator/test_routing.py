@@ -111,6 +111,13 @@ def test_create_default_routing_table_routes_known_prefixes():
     assert table.route("gpt-oss-120b") == "cerebras"
     assert table.route("sonar") == "perplexity"
     assert table.route("sonar-pro") == "perplexity"
+    assert table.route("openrouter/auto") == "openrouter"
+    assert table.route("openai/gpt-4o") == "openrouter"
+    assert table.route("anthropic/claude-3.5-sonnet") == "openrouter"
+    assert table.route("google/gemini-2.5-flash-lite") == "openrouter"
+    assert table.route("deepseek/deepseek-r1") == "openrouter"
+    assert table.route("x-ai/grok-4") == "openrouter"
+    assert table.route("qwen/qwen-2.5-72b-instruct") == "openrouter"
 
 
 def test_deepseek_ai_prefix_does_not_collide_with_native_deepseek_rule():
@@ -133,3 +140,15 @@ def test_cerebras_specific_prefixes_do_not_collide_with_broader_rules():
     assert table.route("gpt-4o") == "openai"
     assert table.route("llama-3.3-70b-versatile") == "groq"
     assert table.route("qwen-2.5-32b") == "groq"
+
+
+def test_openrouter_does_not_claim_together_vendor_slugs():
+    # OpenRouter also hosts models under "meta-llama/" and "mistralai/"
+    # namespaces, identical to Together's, but those prefixes are
+    # deliberately NOT claimed for OpenRouter (a true shared-prefix
+    # collision has no ordering fix) - Together's existing routing must
+    # be unaffected.
+    table = create_default_routing_table()
+    assert table.route("meta-llama/Llama-3.3-70B-Instruct-Turbo") == "together"
+    assert table.route("mistralai/Mixtral-8x7B-Instruct-v0.1") == "together"
+    assert table.route("Qwen/Qwen2.5-32B-Instruct") == "together"

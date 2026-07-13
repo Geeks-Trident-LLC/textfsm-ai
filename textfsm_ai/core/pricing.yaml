@@ -132,3 +132,18 @@ perplexity:
   sonar-reasoning: {input: 1.00, output: 5.00}
   sonar-reasoning-pro: {input: 2.00, output: 8.00}
   sonar-deep-research: {input: 2.00, output: 8.00}
+
+# Approximate rates - verify against https://openrouter.ai/models before
+# relying on these for real cost estimates; OpenRouter's per-model rates
+# generally track the upstream provider's own pricing.
+#
+# "openrouter/auto" is deliberately NOT priced here: it dynamically picks
+# the underlying model per request, so it has no single fixed rate -
+# estimate_cost() will correctly report it as an unpriced/unknown model
+# rather than guessing a number that could be wrong by an order of
+# magnitude depending on what "auto" actually routed to.
+openrouter:
+  anthropic/claude-3.5-sonnet: {input: 3.00, output: 15.00}
+  openai/gpt-4o: {input: 2.50, output: 10.00}
+  google/gemini-2.5-flash-lite: {input: 0.10, output: 0.40}
+  deepseek/deepseek-r1: {input: 0.55, output: 2.19}

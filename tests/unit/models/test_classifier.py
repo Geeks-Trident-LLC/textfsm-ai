@@ -190,6 +190,38 @@ def test_perplexity_classification():
     assert "some-unknown-model" in groups[Tier.OTHER]
 
 
+def test_openrouter_classification():
+    raw = [
+        "meta-llama/llama-3.3-70b-instruct",  # 70B -> quality
+        "mistralai/mixtral-8x7b-instruct",  # MoE -> quality
+        "qwen/qwen-2.5-32b-instruct",  # 32B -> balance
+        "meta-llama/llama-3.1-8b-instruct",  # 8B -> speed
+        "deepseek/deepseek-r1",  # reasoning -> thinking
+        "openai/gpt-4o",  # no size info -> other
+        "anthropic/claude-3.5-sonnet",  # no size info -> other
+        "openrouter/auto",  # meta-model, no size info -> other
+    ]
+    groups = classify_models("openrouter", raw)
+
+    assert "meta-llama/llama-3.3-70b-instruct" in groups[Tier.QUALITY_CHAT]
+    assert "mistralai/mixtral-8x7b-instruct" in groups[Tier.QUALITY_CHAT]
+    assert "qwen/qwen-2.5-32b-instruct" in groups[Tier.BALANCE_CHAT]
+    assert "meta-llama/llama-3.1-8b-instruct" in groups[Tier.SPEED_CHAT]
+    assert "deepseek/deepseek-r1" in groups[Tier.THINKING_CHAT]
+    assert "openai/gpt-4o" in groups[Tier.OTHER]
+    assert "anthropic/claude-3.5-sonnet" in groups[Tier.OTHER]
+    assert "openrouter/auto" in groups[Tier.OTHER]
+
+
+def test_openrouter_classification_preserves_vendor_prefix():
+    # Like Together/Fireworks, OpenRouter's classifier must NOT strip the
+    # "vendor/" prefix - it's required to actually call the model.
+    groups = classify_models("openrouter", ["meta-llama/llama-3.1-8b-instruct"])
+
+    assert "meta-llama/llama-3.1-8b-instruct" in groups[Tier.SPEED_CHAT]
+    assert "llama-3.1-8b-instruct" not in groups[Tier.SPEED_CHAT]
+
+
 # ---------------------------------------------------------
 # _normalize (via the "provider/model" prefix form)
 # ---------------------------------------------------------
