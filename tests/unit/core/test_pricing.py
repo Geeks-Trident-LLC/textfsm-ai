@@ -1,9 +1,11 @@
+import logging
 from datetime import datetime, timezone
 
 import pytest
 
 from textfsm_ai.core.pricing import (
     PRICING_TABLE,
+    PricingResult,
     estimate_cost,
     extract_base_model,
     update_claude_sonnet_5,
@@ -101,6 +103,31 @@ def test_estimate_cost_with_reasoning_tokens():
     assert result.estimated_cost == pytest.approx(expected_cost)
 
 
+def test_estimate_cost_pricing_family_not_found(monkeypatch):
+    # extract_base_model() only ever returns a key that exists in
+    # PRICING_TABLE[provider], so this branch is defensive; exercise it
+    # directly by forcing a mismatch.
+    monkeypatch.setattr(
+        "textfsm_ai.core.pricing.extract_base_model",
+        lambda provider, model: "nonexistent-family",
+    )
+
+    result = estimate_cost(
+        input_tokens=100,
+        output_tokens=100,
+        total_tokens=200,
+        currency="USD",
+        provider="openai",
+        model="whatever",
+    )
+
+    assert result.based_model == "nonexistent-family"
+    assert result.input_per_million == 0.0
+    assert result.output_per_million == 0.0
+    assert result.estimated_cost == 0.0
+    assert "not found" in result.warning.lower()
+
+
 def test_estimate_cost_fallback():
     result = estimate_cost(
         input_tokens=1000,
@@ -116,6 +143,33 @@ def test_estimate_cost_fallback():
     assert result.output_per_million == 0.0
     assert result.estimated_cost == 0.0
     assert "fallback" in result.warning.lower()
+
+
+# ---------------------------------------------------------------------------
+# PricingResult
+# ---------------------------------------------------------------------------
+
+
+def test_pricing_result_to_dict():
+    result = PricingResult(
+        provider="openai",
+        based_model="gpt-4o",
+        currency="USD",
+        input_per_million=2.5,
+        output_per_million=10.0,
+        estimated_cost=0.0125,
+        warning=None,
+    )
+
+    assert result.to_dict() == {
+        "provider": "openai",
+        "based_model": "gpt-4o",
+        "currency": "USD",
+        "input_per_million": 2.5,
+        "output_per_million": 10.0,
+        "estimated_cost": 0.0125,
+        "warning": None,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -158,3 +212,28 @@ def test_sonnet_5_intro_pricing_updates_after_cutoff(tmp_path, monkeypatch):
     update_claude_sonnet_5(now=after)
     assert PRICING_TABLE["anthropic"]["claude-sonnet-5"]["input"] == 3.00
     assert PRICING_TABLE["anthropic"]["claude-sonnet-5"]["output"] == 15.00
+
+
+def test_sonnet_5_already_updated_nags_once(tmp_path, monkeypatch, caplog):
+    ack_file = tmp_path / ".ack"
+    monkeypatch.setattr("textfsm_ai.core.pricing._ACK_FLAG_FILE", ack_file)
+    monkeypatch.setitem(PRICING_TABLE["anthropic"]["claude-sonnet-5"], "input", 3.00)
+    monkeypatch.setitem(PRICING_TABLE["anthropic"]["claude-sonnet-5"], "output", 15.00)
+
+    after = datetime(2026, 10, 1, tzinfo=timezone.utc)
+
+    assert not ack_file.exists()
+
+    with caplog.at_level(logging.WARNING, logger="textfsm_ai.core.pricing"):
+        update_claude_sonnet_5(now=after)
+
+    assert ack_file.exists()
+    assert any("dead code" in r.message for r in caplog.records)
+
+    caplog.clear()
+
+    # Second call: ack file already exists -> no repeat warning
+    with caplog.at_level(logging.WARNING, logger="textfsm_ai.core.pricing"):
+        update_claude_sonnet_5(now=after)
+
+    assert caplog.records == []
