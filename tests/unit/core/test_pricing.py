@@ -4,12 +4,32 @@ from datetime import datetime, timezone
 import pytest
 
 from textfsm_ai.core.pricing import (
+    PRICING_DATA_PATH,
     PRICING_TABLE,
     PricingResult,
     estimate_cost,
     extract_base_model,
     update_claude_sonnet_5,
 )
+
+# ---------------------------------------------------------------------------
+# pricing.yaml loading
+# ---------------------------------------------------------------------------
+
+
+def test_pricing_data_path_exists_and_is_yaml():
+    assert PRICING_DATA_PATH.exists()
+    assert PRICING_DATA_PATH.name == "pricing.yaml"
+
+
+def test_pricing_table_loaded_from_yaml_has_expected_providers():
+    # "azure" is deliberately excluded here - it's derived at import time,
+    # not present in pricing.yaml itself.
+    for provider in ("anthropic", "openai", "deepseek", "gemini", "groq"):
+        assert provider in PRICING_TABLE
+        assert isinstance(PRICING_TABLE[provider], dict)
+        assert PRICING_TABLE[provider]  # non-empty
+
 
 # ---------------------------------------------------------------------------
 # Model-family extraction
