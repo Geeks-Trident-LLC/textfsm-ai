@@ -75,6 +75,18 @@ groq:
   thinking-chat:
   - deepseek-r1-distill-llama-70b
   other: []
+moonshot:
+  quality-chat:
+  - kimi-k2-0711-preview
+  - moonshot-v1-128k
+  balance-chat:
+  - moonshot-v1-32k
+  - kimi-k2-turbo-preview
+  speed-chat:
+  - moonshot-v1-8k
+  thinking-chat: []
+  other:
+  - moonshot-v1-auto
 openai:
   quality-chat:
   - gpt-5.5

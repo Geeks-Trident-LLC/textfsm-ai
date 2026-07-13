@@ -150,5 +150,7 @@ def create_default_routing_table() -> RoutingTable:
             RoutingRule("deepseek/", "openrouter"),
             RoutingRule("x-ai/", "openrouter"),
             RoutingRule("qwen/", "openrouter"),
+            RoutingRule("moonshot-", "moonshot"),
+            RoutingRule("kimi-", "moonshot"),
         ]
     )

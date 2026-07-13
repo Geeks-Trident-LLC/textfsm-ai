@@ -71,6 +71,8 @@ keywords = [
     "cerebras",
     "perplexity",
     "openrouter",
+    "moonshot",
+    "kimi",
     "device output parsing",
     "log extraction",
     "structured data extraction",

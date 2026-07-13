@@ -93,6 +93,11 @@ def openrouter_key(require_real_tests):
 
 
 @pytest.fixture(scope="session")
+def moonshot_key(require_real_tests):
+    return _require_env("MOONSHOT_API_KEY")
+
+
+@pytest.fixture(scope="session")
 def azure_key(require_real_tests):
     return _require_env("AZURE_OPENAI_API_KEY")
 

@@ -222,6 +222,27 @@ def test_openrouter_classification_preserves_vendor_prefix():
     assert "llama-3.1-8b-instruct" not in groups[Tier.SPEED_CHAT]
 
 
+def test_moonshot_classification():
+    raw = [
+        "moonshot-v1-128k",  # 128k context -> quality
+        "kimi-k2-0711-preview",  # flagship codename -> quality
+        "moonshot-v1-32k",  # 32k context -> balance
+        "kimi-k2-turbo-preview",  # turbo codename -> balance
+        "moonshot-v1-8k",  # 8k context -> speed
+        "moonshot-v1-auto",  # dynamic context -> other
+        "some-unknown-model",  # no match -> other
+    ]
+    groups = classify_models("moonshot", raw)
+
+    assert "moonshot-v1-128k" in groups[Tier.QUALITY_CHAT]
+    assert "kimi-k2-0711-preview" in groups[Tier.QUALITY_CHAT]
+    assert "moonshot-v1-32k" in groups[Tier.BALANCE_CHAT]
+    assert "kimi-k2-turbo-preview" in groups[Tier.BALANCE_CHAT]
+    assert "moonshot-v1-8k" in groups[Tier.SPEED_CHAT]
+    assert "moonshot-v1-auto" in groups[Tier.OTHER]
+    assert "some-unknown-model" in groups[Tier.OTHER]
+
+
 # ---------------------------------------------------------
 # _normalize (via the "provider/model" prefix form)
 # ---------------------------------------------------------

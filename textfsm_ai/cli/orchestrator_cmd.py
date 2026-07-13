@@ -65,6 +65,7 @@ def orchestrator_route(model: str) -> None:
         "cerebras": DummyProvider("cerebras"),
         "perplexity": DummyProvider("perplexity"),
         "openrouter": DummyProvider("openrouter"),
+        "moonshot": DummyProvider("moonshot"),
     }
 
     req = OrchestratorRequest(model=model, prompt="")

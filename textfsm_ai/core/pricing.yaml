@@ -147,3 +147,16 @@ openrouter:
   openai/gpt-4o: {input: 2.50, output: 10.00}
   google/gemini-2.5-flash-lite: {input: 0.10, output: 0.40}
   deepseek/deepseek-r1: {input: 0.55, output: 2.19}
+
+# Approximate rates - verify against https://platform.moonshot.ai/pricing
+# before relying on these for real cost estimates.
+#
+# "moonshot-v1-auto" is deliberately NOT priced here: it dynamically picks
+# the context-length bucket per request (same rationale as
+# "openrouter/auto" above), so it has no single fixed rate.
+moonshot:
+  moonshot-v1-8k: {input: 0.20, output: 2.00}
+  moonshot-v1-32k: {input: 1.00, output: 3.00}
+  moonshot-v1-128k: {input: 2.00, output: 5.00}
+  kimi-k2-0711-preview: {input: 0.60, output: 2.50}
+  kimi-k2-turbo-preview: {input: 0.60, output: 2.50}
