@@ -36,6 +36,7 @@ def test_pricing_table_loaded_from_yaml_has_expected_providers():
         "fireworks",
         "cerebras",
         "perplexity",
+        "openrouter",
     ):
         assert provider in PRICING_TABLE
         assert isinstance(PRICING_TABLE[provider], dict)
@@ -140,6 +141,21 @@ def test_extract_base_model_perplexity():
         ("sonar-pro", "sonar-pro"),
     ):
         assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_openrouter():
+    provider = "openrouter"
+    for model, based_model in (
+        ("openai/gpt-4o", "openai/gpt-4o"),
+        ("google/gemini-2.5-flash-lite", "google/gemini-2.5-flash-lite"),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_openrouter_auto_unpriced():
+    # "openrouter/auto" is deliberately not in pricing.yaml - its cost
+    # varies by whichever underlying model it routes to.
+    assert extract_base_model("openrouter", "openrouter/auto") == ""
 
 
 def test_extract_base_model_unknown_provider():
@@ -304,6 +320,47 @@ def test_estimate_cost_perplexity():
         result.output_per_million == PRICING_TABLE["perplexity"]["sonar-pro"]["output"]
     )
     assert result.warning is None
+
+
+def test_estimate_cost_openrouter():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="openrouter",
+        model="google/gemini-2.5-flash-lite",
+    )
+
+    assert result.provider == "openrouter"
+    assert result.based_model == "google/gemini-2.5-flash-lite"
+    assert (
+        result.input_per_million
+        == PRICING_TABLE["openrouter"]["google/gemini-2.5-flash-lite"]["input"]
+    )
+    assert (
+        result.output_per_million
+        == PRICING_TABLE["openrouter"]["google/gemini-2.5-flash-lite"]["output"]
+    )
+    assert result.warning is None
+
+
+def test_estimate_cost_openrouter_auto_falls_back_to_unknown():
+    # "openrouter/auto" has no fixed rate (it dynamically picks the
+    # underlying model per request), so cost estimation must honestly
+    # report it as unpriced rather than guessing.
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="openrouter",
+        model="openrouter/auto",
+    )
+
+    assert result.based_model == "unknown"
+    assert result.estimated_cost == 0.0
+    assert "fallback" in result.warning.lower()
 
 
 def test_estimate_cost_with_reasoning_tokens():

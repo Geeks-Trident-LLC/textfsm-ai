@@ -70,6 +70,7 @@ keywords = [
     "fireworks-ai",
     "cerebras",
     "perplexity",
+    "openrouter",
     "device output parsing",
     "log extraction",
     "structured data extraction",

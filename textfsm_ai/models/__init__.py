@@ -243,3 +243,25 @@ class model:
                 chat = ModelRegistry.get("perplexity", "thinking", "speed", "chat")
 
         default = ModelRegistry.alias("perplexity_default")
+
+    class openrouter:
+        class quality:
+            chat = ModelRegistry.get("openrouter", "quality", "chat")
+
+        class balance:
+            chat = ModelRegistry.get("openrouter", "balance", "chat")
+
+        class speed:
+            chat = ModelRegistry.get("openrouter", "speed", "chat")
+
+        class thinking:
+            class quality:
+                chat = ModelRegistry.get("openrouter", "thinking", "quality", "chat")
+
+            class balance:
+                chat = ModelRegistry.get("openrouter", "thinking", "balance", "chat")
+
+            class speed:
+                chat = ModelRegistry.get("openrouter", "thinking", "speed", "chat")
+
+        default = ModelRegistry.alias("openrouter_default")

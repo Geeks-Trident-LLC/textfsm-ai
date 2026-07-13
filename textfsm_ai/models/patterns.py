@@ -171,3 +171,26 @@ CEREBRAS_PATTERN = re.compile(r"(?P<size>[0-9]+(?:\.[0-9]+)?)b", re.IGNORECASE)
 PERPLEXITY_PATTERN = re.compile(
     r"^sonar(?:-(pro|reasoning-pro|reasoning|deep-research))?$"
 )
+
+
+# ---------------------------------------------------------
+# OpenRouter (model aggregator - re-exposes upstream providers' models
+# under "vendor/model" namespaces, e.g. "openai/gpt-4o",
+# "meta-llama/llama-3.3-70b-instruct", plus its own "openrouter/auto"
+# meta-model). Same search-based approach as
+# TOGETHER_PATTERN/FIREWORKS_PATTERN/CEREBRAS_PATTERN: looks for a
+# "<size>B" or "<n>x<size>B" token anywhere in the model name, since
+# OpenRouter's catalog spans every vendor naming convention that
+# exists. Unlike those providers, a large fraction of OpenRouter's
+# catalog (proprietary models like "openai/gpt-4o",
+# "anthropic/claude-3.5-sonnet") has no size info at all and falls
+# through to OTHER in the classifier - a catalog this heterogeneous
+# can't be reliably tiered from the name alone.
+# Examples:
+#   meta-llama/llama-3.3-70b-instruct  -> size="70"
+#   mistralai/mixtral-8x7b-instruct    -> moe="8", moe_size="7"
+# ---------------------------------------------------------
+OPENROUTER_PATTERN = re.compile(
+    r"(?:(?P<moe>[0-9]+)x(?P<moe_size>[0-9]+)b" r"|(?P<size>[0-9]+(?:\.[0-9]+)?)b)",
+    re.IGNORECASE,
+)

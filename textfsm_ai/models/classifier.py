@@ -11,6 +11,7 @@ from .patterns import (
     GEMINI_PATTERN,
     GROQ_PATTERN,
     OPENAI_PATTERN,
+    OPENROUTER_PATTERN,
     PERPLEXITY_PATTERN,
     TOGETHER_PATTERN,
     XAI_PATTERN,
@@ -391,6 +392,56 @@ def classify_perplexity_models(raw: List[str]):
 
 
 # ---------------------------------------------------------
+# OpenRouter (model aggregator re-exposing many upstream providers'
+# catalogs under "vendor/model" namespaces). Deliberately does NOT
+# use _normalize(): the vendor prefix is required to actually call
+# the model, same reasoning as Together/Fireworks. Given how
+# heterogeneous the catalog is, this only reliably classifies
+# reasoning-flagged and explicitly-sized (open-weight) models;
+# everything else - most proprietary models, which have no size in
+# the name - falls to OTHER rather than guessing.
+# ---------------------------------------------------------
+def classify_openrouter_models(raw: List[str]):
+    groups = empty_tier_groups()
+
+    for name in map(str.strip, raw):
+        lname = name.lower()
+
+        # Reasoning/distilled models go to thinking-chat regardless of size
+        if (
+            "r1" in lname
+            or "reasoner" in lname
+            or "distill" in lname
+            or "qwq" in lname
+            or "thinking" in lname
+        ):
+            groups[Tier.THINKING_CHAT].append(name)
+            continue
+
+        m = OPENROUTER_PATTERN.search(lname)
+        if not m:
+            groups[Tier.OTHER].append(name)
+            continue
+
+        # Mixture-of-experts sizes (e.g. "8x7b") count as quality tier
+        if m.group("moe"):
+            groups[Tier.QUALITY_CHAT].append(name)
+            continue
+
+        size_num = float(m.group("size"))
+        if size_num >= 70:
+            groups[Tier.QUALITY_CHAT].append(name)
+        elif size_num >= 30:
+            groups[Tier.BALANCE_CHAT].append(name)
+        else:
+            groups[Tier.SPEED_CHAT].append(name)
+
+    for g in groups.values():
+        g.sort(reverse=True)
+    return groups
+
+
+# ---------------------------------------------------------
 # Unified entry point
 # ---------------------------------------------------------
 def classify_models(provider: str, raw: List[str]):
@@ -416,6 +467,8 @@ def classify_models(provider: str, raw: List[str]):
         return classify_cerebras_models(raw)
     if provider == "perplexity":
         return classify_perplexity_models(raw)
+    if provider == "openrouter":
+        return classify_openrouter_models(raw)
     if provider in ("azure", "azure-openai"):
         return classify_openai_models(raw)
 
