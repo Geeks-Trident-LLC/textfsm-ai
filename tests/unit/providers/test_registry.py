@@ -1,6 +1,7 @@
 import pytest
 
 from textfsm_ai.providers.anthropic_provider import AnthropicProvider
+from textfsm_ai.providers.groq_provider import GroqProvider
 from textfsm_ai.providers.openai_provider import OpenAIProvider
 from textfsm_ai.providers.registry import (
     ProviderRegistry,
@@ -12,6 +13,7 @@ from textfsm_ai.providers.registry import (
 def test_registry_get_returns_registered_class():
     assert registry.get("openai") is OpenAIProvider
     assert registry.get("anthropic") is AnthropicProvider
+    assert registry.get("groq") is GroqProvider
 
 
 def test_registry_get_unknown_raises_keyerror():

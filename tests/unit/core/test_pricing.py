@@ -45,6 +45,15 @@ def test_extract_base_model_deepseek():
         assert extract_base_model(provider, model) == based_model
 
 
+def test_extract_base_model_groq():
+    provider = "groq"
+    for model, based_model in (
+        ("llama-3.3-70b-versatile", "llama-3.3-70b-versatile"),
+        ("llama-3.1-8b-instant", "llama-3.1-8b-instant"),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
 def test_extract_base_model_unknown_provider():
     assert extract_base_model("unknown", "gpt-4o") == ""
 
@@ -79,6 +88,29 @@ def test_estimate_cost_basic():
     output_cost = (2000 / 1_000_000) * result.output_per_million
     other_cost = (0 / 1_000_000) * result.output_per_million
     assert result.estimated_cost == pytest.approx(input_cost + output_cost + other_cost)
+
+
+def test_estimate_cost_groq():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="groq",
+        model="llama-3.1-8b-instant",
+    )
+
+    assert result.provider == "groq"
+    assert result.based_model == "llama-3.1-8b-instant"
+    assert (
+        result.input_per_million
+        == PRICING_TABLE["groq"]["llama-3.1-8b-instant"]["input"]
+    )
+    assert (
+        result.output_per_million
+        == PRICING_TABLE["groq"]["llama-3.1-8b-instant"]["output"]
+    )
+    assert result.warning is None
 
 
 def test_estimate_cost_with_reasoning_tokens():

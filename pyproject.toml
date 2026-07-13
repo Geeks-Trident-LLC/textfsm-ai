@@ -63,6 +63,7 @@ keywords = [
     "gemini",
     "azure-ai-inference",
     "deepseek",
+    "groq",
     "device output parsing",
     "log extraction",
     "structured data extraction",

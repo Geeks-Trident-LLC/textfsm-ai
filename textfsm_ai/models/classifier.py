@@ -7,6 +7,7 @@ from .patterns import (
     DEEPSEEK_NATIVE_PATTERN,
     DEEPSEEK_PATTERN_V4,
     GEMINI_PATTERN,
+    GROQ_PATTERN,
     OPENAI_PATTERN,
 )
 from .tiers import Tier, empty_tier_groups
@@ -155,6 +156,44 @@ def classify_deepseek_models(raw: List[str]):
 
 
 # ---------------------------------------------------------
+# Groq (hosts open models, classified by parameter size rather than
+# a vendor-assigned tier suffix)
+# ---------------------------------------------------------
+def classify_groq_models(raw: List[str]):
+    groups = empty_tier_groups()
+
+    for name in map(_normalize, raw):
+        m = GROQ_PATTERN.match(name)
+        if not m:
+            groups[Tier.OTHER].append(name)
+            continue
+
+        # Reasoning/distilled models go to thinking-chat regardless of size
+        if "distill" in name or "r1" in name or "reasoner" in name:
+            groups[Tier.THINKING_CHAT].append(name)
+            continue
+
+        size = m.group(1)  # e.g. "70", "8", "8x7"
+
+        # Mixture-of-experts sizes (e.g. "8x7") count as quality tier
+        if "x" in size:
+            groups[Tier.QUALITY_CHAT].append(name)
+            continue
+
+        size_num = int(size)
+        if size_num >= 70:
+            groups[Tier.QUALITY_CHAT].append(name)
+        elif size_num >= 30:
+            groups[Tier.BALANCE_CHAT].append(name)
+        else:
+            groups[Tier.SPEED_CHAT].append(name)
+
+    for g in groups.values():
+        g.sort(reverse=True)
+    return groups
+
+
+# ---------------------------------------------------------
 # Unified entry point
 # ---------------------------------------------------------
 def classify_models(provider: str, raw: List[str]):
@@ -168,6 +207,8 @@ def classify_models(provider: str, raw: List[str]):
         return classify_anthropic_models(raw)
     if provider == "deepseek":
         return classify_deepseek_models(raw)
+    if provider == "groq":
+        return classify_groq_models(raw)
     if provider in ("azure", "azure-openai"):
         return classify_openai_models(raw)
 

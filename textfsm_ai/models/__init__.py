@@ -111,3 +111,25 @@ class model:
                 chat = ModelRegistry.get("deepseek", "thinking", "speed", "chat")
 
         default = ModelRegistry.alias("deepseek_default")
+
+    class groq:
+        class quality:
+            chat = ModelRegistry.get("groq", "quality", "chat")
+
+        class balance:
+            chat = ModelRegistry.get("groq", "balance", "chat")
+
+        class speed:
+            chat = ModelRegistry.get("groq", "speed", "chat")
+
+        class thinking:
+            class quality:
+                chat = ModelRegistry.get("groq", "thinking", "quality", "chat")
+
+            class balance:
+                chat = ModelRegistry.get("groq", "thinking", "balance", "chat")
+
+            class speed:
+                chat = ModelRegistry.get("groq", "thinking", "speed", "chat")
+
+        default = ModelRegistry.alias("groq_default")

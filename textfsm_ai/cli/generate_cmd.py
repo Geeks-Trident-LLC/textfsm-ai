@@ -238,6 +238,7 @@ def resolve_api_key(provider, api_key, pconf):
         "gemini": "GEMINI_API_KEY",
         "deepseek": "DEEPSEEK_API_KEY",
         "azure": "AZURE_OPENAI_API_KEY",
+        "groq": "GROQ_API_KEY",
     }
 
     env_var = env_map.get(provider)

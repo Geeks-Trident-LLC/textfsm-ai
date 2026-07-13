@@ -63,3 +63,22 @@ DEEPSEEK_PATTERN_V4 = re.compile(r"^deepseek-v4-(pro|flash)$")
 #   deepseek-r1-distill
 # ---------------------------------------------------------
 DEEPSEEK_NATIVE_PATTERN = re.compile(r"^deepseek-(chat|reasoner|r1|r1-distill)$")
+
+
+# ---------------------------------------------------------
+# Groq (hosts open models: Llama, Gemma, Qwen, Mixtral, DeepSeek-distill)
+# Examples:
+#   llama-3.3-70b-versatile
+#   llama-3.1-8b-instant
+#   gemma2-9b-it
+#   qwen-2.5-32b
+#   mixtral-8x7b-32768
+#   deepseek-r1-distill-llama-70b
+# Capture group 1 = size (e.g. "70", "8", "8x7"); group 2 = optional suffix.
+# ---------------------------------------------------------
+GROQ_PATTERN = re.compile(
+    r"^(?:llama|gemma2?|qwen|mixtral|deepseek-r1-distill-llama)"
+    r"(?:-[0-9]+(?:\.[0-9]+)?)?"
+    r"-([0-9]+x?[0-9]*)b"
+    r"(?:-([a-z0-9]+))?$"
+)

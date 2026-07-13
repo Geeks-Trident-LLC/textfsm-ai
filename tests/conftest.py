@@ -58,6 +58,11 @@ def anthropic_key(require_real_tests):
 
 
 @pytest.fixture(scope="session")
+def groq_key(require_real_tests):
+    return _require_env("GROQ_API_KEY")
+
+
+@pytest.fixture(scope="session")
 def azure_key(require_real_tests):
     return _require_env("AZURE_OPENAI_API_KEY")
 

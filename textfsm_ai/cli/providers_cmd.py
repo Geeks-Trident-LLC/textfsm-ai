@@ -20,6 +20,7 @@ PROVIDER_DESCRIPTIONS = {
     "azure": "Azure AI Inference / Azure OpenAI",
     "anthropic": "Anthropic Claude models",
     "gemini": "Google Gemini models",
+    "groq": "Groq (fast open-model inference, OpenAI-compatible API)",
 }
 
 

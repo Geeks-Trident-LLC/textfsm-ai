@@ -78,6 +78,13 @@ def load_config_from_env() -> OrchestratorConfig:
             params={"api_key": os.getenv("DEEPSEEK_API_KEY")},
         )
 
+    if os.getenv("GROQ_API_KEY"):
+        providers_cfg["groq"] = ProviderConfig(
+            name="groq",
+            type="groq",
+            params={"api_key": os.getenv("GROQ_API_KEY")},
+        )
+
     if os.getenv("AZURE_OPENAI_ENDPOINT") and os.getenv("AZURE_OPENAI_API_KEY"):
         providers_cfg["azure"] = ProviderConfig(
             name="azure",

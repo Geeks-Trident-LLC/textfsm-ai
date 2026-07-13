@@ -61,6 +61,11 @@ class RoutingTable:
 
 
 def create_default_routing_table() -> RoutingTable:
+    # Groq hosts open models (Llama, Gemma, Qwen, Mixtral) rather than a
+    # single vendor-prefixed family, so it needs one rule per family it
+    # serves. None of these collide with another provider's models today;
+    # if a future provider hosts the same open-weight models under the
+    # same names, these rules will need to be reconciled at that point.
     return RoutingTable(
         rules=[
             RoutingRule("gpt-", "openai"),
@@ -70,5 +75,9 @@ def create_default_routing_table() -> RoutingTable:
             RoutingRule("gemini-", "gemini"),
             RoutingRule("azure-", "azure"),
             RoutingRule("deepseek-", "deepseek"),
+            RoutingRule("llama-", "groq"),
+            RoutingRule("gemma", "groq"),
+            RoutingRule("qwen-", "groq"),
+            RoutingRule("mixtral-", "groq"),
         ]
     )

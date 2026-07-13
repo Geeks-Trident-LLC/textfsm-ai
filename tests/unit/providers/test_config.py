@@ -7,6 +7,7 @@ _ENV_VARS = [
     "ANTHROPIC_API_KEY",
     "GEMINI_API_KEY",
     "DEEPSEEK_API_KEY",
+    "GROQ_API_KEY",
     "AZURE_OPENAI_ENDPOINT",
     "AZURE_OPENAI_API_KEY",
     "AZURE_OPENAI_API_VERSION",
@@ -123,6 +124,14 @@ def test_load_config_from_env_deepseek(monkeypatch):
     assert cfg.providers["deepseek"].params == {"api_key": "sk-deepseek"}
 
 
+def test_load_config_from_env_groq(monkeypatch):
+    monkeypatch.setenv("GROQ_API_KEY", "sk-groq")
+    cfg = load_config_from_env()
+
+    assert set(cfg.providers.keys()) == {"groq"}
+    assert cfg.providers["groq"].params == {"api_key": "sk-groq"}
+
+
 def test_load_config_from_env_azure_requires_both_endpoint_and_key(monkeypatch):
     monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
     # api key missing -> azure should NOT appear
@@ -157,6 +166,7 @@ def test_load_config_from_env_all_providers_at_once(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "k2")
     monkeypatch.setenv("GEMINI_API_KEY", "k3")
     monkeypatch.setenv("DEEPSEEK_API_KEY", "k4")
+    monkeypatch.setenv("GROQ_API_KEY", "k6")
     monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
     monkeypatch.setenv("AZURE_OPENAI_API_KEY", "k5")
 
@@ -167,5 +177,6 @@ def test_load_config_from_env_all_providers_at_once(monkeypatch):
         "anthropic",
         "gemini",
         "deepseek",
+        "groq",
         "azure",
     }

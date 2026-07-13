@@ -42,6 +42,27 @@ def test_deepseek_classification():
     assert "deepseek-r1" in groups[Tier.THINKING_CHAT]
 
 
+def test_groq_classification():
+    raw = [
+        "llama-3.3-70b-versatile",  # large -> quality
+        "qwen-2.5-32b",  # mid -> balance
+        "llama-3.1-8b-instant",  # small -> speed
+        "gemma2-9b-it",  # small -> speed
+        "mixtral-8x7b-32768",  # MoE -> quality
+        "deepseek-r1-distill-llama-70b",  # reasoning -> thinking
+        "some-unknown-model",  # no match -> other
+    ]
+    groups = classify_models("groq", raw)
+
+    assert "llama-3.3-70b-versatile" in groups[Tier.QUALITY_CHAT]
+    assert "mixtral-8x7b-32768" in groups[Tier.QUALITY_CHAT]
+    assert "qwen-2.5-32b" in groups[Tier.BALANCE_CHAT]
+    assert "llama-3.1-8b-instant" in groups[Tier.SPEED_CHAT]
+    assert "gemma2-9b-it" in groups[Tier.SPEED_CHAT]
+    assert "deepseek-r1-distill-llama-70b" in groups[Tier.THINKING_CHAT]
+    assert "some-unknown-model" in groups[Tier.OTHER]
+
+
 # ---------------------------------------------------------
 # _normalize (via the "provider/model" prefix form)
 # ---------------------------------------------------------
