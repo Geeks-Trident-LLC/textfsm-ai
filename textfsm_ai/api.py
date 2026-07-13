@@ -1,4 +1,4 @@
-# textfsm_ai/api.py
+"""Public Python API: sample -> template, records, ast, canonical/readable DSL."""
 
 from __future__ import annotations
 
