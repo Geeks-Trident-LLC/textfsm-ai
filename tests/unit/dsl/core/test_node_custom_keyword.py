@@ -75,6 +75,11 @@ def test_custom_keyword_expression_with_var():
     assert node.to_expression() == "char(var-v0)"
 
 
+def test_custom_keyword_expression_with_var_and_extra():
+    node = CustomKeywordNode("char", varname="v0", extra="opt1")
+    assert node.to_expression() == "char(var-v0, options-opt1)"
+
+
 # -----------------------------
 # error handling
 # -----------------------------
