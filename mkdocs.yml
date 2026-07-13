@@ -45,9 +45,10 @@ nav:
 
   - CLI Guide: cli/index.md
 
+  - Guides:
+      - Human-in-the-Loop Review: guides/human-in-the-loop-review.md
+
   - API Reference:
       - Overview: reference/index.md
-
-  - Golden Tests: golden-tests/index.md
 
   - Changelog: changelog.md

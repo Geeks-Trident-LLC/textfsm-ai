@@ -35,8 +35,8 @@ Either command prints the installed version, e.g. `textfsm-ai v0.4.0`.
 
 ## 📚 Documentation
 
-- **Latest docs:** https://geeks-trident-llc.github.io/textfsm-ai/latest/
-- **All versions:** https://geeks-trident-llc.github.io/textfsm-ai/
+- **Latest docs:** [https://geeks-trident-llc.github.io/textfsm-ai/latest/](https://geeks-trident-llc.github.io/textfsm-ai/latest/)
+- **All versions:** [https://geeks-trident-llc.github.io/textfsm-ai/](https://geeks-trident-llc.github.io/textfsm-ai/)
 
 ---
 

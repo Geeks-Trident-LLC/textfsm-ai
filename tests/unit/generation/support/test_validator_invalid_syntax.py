@@ -58,6 +58,13 @@ def test_valid_dollar_patterns_are_not_flagged():
     assert findings == []
 
 
+def test_illegal_var_regex_pattern():
+    lines = [r"^foo ${name:\d+}"]
+    findings = run(lines)
+
+    assert any("illegal_var_regex" in f for f in findings)
+
+
 def test_mixed_valid_and_invalid():
     lines = [
         r"^ok1 ${var}",  # valid

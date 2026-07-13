@@ -356,6 +356,15 @@ class DeliveryPackage:
 
 @dataclass
 class DeliveryOutput:
+    """Formatted result of running the full generate + compile pipeline.
+
+    Attributes:
+        mode: The verbosity mode `output` was formatted for.
+        output: The formatted text (or JSON, if `as_json=True` was passed).
+        passed: True if the pipeline succeeded.
+        error: Failure detail if `passed` is False; "" on success.
+    """
+
     mode: DeliveryMode
     output: str = ""
     passed: bool = False

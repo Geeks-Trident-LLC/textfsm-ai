@@ -1,45 +1,47 @@
 ## Summary
 
-This PR prepares the v0.4.1 release: a maintainability and quality‑focused release
-following v0.4.0, adding a `--version` CLI flag, refactoring the DSL node module into
-a package, fixing a packaging/CI gap, and raising unit test coverage to ~95% across
-nearly every module in the codebase.
+This PR prepares the v0.4.2 release: a new standardized public Python API,
+the documentation to go with it, and a further pass of test coverage
+across the codebase, following v0.4.1.
 
 ## What's Included
 
-### CLI
-- New `--version` flag
+### Public API
+- New facade: `generate()`/`compile_dsl()`/`run_pipeline()` (verb functions,
+  always return a full result object, never raise for expected failures)
+  plus `to_llm_result`/`to_llm_template`/`to_llm_records`/`to_llm_variables`/
+  `to_llm_handling` and `to_dsl_result`/`to_ast`/`to_canonical`/`to_readable`/
+  `to_recognizers` shortcuts with identical parameters to their verb function
+- New `LLMResult`/`DSLResult` result types (`textfsm_ai/api_models.py`);
+  `TemplateAST`, `DeliveryOutput`, `ValidationResult` now also exported at
+  the top level
+- Removed `ask_ai()`, superseded by `generate()`/`run_pipeline()`
 
-### DSL
-- `dsl/core/nodes.py` split into a `dsl/core/nodes/` package (`groups`, `base`, `leaf`,
-  `modifiers`, `quantifiers`, `factory`) — no change to public import paths or behavior
+### Documentation
+- Quickstart guide covering the full API end to end
+- mkdocstrings-generated API Reference (all public functions/types)
+- Real CLI Guide (every command, verified against the live CLI)
+- New Human-in-the-Loop Review guide: reviewing a generated template using
+  the plain-English "readable" DSL form and a real parse-and-diff step,
+  with no regex required
+- Removed broken/stale docs pages and a nonexistent golden-test framework doc
 
-### Packaging & CI
-- Consolidated pytest configuration into `pyproject.toml` (removed a `pytest.ini` that
-  was silently shadowing it, including coverage options)
-- Fixed Makefile recipe tabs and aligned `pre-commit` hooks with pinned `tox`
-  lint/format/typecheck versions
-- CI workflow now also triggers on `develop` pushes, not just `main`
-
-### Bug Fixes
-- `orchestrator/factory.py`: unreachable error branch for unknown provider types now
-  correctly raises `ValueError`
-- `generate_cmd.py`: incorrect `pconf.api_key` attribute reference and wrong
-  `GEMINI_API_KEY` env var mapping
+### Bug Fix
+- `generate()` now sources `.ready`/`.reason` from the top-level generation
+  pipeline (accounts for retries and template-syntax validation) instead of
+  the nested LLM response object — the old logic could report success for a
+  pipeline that had actually failed
 
 ### Test Coverage
-- Added dedicated unit test suites for: all provider modules, delivery
-  assembly/controller/engine, `dsl/core/nodes/factory.py`, `generation/support/llm_extractor.py`,
-  `dsl/engine/dsl_engine.py`, `core/serializable.py`, `core/dotdict.py`,
-  `core/utils/template.py`, and CLI/package coverage gaps
-- Overall coverage raised from the low‑80s to ~95%
+- Raised to ~99% across nearly the entire codebase, closing every file that
+  had a genuinely testable gap
 
 ## Release Artifacts
-- CHANGELOG updated for v0.4.1
+- CHANGELOG updated for v0.4.2
 - Release notes generated
-- Version bumped from 0.4.0 → 0.4.1
+- Version bumped from 0.4.1 → 0.4.2
 
 ## Testing
-- Full unit and integration suite passing (562 passed, 18 skipped)
+- Full unit and integration suite passing
 - `tox -e format,lint,typecheck` clean
-- TestPyPI release validated (`v0.4.1-test`)
+- TestPyPI release validated (`v0.4.2-test`)

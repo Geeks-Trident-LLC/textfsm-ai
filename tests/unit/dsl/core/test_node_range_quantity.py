@@ -2,6 +2,8 @@
 
 import re
 
+import pytest
+
 from textfsm_ai.dsl.core.nodes import RangeQuantityNode, create_node
 
 WORD = r"[A-Za-z0-9_]*[A-Za-z][A-Za-z0-9_]*"
@@ -293,3 +295,27 @@ def test_range_1_4_digits():
     assert r.match("12")
     assert r.match("1234")
     assert not r.match("12345")
+
+
+# ---------- atomic-plus base regex missing a trailing "+" ----------
+
+
+def test_range_atomic_plus_raises_when_base_regex_lacks_plus():
+    # "any" is classified as atomic-plus but its custom regex is ".*",
+    # which doesn't end with "+" - the defensive guard should fire.
+    node = RangeQuantityNode(create_node("any"), 1, 3)
+    with pytest.raises(ValueError, match="atomic-plus regex must end with"):
+        node.to_regex()
+
+
+# ---------- to_expression() ----------
+
+
+def test_range_to_expression_with_finite_hi():
+    node = RangeQuantityNode(word_node(), 2, 5)
+    assert node.to_expression() == "range-2-5-word()"
+
+
+def test_range_to_expression_with_inf_hi():
+    node = RangeQuantityNode(digit_node(), 2, None)
+    assert node.to_expression() == "range-2-inf-digit()"

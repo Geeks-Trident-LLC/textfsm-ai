@@ -22,8 +22,8 @@ It is designed for:
 
 ## Documentation
 
-- **Latest docs:** https://geeks-trident-llc.github.io/textfsm-ai/latest/
-- **All versions:** https://geeks-trident-llc.github.io/textfsm-ai/
+- **Latest docs:** [https://geeks-trident-llc.github.io/textfsm-ai/latest/](https://geeks-trident-llc.github.io/textfsm-ai/latest/)
+- **All versions:** [https://geeks-trident-llc.github.io/textfsm-ai/](https://geeks-trident-llc.github.io/textfsm-ai/)
 
 ## Installation
 
