@@ -152,3 +152,22 @@ FIREWORKS_PATTERN = re.compile(
 #   qwen-3-235b-a22b-instruct-2507 -> size="235" (first size token wins)
 # ---------------------------------------------------------
 CEREBRAS_PATTERN = re.compile(r"(?P<size>[0-9]+(?:\.[0-9]+)?)b", re.IGNORECASE)
+
+
+# ---------------------------------------------------------
+# Perplexity (search-grounded "sonar" family). Unlike the open-model
+# providers above, Perplexity's catalog is small and fixed with no
+# parameter-size info in the name, so this is a full-name anchor with
+# a tier suffix, same shape as XAI_PATTERN.
+# Examples:
+#   sonar
+#   sonar-pro
+#   sonar-reasoning
+#   sonar-reasoning-pro
+#   sonar-deep-research
+# Capture group 1 = optional suffix (pro, reasoning, reasoning-pro,
+# deep-research).
+# ---------------------------------------------------------
+PERPLEXITY_PATTERN = re.compile(
+    r"^sonar(?:-(pro|reasoning-pro|reasoning|deep-research))?$"
+)

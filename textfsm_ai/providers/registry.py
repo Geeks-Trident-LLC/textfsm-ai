@@ -14,6 +14,7 @@ from textfsm_ai.providers.gemini_provider import GeminiProvider
 from textfsm_ai.providers.groq_provider import GroqProvider
 from textfsm_ai.providers.openai_compat_provider import OpenAICompatProvider
 from textfsm_ai.providers.openai_provider import OpenAIProvider
+from textfsm_ai.providers.perplexity_provider import PerplexityProvider
 from textfsm_ai.providers.together_provider import TogetherProvider
 from textfsm_ai.providers.xai_provider import XAIProvider
 
@@ -44,6 +45,7 @@ registry.register(XAIProvider)
 registry.register(TogetherProvider)
 registry.register(FireworksProvider)
 registry.register(CerebrasProvider)
+registry.register(PerplexityProvider)
 
 
 def get_provider_by_name(provider_name: str) -> Type[Provider]:

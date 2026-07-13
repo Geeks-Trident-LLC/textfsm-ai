@@ -221,3 +221,25 @@ class model:
                 chat = ModelRegistry.get("cerebras", "thinking", "speed", "chat")
 
         default = ModelRegistry.alias("cerebras_default")
+
+    class perplexity:
+        class quality:
+            chat = ModelRegistry.get("perplexity", "quality", "chat")
+
+        class balance:
+            chat = ModelRegistry.get("perplexity", "balance", "chat")
+
+        class speed:
+            chat = ModelRegistry.get("perplexity", "speed", "chat")
+
+        class thinking:
+            class quality:
+                chat = ModelRegistry.get("perplexity", "thinking", "quality", "chat")
+
+            class balance:
+                chat = ModelRegistry.get("perplexity", "thinking", "balance", "chat")
+
+            class speed:
+                chat = ModelRegistry.get("perplexity", "thinking", "speed", "chat")
+
+        default = ModelRegistry.alias("perplexity_default")

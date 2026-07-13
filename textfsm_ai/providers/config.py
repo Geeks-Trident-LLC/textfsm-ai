@@ -113,6 +113,13 @@ def load_config_from_env() -> OrchestratorConfig:
             params={"api_key": os.getenv("CEREBRAS_API_KEY")},
         )
 
+    if os.getenv("PERPLEXITY_API_KEY"):
+        providers_cfg["perplexity"] = ProviderConfig(
+            name="perplexity",
+            type="perplexity",
+            params={"api_key": os.getenv("PERPLEXITY_API_KEY")},
+        )
+
     if os.getenv("AZURE_OPENAI_ENDPOINT") and os.getenv("AZURE_OPENAI_API_KEY"):
         providers_cfg["azure"] = ProviderConfig(
             name="azure",

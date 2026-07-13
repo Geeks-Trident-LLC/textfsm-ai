@@ -122,5 +122,6 @@ def create_default_routing_table() -> RoutingTable:
             RoutingRule("mistralai/", "together"),
             RoutingRule("accounts/fireworks/models/", "fireworks"),
             RoutingRule("llama3.", "cerebras"),  # e.g. "llama3.1-8b" (no hyphen)
+            RoutingRule("sonar", "perplexity"),
         ]
     )

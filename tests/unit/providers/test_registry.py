@@ -5,6 +5,7 @@ from textfsm_ai.providers.cerebras_provider import CerebrasProvider
 from textfsm_ai.providers.fireworks_provider import FireworksProvider
 from textfsm_ai.providers.groq_provider import GroqProvider
 from textfsm_ai.providers.openai_provider import OpenAIProvider
+from textfsm_ai.providers.perplexity_provider import PerplexityProvider
 from textfsm_ai.providers.registry import (
     ProviderRegistry,
     get_provider_by_name,
@@ -22,6 +23,7 @@ def test_registry_get_returns_registered_class():
     assert registry.get("together") is TogetherProvider
     assert registry.get("fireworks") is FireworksProvider
     assert registry.get("cerebras") is CerebrasProvider
+    assert registry.get("perplexity") is PerplexityProvider
 
 
 def test_registry_get_unknown_raises_keyerror():
