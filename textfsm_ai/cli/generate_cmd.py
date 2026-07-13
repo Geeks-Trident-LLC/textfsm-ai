@@ -245,6 +245,7 @@ def resolve_api_key(provider, api_key, pconf):
         "cerebras": "CEREBRAS_API_KEY",
         "perplexity": "PERPLEXITY_API_KEY",
         "openrouter": "OPENROUTER_API_KEY",
+        "moonshot": "MOONSHOT_API_KEY",
     }
 
     env_var = env_map.get(provider)

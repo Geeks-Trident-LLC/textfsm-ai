@@ -27,6 +27,7 @@ def test_providers_list_runs():
     assert "cerebras" in result.output
     assert "perplexity" in result.output
     assert "openrouter" in result.output
+    assert "moonshot" in result.output
 
 
 def test_providers_info_no_config(monkeypatch):

@@ -194,3 +194,20 @@ OPENROUTER_PATTERN = re.compile(
     r"(?:(?P<moe>[0-9]+)x(?P<moe_size>[0-9]+)b" r"|(?P<size>[0-9]+(?:\.[0-9]+)?)b)",
     re.IGNORECASE,
 )
+
+
+# ---------------------------------------------------------
+# Moonshot AI ("moonshot-v1-*" context-length variants). Unlike other
+# providers' size suffixes (parameter count), this suffix is CONTEXT
+# WINDOW LENGTH (8k/32k/128k) - it's the same underlying model, just
+# billed differently per context size, not a capability tier. Kimi K2
+# ("kimi-k2-*") is a distinct, separately-branded flagship model line
+# not covered by this pattern; classified by keyword instead, see
+# classify_moonshot_models().
+# Examples:
+#   moonshot-v1-8k    -> context="8k"
+#   moonshot-v1-32k   -> context="32k"
+#   moonshot-v1-128k  -> context="128k"
+#   moonshot-v1-auto  -> context="auto"
+# ---------------------------------------------------------
+MOONSHOT_PATTERN = re.compile(r"^moonshot-v1-(8k|32k|128k|auto)$")

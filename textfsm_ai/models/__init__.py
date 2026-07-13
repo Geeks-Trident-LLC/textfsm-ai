@@ -265,3 +265,25 @@ class model:
                 chat = ModelRegistry.get("openrouter", "thinking", "speed", "chat")
 
         default = ModelRegistry.alias("openrouter_default")
+
+    class moonshot:
+        class quality:
+            chat = ModelRegistry.get("moonshot", "quality", "chat")
+
+        class balance:
+            chat = ModelRegistry.get("moonshot", "balance", "chat")
+
+        class speed:
+            chat = ModelRegistry.get("moonshot", "speed", "chat")
+
+        class thinking:
+            class quality:
+                chat = ModelRegistry.get("moonshot", "thinking", "quality", "chat")
+
+            class balance:
+                chat = ModelRegistry.get("moonshot", "thinking", "balance", "chat")
+
+            class speed:
+                chat = ModelRegistry.get("moonshot", "thinking", "speed", "chat")
+
+        default = ModelRegistry.alias("moonshot_default")

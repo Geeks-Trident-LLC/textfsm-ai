@@ -118,6 +118,8 @@ def test_create_default_routing_table_routes_known_prefixes():
     assert table.route("deepseek/deepseek-r1") == "openrouter"
     assert table.route("x-ai/grok-4") == "openrouter"
     assert table.route("qwen/qwen-2.5-72b-instruct") == "openrouter"
+    assert table.route("moonshot-v1-8k") == "moonshot"
+    assert table.route("kimi-k2-0711-preview") == "moonshot"
 
 
 def test_deepseek_ai_prefix_does_not_collide_with_native_deepseek_rule():

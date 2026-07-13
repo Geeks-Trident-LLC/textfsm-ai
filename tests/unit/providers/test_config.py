@@ -14,6 +14,7 @@ _ENV_VARS = [
     "CEREBRAS_API_KEY",
     "PERPLEXITY_API_KEY",
     "OPENROUTER_API_KEY",
+    "MOONSHOT_API_KEY",
     "AZURE_OPENAI_ENDPOINT",
     "AZURE_OPENAI_API_KEY",
     "AZURE_OPENAI_API_VERSION",
@@ -186,6 +187,14 @@ def test_load_config_from_env_openrouter(monkeypatch):
     assert cfg.providers["openrouter"].params == {"api_key": "sk-openrouter"}
 
 
+def test_load_config_from_env_moonshot(monkeypatch):
+    monkeypatch.setenv("MOONSHOT_API_KEY", "sk-moonshot")
+    cfg = load_config_from_env()
+
+    assert set(cfg.providers.keys()) == {"moonshot"}
+    assert cfg.providers["moonshot"].params == {"api_key": "sk-moonshot"}
+
+
 def test_load_config_from_env_azure_requires_both_endpoint_and_key(monkeypatch):
     monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
     # api key missing -> azure should NOT appear
@@ -227,6 +236,7 @@ def test_load_config_from_env_all_providers_at_once(monkeypatch):
     monkeypatch.setenv("CEREBRAS_API_KEY", "k10")
     monkeypatch.setenv("PERPLEXITY_API_KEY", "k11")
     monkeypatch.setenv("OPENROUTER_API_KEY", "k12")
+    monkeypatch.setenv("MOONSHOT_API_KEY", "k13")
     monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
     monkeypatch.setenv("AZURE_OPENAI_API_KEY", "k5")
 
@@ -244,5 +254,6 @@ def test_load_config_from_env_all_providers_at_once(monkeypatch):
         "cerebras",
         "perplexity",
         "openrouter",
+        "moonshot",
         "azure",
     }

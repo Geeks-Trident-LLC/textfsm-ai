@@ -10,6 +10,7 @@ from .patterns import (
     FIREWORKS_PATTERN,
     GEMINI_PATTERN,
     GROQ_PATTERN,
+    MOONSHOT_PATTERN,
     OPENAI_PATTERN,
     OPENROUTER_PATTERN,
     PERPLEXITY_PATTERN,
@@ -442,6 +443,52 @@ def classify_openrouter_models(raw: List[str]):
 
 
 # ---------------------------------------------------------
+# Moonshot AI (Kimi). Bare, un-namespaced model IDs (no "/"), so
+# _normalize() is safe here. Catalog mixes "moonshot-v1-<context>"
+# variants - tiered by CONTEXT WINDOW LENGTH as a rough capability
+# proxy, since it's the only signal in the name (all three are the
+# same underlying model) - with the separately-branded "kimi-k2-*"
+# flagship line, classified by keyword instead.
+# ---------------------------------------------------------
+def classify_moonshot_models(raw: List[str]):
+    groups = empty_tier_groups()
+
+    for name in map(_normalize, raw):
+        lname = name.lower()
+
+        # Kimi K2: flagship large MoE model line, named separately from
+        # the "moonshot-v1-*" context-length variants.
+        if "k2" in lname:
+            if "turbo" in lname:
+                groups[Tier.BALANCE_CHAT].append(name)
+            else:
+                groups[Tier.QUALITY_CHAT].append(name)
+            continue
+
+        m = MOONSHOT_PATTERN.match(lname)
+        if not m:
+            groups[Tier.OTHER].append(name)
+            continue
+
+        context = m.group(1)  # 8k, 32k, 128k, or auto
+
+        if context == "128k":
+            groups[Tier.QUALITY_CHAT].append(name)
+        elif context == "32k":
+            groups[Tier.BALANCE_CHAT].append(name)
+        elif context == "8k":
+            groups[Tier.SPEED_CHAT].append(name)
+        else:
+            # "auto" dynamically picks context length, doesn't fit a
+            # fixed tier
+            groups[Tier.OTHER].append(name)
+
+    for g in groups.values():
+        g.sort(reverse=True)
+    return groups
+
+
+# ---------------------------------------------------------
 # Unified entry point
 # ---------------------------------------------------------
 def classify_models(provider: str, raw: List[str]):
@@ -469,6 +516,8 @@ def classify_models(provider: str, raw: List[str]):
         return classify_perplexity_models(raw)
     if provider == "openrouter":
         return classify_openrouter_models(raw)
+    if provider == "moonshot":
+        return classify_moonshot_models(raw)
     if provider in ("azure", "azure-openai"):
         return classify_openai_models(raw)
 

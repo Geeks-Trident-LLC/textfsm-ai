@@ -27,6 +27,7 @@ PROVIDER_DESCRIPTIONS = {
     "cerebras": "Cerebras (fast open-model inference, OpenAI-compatible API)",
     "perplexity": "Perplexity (search-grounded Sonar models, OpenAI-compatible API)",
     "openrouter": "OpenRouter (multi-provider model aggregator, OpenAI-compatible API)",
+    "moonshot": "Moonshot AI / Kimi models (OpenAI-compatible API)",
 }
 
 
