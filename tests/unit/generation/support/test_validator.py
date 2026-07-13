@@ -86,6 +86,21 @@ def test_validate_template_and_records_syntax_error():
     assert "template_syntax_error" in findings[0]
 
 
+def test_validate_template_and_records_parse_error():
+    template = """
+Value iface (\\S+)
+
+Start
+  ^interface ${iface} -> Continue
+  ^bad -> Error "boom"
+""".strip()
+    sample = "interface Gi0/1\nbad\n"
+
+    findings, ready = validate_template_and_records(template, sample, [])
+    assert ready is False
+    assert any("template_parse_error" in f for f in findings)
+
+
 # ---------------------------------------------------------
 # extract_lines
 # ---------------------------------------------------------
@@ -125,6 +140,43 @@ def test_check_value_definitions_invalid_regex():
     assert any("regex_compile_error" in f for f in findings)
 
 
+def test_check_value_definitions_pat1_invalid_variable_name():
+    # No options prefix, so "Required" is parsed as the variable name itself.
+    lines = ["Value Required (\\S+)", "Start"]
+    findings = check_value_definitions(lines)
+    assert any("invalid_variable_name" in f for f in findings)
+
+
+def test_check_value_definitions_pat1_empty_regex():
+    lines = ["Value iface ()", "Start"]
+    findings = check_value_definitions(lines)
+    assert any("empty_regex" in f for f in findings)
+
+
+def test_check_value_definitions_pat2_invalid_option():
+    lines = ["Value BadOpt iface (\\S+)", "Start"]
+    findings = check_value_definitions(lines)
+    assert any("invalid_value_options" in f for f in findings)
+
+
+def test_check_value_definitions_pat2_invalid_variable_name():
+    lines = ["Value Required Key (\\S+)", "Start"]
+    findings = check_value_definitions(lines)
+    assert any("invalid_variable_name" in f for f in findings)
+
+
+def test_check_value_definitions_pat2_empty_regex():
+    lines = ["Value Required iface ()", "Start"]
+    findings = check_value_definitions(lines)
+    assert any("empty_regex" in f for f in findings)
+
+
+def test_check_value_definitions_pat2_regex_compile_error():
+    lines = ["Value Required iface (abc[def)", "Start"]
+    findings = check_value_definitions(lines)
+    assert any("regex_compile_error" in f for f in findings)
+
+
 # ---------------------------------------------------------
 # check_start_state
 # ---------------------------------------------------------
@@ -144,6 +196,18 @@ def test_check_start_state_casing():
     lines = ["value iface (\\S+)", "start"]
     findings = check_start_state(lines)
     assert "start_state_casing_error: start" in findings
+
+
+def test_check_start_state_multiple():
+    lines = ["Start", "Foo", "Start"]
+    findings = check_start_state(lines)
+    assert "multiple_start_state" in findings
+
+
+def test_check_start_state_preceding_newline_error():
+    lines = ["Value iface (\\S+)", "Start"]
+    findings = check_start_state(lines)
+    assert "start_state_preceding_newline_error" in findings
 
 
 # ---------------------------------------------------------
@@ -181,6 +245,12 @@ def test_check_rule_actions_invalid_rule():
     lines = ["  foo -> Record"]
     findings = check_rule_actions(lines)
     assert any("invalid_rule_definition" in f for f in findings)
+
+
+def test_check_rule_actions_no_action_is_fine():
+    lines = ["  ^foo"]
+    findings = check_rule_actions(lines)
+    assert findings == []
 
 
 # ---------------------------------------------------------
