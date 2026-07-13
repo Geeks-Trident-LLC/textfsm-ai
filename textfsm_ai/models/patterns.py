@@ -82,3 +82,17 @@ GROQ_PATTERN = re.compile(
     r"-([0-9]+x?[0-9]*)b"
     r"(?:-([a-z0-9]+))?$"
 )
+
+
+# ---------------------------------------------------------
+# xAI (Grok)
+# Examples:
+#   grok-4
+#   grok-3
+#   grok-3-mini
+#   grok-2-vision-1212
+# Capture group 1 = optional suffix (mini, vision, fast).
+# ---------------------------------------------------------
+XAI_PATTERN = re.compile(
+    r"^grok-[0-9]+(?:\.[0-9]+)?" r"(?:-(mini|vision|fast))?" r"(?:-[0-9]+)?$"
+)

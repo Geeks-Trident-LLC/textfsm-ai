@@ -87,3 +87,11 @@ groq:
   qwen-2.5-32b: {input: 0.79, output: 0.79}
   mixtral-8x7b-32768: {input: 0.24, output: 0.24}
   deepseek-r1-distill-llama-70b: {input: 0.75, output: 0.99}
+
+# Approximate rates - verify against https://x.ai/api pricing page before
+# relying on these for real cost estimates.
+xai:
+  grok-4: {input: 3.00, output: 15.00}
+  grok-3: {input: 3.00, output: 15.00}
+  grok-3-mini: {input: 0.30, output: 0.50}
+  grok-2-vision-1212: {input: 2.00, output: 10.00}

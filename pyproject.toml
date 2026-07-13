@@ -64,6 +64,8 @@ keywords = [
     "azure-ai-inference",
     "deepseek",
     "groq",
+    "xai",
+    "grok",
     "device output parsing",
     "log extraction",
     "structured data extraction",

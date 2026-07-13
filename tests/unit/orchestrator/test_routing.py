@@ -97,3 +97,4 @@ def test_create_default_routing_table_routes_known_prefixes():
     assert table.route("gemma2-9b-it") == "groq"
     assert table.route("qwen-2.5-32b") == "groq"
     assert table.route("mixtral-8x7b-32768") == "groq"
+    assert table.route("grok-4") == "xai"

@@ -21,6 +21,7 @@ PROVIDER_DESCRIPTIONS = {
     "anthropic": "Anthropic Claude models",
     "gemini": "Google Gemini models",
     "groq": "Groq (fast open-model inference, OpenAI-compatible API)",
+    "xai": "xAI Grok models (OpenAI-compatible API)",
 }
 
 

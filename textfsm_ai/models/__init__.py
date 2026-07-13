@@ -133,3 +133,25 @@ class model:
                 chat = ModelRegistry.get("groq", "thinking", "speed", "chat")
 
         default = ModelRegistry.alias("groq_default")
+
+    class xai:
+        class quality:
+            chat = ModelRegistry.get("xai", "quality", "chat")
+
+        class balance:
+            chat = ModelRegistry.get("xai", "balance", "chat")
+
+        class speed:
+            chat = ModelRegistry.get("xai", "speed", "chat")
+
+        class thinking:
+            class quality:
+                chat = ModelRegistry.get("xai", "thinking", "quality", "chat")
+
+            class balance:
+                chat = ModelRegistry.get("xai", "thinking", "balance", "chat")
+
+            class speed:
+                chat = ModelRegistry.get("xai", "thinking", "speed", "chat")
+
+        default = ModelRegistry.alias("xai_default")

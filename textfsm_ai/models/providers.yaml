@@ -105,9 +105,31 @@ groq:
       chat:
         - deepseek-r1-distill-llama-70b
 
+xai:
+  quality:
+    chat:
+      - grok-4
+  balance:
+    chat:
+      - grok-3
+  speed:
+    chat:
+      - grok-3-mini
+  thinking:
+    quality:
+      chat:
+        - grok-4
+    balance:
+      chat:
+        - grok-3
+    speed:
+      chat:
+        - grok-3-mini
+
 aliases:
   openai_default: gpt-4o-mini
   anthropic_default: claude-haiku-4-5-20251001
   gemini_default: gemini-2.5-flash
   deepseek_default: deepseek-v4-flash
   groq_default: llama-3.1-8b-instant
+  xai_default: grok-3-mini

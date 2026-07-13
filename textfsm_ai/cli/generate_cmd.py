@@ -239,6 +239,7 @@ def resolve_api_key(provider, api_key, pconf):
         "deepseek": "DEEPSEEK_API_KEY",
         "azure": "AZURE_OPENAI_API_KEY",
         "groq": "GROQ_API_KEY",
+        "xai": "XAI_API_KEY",
     }
 
     env_var = env_map.get(provider)
