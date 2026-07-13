@@ -34,6 +34,7 @@ def test_pricing_table_loaded_from_yaml_has_expected_providers():
         "xai",
         "together",
         "fireworks",
+        "cerebras",
     ):
         assert provider in PRICING_TABLE
         assert isinstance(PRICING_TABLE[provider], dict)
@@ -118,6 +119,15 @@ def test_extract_base_model_fireworks():
             "accounts/fireworks/models/mixtral-8x22b-instruct",
             "accounts/fireworks/models/mixtral-8x22b-instruct",
         ),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_cerebras():
+    provider = "cerebras"
+    for model, based_model in (
+        ("llama3.1-8b", "llama3.1-8b"),
+        ("qwen-3-32b", "qwen-3-32b"),
     ):
         assert extract_base_model(provider, model) == based_model
 
@@ -244,6 +254,25 @@ def test_estimate_cost_fireworks():
         == PRICING_TABLE["fireworks"][
             "accounts/fireworks/models/llama-v3p1-8b-instruct"
         ]["output"]
+    )
+    assert result.warning is None
+
+
+def test_estimate_cost_cerebras():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="cerebras",
+        model="llama3.1-8b",
+    )
+
+    assert result.provider == "cerebras"
+    assert result.based_model == "llama3.1-8b"
+    assert result.input_per_million == PRICING_TABLE["cerebras"]["llama3.1-8b"]["input"]
+    assert (
+        result.output_per_million == PRICING_TABLE["cerebras"]["llama3.1-8b"]["output"]
     )
     assert result.warning is None
 

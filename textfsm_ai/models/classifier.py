@@ -4,6 +4,7 @@ from typing import List
 
 from .patterns import (
     ANTHROPIC_PATTERN,
+    CEREBRAS_PATTERN,
     DEEPSEEK_NATIVE_PATTERN,
     DEEPSEEK_PATTERN_V4,
     FIREWORKS_PATTERN,
@@ -309,6 +310,59 @@ def classify_fireworks_models(raw: List[str]):
 
 
 # ---------------------------------------------------------
+# Cerebras (hosts open models under bare, un-namespaced IDs like Groq,
+# so _normalize() is safe here - no vendor prefix to preserve).
+# Cerebras' catalog mixes dense models named by parameter size
+# (qwen-3-32b, llama3.1-8b) with Llama 4's MoE models named by
+# codename (scout/maverick) whose IDs only expose *active* params
+# (e.g. "17b"), not the much larger total param count - so those are
+# classified by codename instead of falling through to the size regex.
+# ---------------------------------------------------------
+def classify_cerebras_models(raw: List[str]):
+    groups = empty_tier_groups()
+
+    for name in map(_normalize, raw):
+        lname = name.lower()
+
+        # Reasoning-flagged models go to thinking-chat regardless of size
+        if (
+            "gpt-oss" in lname
+            or "r1" in lname
+            or "reasoner" in lname
+            or "distill" in lname
+            or "qwq" in lname
+        ):
+            groups[Tier.THINKING_CHAT].append(name)
+            continue
+
+        # Llama 4 MoE models: active-param count in the name understates
+        # total capability, so classify by codename instead of size.
+        if "maverick" in lname:
+            groups[Tier.QUALITY_CHAT].append(name)
+            continue
+        if "scout" in lname:
+            groups[Tier.BALANCE_CHAT].append(name)
+            continue
+
+        m = CEREBRAS_PATTERN.search(lname)
+        if not m:
+            groups[Tier.OTHER].append(name)
+            continue
+
+        size_num = float(m.group("size"))
+        if size_num >= 70:
+            groups[Tier.QUALITY_CHAT].append(name)
+        elif size_num >= 30:
+            groups[Tier.BALANCE_CHAT].append(name)
+        else:
+            groups[Tier.SPEED_CHAT].append(name)
+
+    for g in groups.values():
+        g.sort(reverse=True)
+    return groups
+
+
+# ---------------------------------------------------------
 # Unified entry point
 # ---------------------------------------------------------
 def classify_models(provider: str, raw: List[str]):
@@ -330,6 +384,8 @@ def classify_models(provider: str, raw: List[str]):
         return classify_together_models(raw)
     if provider == "fireworks":
         return classify_fireworks_models(raw)
+    if provider == "cerebras":
+        return classify_cerebras_models(raw)
     if provider in ("azure", "azure-openai"):
         return classify_openai_models(raw)
 

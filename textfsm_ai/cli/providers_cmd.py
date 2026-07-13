@@ -24,6 +24,7 @@ PROVIDER_DESCRIPTIONS = {
     "xai": "xAI Grok models (OpenAI-compatible API)",
     "together": "Together AI (open-model hosting, OpenAI-compatible API)",
     "fireworks": "Fireworks AI (open-model hosting, OpenAI-compatible API)",
+    "cerebras": "Cerebras (fast open-model inference, OpenAI-compatible API)",
 }
 
 
