@@ -109,6 +109,8 @@ def test_create_default_routing_table_routes_known_prefixes():
     assert table.route("qwen-3-32b") == "cerebras"
     assert table.route("llama3.1-8b") == "cerebras"
     assert table.route("gpt-oss-120b") == "cerebras"
+    assert table.route("sonar") == "perplexity"
+    assert table.route("sonar-pro") == "perplexity"
 
 
 def test_deepseek_ai_prefix_does_not_collide_with_native_deepseek_rule():

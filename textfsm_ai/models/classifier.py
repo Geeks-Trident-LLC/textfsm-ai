@@ -11,6 +11,7 @@ from .patterns import (
     GEMINI_PATTERN,
     GROQ_PATTERN,
     OPENAI_PATTERN,
+    PERPLEXITY_PATTERN,
     TOGETHER_PATTERN,
     XAI_PATTERN,
 )
@@ -363,6 +364,33 @@ def classify_cerebras_models(raw: List[str]):
 
 
 # ---------------------------------------------------------
+# Perplexity (search-grounded "sonar" family, fixed small catalog with
+# no parameter-size info, tiered by suffix rather than size like xAI)
+# ---------------------------------------------------------
+def classify_perplexity_models(raw: List[str]):
+    groups = empty_tier_groups()
+
+    for name in map(_normalize, raw):
+        m = PERPLEXITY_PATTERN.match(name)
+        if not m:
+            groups[Tier.OTHER].append(name)
+            continue
+
+        suffix = m.group(1)  # pro, reasoning, reasoning-pro, deep-research, or None
+
+        if suffix == "pro":
+            groups[Tier.QUALITY_CHAT].append(name)
+        elif suffix in ("reasoning", "reasoning-pro", "deep-research"):
+            groups[Tier.THINKING_CHAT].append(name)
+        else:
+            groups[Tier.SPEED_CHAT].append(name)
+
+    for g in groups.values():
+        g.sort(reverse=True)
+    return groups
+
+
+# ---------------------------------------------------------
 # Unified entry point
 # ---------------------------------------------------------
 def classify_models(provider: str, raw: List[str]):
@@ -386,6 +414,8 @@ def classify_models(provider: str, raw: List[str]):
         return classify_fireworks_models(raw)
     if provider == "cerebras":
         return classify_cerebras_models(raw)
+    if provider == "perplexity":
+        return classify_perplexity_models(raw)
     if provider in ("azure", "azure-openai"):
         return classify_openai_models(raw)
 

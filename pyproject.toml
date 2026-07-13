@@ -69,6 +69,7 @@ keywords = [
     "together-ai",
     "fireworks-ai",
     "cerebras",
+    "perplexity",
     "device output parsing",
     "log extraction",
     "structured data extraction",

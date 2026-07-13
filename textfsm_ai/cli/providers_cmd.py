@@ -25,6 +25,7 @@ PROVIDER_DESCRIPTIONS = {
     "together": "Together AI (open-model hosting, OpenAI-compatible API)",
     "fireworks": "Fireworks AI (open-model hosting, OpenAI-compatible API)",
     "cerebras": "Cerebras (fast open-model inference, OpenAI-compatible API)",
+    "perplexity": "Perplexity (search-grounded Sonar models, OpenAI-compatible API)",
 }
 
 

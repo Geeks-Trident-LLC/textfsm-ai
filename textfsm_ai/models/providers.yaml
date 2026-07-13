@@ -189,6 +189,26 @@ cerebras:
       chat:
         - gpt-oss-120b
 
+perplexity:
+  quality:
+    chat:
+      - sonar-pro
+  balance:
+    chat: []
+  speed:
+    chat:
+      - sonar
+  thinking:
+    quality:
+      chat:
+        - sonar-deep-research
+    balance:
+      chat:
+        - sonar-reasoning-pro
+    speed:
+      chat:
+        - sonar-reasoning
+
 aliases:
   openai_default: gpt-4o-mini
   anthropic_default: claude-haiku-4-5-20251001
@@ -199,3 +219,4 @@ aliases:
   together_default: meta-llama/Llama-3.1-8B-Instruct-Turbo
   fireworks_default: accounts/fireworks/models/llama-v3p1-8b-instruct
   cerebras_default: llama3.1-8b
+  perplexity_default: sonar

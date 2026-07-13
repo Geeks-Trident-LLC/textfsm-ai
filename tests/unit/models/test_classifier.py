@@ -171,6 +171,25 @@ def test_cerebras_classification_moe_uses_first_size_token():
     assert "qwen-3-235b-a22b-instruct-2507" in groups[Tier.QUALITY_CHAT]
 
 
+def test_perplexity_classification():
+    raw = [
+        "sonar",  # no suffix -> speed
+        "sonar-pro",  # pro -> quality
+        "sonar-reasoning",  # reasoning -> thinking
+        "sonar-reasoning-pro",  # reasoning-pro -> thinking
+        "sonar-deep-research",  # deep-research -> thinking
+        "some-unknown-model",  # no match -> other
+    ]
+    groups = classify_models("perplexity", raw)
+
+    assert "sonar" in groups[Tier.SPEED_CHAT]
+    assert "sonar-pro" in groups[Tier.QUALITY_CHAT]
+    assert "sonar-reasoning" in groups[Tier.THINKING_CHAT]
+    assert "sonar-reasoning-pro" in groups[Tier.THINKING_CHAT]
+    assert "sonar-deep-research" in groups[Tier.THINKING_CHAT]
+    assert "some-unknown-model" in groups[Tier.OTHER]
+
+
 # ---------------------------------------------------------
 # _normalize (via the "provider/model" prefix form)
 # ---------------------------------------------------------
