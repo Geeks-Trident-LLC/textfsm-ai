@@ -48,6 +48,4 @@ nav:
   - API Reference:
       - Overview: reference/index.md
 
-  - Golden Tests: golden-tests/index.md
-
   - Changelog: changelog.md

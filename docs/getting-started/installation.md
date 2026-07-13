@@ -23,6 +23,5 @@ pip install -r requirements-dev.txt
 This includes:
 
 - mkdocs + mkdocstrings
-- pytest
-- golden test utilities
-```
+- pytest + pytest-cov
+- ruff, black, mypy
