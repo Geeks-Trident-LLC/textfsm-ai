@@ -66,6 +66,7 @@ keywords = [
     "groq",
     "xai",
     "grok",
+    "together-ai",
     "device output parsing",
     "log extraction",
     "structured data extraction",

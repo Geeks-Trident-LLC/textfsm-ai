@@ -80,6 +80,34 @@ def test_xai_classification():
     assert "some-unknown-model" in groups[Tier.OTHER]
 
 
+def test_together_classification():
+    raw = [
+        "meta-llama/Llama-3.3-70B-Instruct-Turbo",  # 70B -> quality
+        "mistralai/Mixtral-8x7B-Instruct-v0.1",  # MoE -> quality
+        "Qwen/Qwen2.5-32B-Instruct",  # 32B -> balance
+        "meta-llama/Llama-3.1-8B-Instruct-Turbo",  # 8B -> speed
+        "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",  # reasoning -> thinking
+        "deepseek-ai/DeepSeek-V3",  # no size token -> other
+    ]
+    groups = classify_models("together", raw)
+
+    assert "meta-llama/Llama-3.3-70B-Instruct-Turbo" in groups[Tier.QUALITY_CHAT]
+    assert "mistralai/Mixtral-8x7B-Instruct-v0.1" in groups[Tier.QUALITY_CHAT]
+    assert "Qwen/Qwen2.5-32B-Instruct" in groups[Tier.BALANCE_CHAT]
+    assert "meta-llama/Llama-3.1-8B-Instruct-Turbo" in groups[Tier.SPEED_CHAT]
+    assert "deepseek-ai/DeepSeek-R1-Distill-Llama-70B" in groups[Tier.THINKING_CHAT]
+    assert "deepseek-ai/DeepSeek-V3" in groups[Tier.OTHER]
+
+
+def test_together_classification_preserves_vendor_prefix():
+    # Unlike other providers, Together's classifier must NOT strip the
+    # "vendor/" prefix - it's required to actually call the model.
+    groups = classify_models("together", ["meta-llama/Llama-3.1-8B-Instruct-Turbo"])
+
+    assert "meta-llama/Llama-3.1-8B-Instruct-Turbo" in groups[Tier.SPEED_CHAT]
+    assert "Llama-3.1-8B-Instruct-Turbo" not in groups[Tier.SPEED_CHAT]
+
+
 # ---------------------------------------------------------
 # _normalize (via the "provider/model" prefix form)
 # ---------------------------------------------------------

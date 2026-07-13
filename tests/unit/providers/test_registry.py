@@ -8,6 +8,7 @@ from textfsm_ai.providers.registry import (
     get_provider_by_name,
     registry,
 )
+from textfsm_ai.providers.together_provider import TogetherProvider
 from textfsm_ai.providers.xai_provider import XAIProvider
 
 
@@ -16,6 +17,7 @@ def test_registry_get_returns_registered_class():
     assert registry.get("anthropic") is AnthropicProvider
     assert registry.get("groq") is GroqProvider
     assert registry.get("xai") is XAIProvider
+    assert registry.get("together") is TogetherProvider
 
 
 def test_registry_get_unknown_raises_keyerror():

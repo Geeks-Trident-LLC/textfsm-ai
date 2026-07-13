@@ -22,6 +22,7 @@ def test_providers_list_runs():
     assert "azure" in result.output
     assert "groq" in result.output
     assert "xai" in result.output
+    assert "together" in result.output
 
 
 def test_providers_info_no_config(monkeypatch):

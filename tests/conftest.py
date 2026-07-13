@@ -68,6 +68,11 @@ def xai_key(require_real_tests):
 
 
 @pytest.fixture(scope="session")
+def together_key(require_real_tests):
+    return _require_env("TOGETHER_API_KEY")
+
+
+@pytest.fixture(scope="session")
 def azure_key(require_real_tests):
     return _require_env("AZURE_OPENAI_API_KEY")
 

@@ -25,7 +25,15 @@ def test_pricing_data_path_exists_and_is_yaml():
 def test_pricing_table_loaded_from_yaml_has_expected_providers():
     # "azure" is deliberately excluded here - it's derived at import time,
     # not present in pricing.yaml itself.
-    for provider in ("anthropic", "openai", "deepseek", "gemini", "groq", "xai"):
+    for provider in (
+        "anthropic",
+        "openai",
+        "deepseek",
+        "gemini",
+        "groq",
+        "xai",
+        "together",
+    ):
         assert provider in PRICING_TABLE
         assert isinstance(PRICING_TABLE[provider], dict)
         assert PRICING_TABLE[provider]  # non-empty
@@ -79,6 +87,21 @@ def test_extract_base_model_xai():
     for model, based_model in (
         ("grok-4", "grok-4"),
         ("grok-3-mini", "grok-3-mini"),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_together():
+    provider = "together"
+    for model, based_model in (
+        (
+            "meta-llama/Llama-3.1-8B-Instruct-Turbo",
+            "meta-llama/Llama-3.1-8B-Instruct-Turbo",
+        ),
+        (
+            "mistralai/Mixtral-8x7B-Instruct-v0.1",
+            "mistralai/Mixtral-8x7B-Instruct-v0.1",
+        ),
     ):
         assert extract_base_model(provider, model) == based_model
 
@@ -156,6 +179,29 @@ def test_estimate_cost_xai():
     assert result.based_model == "grok-3-mini"
     assert result.input_per_million == PRICING_TABLE["xai"]["grok-3-mini"]["input"]
     assert result.output_per_million == PRICING_TABLE["xai"]["grok-3-mini"]["output"]
+    assert result.warning is None
+
+
+def test_estimate_cost_together():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="together",
+        model="meta-llama/Llama-3.1-8B-Instruct-Turbo",
+    )
+
+    assert result.provider == "together"
+    assert result.based_model == "meta-llama/Llama-3.1-8B-Instruct-Turbo"
+    assert (
+        result.input_per_million
+        == PRICING_TABLE["together"]["meta-llama/Llama-3.1-8B-Instruct-Turbo"]["input"]
+    )
+    assert (
+        result.output_per_million
+        == PRICING_TABLE["together"]["meta-llama/Llama-3.1-8B-Instruct-Turbo"]["output"]
+    )
     assert result.warning is None
 
 

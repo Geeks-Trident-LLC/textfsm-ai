@@ -92,6 +92,13 @@ def load_config_from_env() -> OrchestratorConfig:
             params={"api_key": os.getenv("XAI_API_KEY")},
         )
 
+    if os.getenv("TOGETHER_API_KEY"):
+        providers_cfg["together"] = ProviderConfig(
+            name="together",
+            type="together",
+            params={"api_key": os.getenv("TOGETHER_API_KEY")},
+        )
+
     if os.getenv("AZURE_OPENAI_ENDPOINT") and os.getenv("AZURE_OPENAI_API_KEY"):
         providers_cfg["azure"] = ProviderConfig(
             name="azure",

@@ -71,6 +71,17 @@ openai:
   - gpt-5.2-pro
   - gpt-5-pro
   other: []
+together:
+  quality-chat:
+  - meta-llama/Llama-3.3-70B-Instruct-Turbo
+  - mistralai/Mixtral-8x7B-Instruct-v0.1
+  balance-chat:
+  - Qwen/Qwen2.5-32B-Instruct
+  speed-chat:
+  - meta-llama/Llama-3.1-8B-Instruct-Turbo
+  thinking-chat:
+  - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+  other: []
 xai:
   quality-chat:
   - grok-4
