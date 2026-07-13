@@ -10,6 +10,7 @@ from .patterns import (
     FIREWORKS_PATTERN,
     GEMINI_PATTERN,
     GROQ_PATTERN,
+    MISTRAL_PATTERN,
     MOONSHOT_PATTERN,
     OPENAI_PATTERN,
     OPENROUTER_PATTERN,
@@ -489,6 +490,42 @@ def classify_moonshot_models(raw: List[str]):
 
 
 # ---------------------------------------------------------
+# Mistral AI. Bare, un-namespaced model IDs, so _normalize() is safe
+# here. Catalog spans several sub-brands (mistral-/magistral-/
+# ministral-/open-mistral-/codestral/pixtral-) with no shared numeric
+# size scheme, so MISTRAL_PATTERN only validates "is this a known
+# Mistral model shape" and tier assignment is done via keyword checks.
+# ---------------------------------------------------------
+def classify_mistral_models(raw: List[str]):
+    groups = empty_tier_groups()
+
+    for name in map(_normalize, raw):
+        lname = name.lower()
+
+        if not MISTRAL_PATTERN.match(lname):
+            groups[Tier.OTHER].append(name)
+            continue
+
+        # Magistral: Mistral's reasoning-focused model line
+        if "magistral" in lname:
+            groups[Tier.THINKING_CHAT].append(name)
+        # Codestral/Pixtral: code/vision-specialized, don't fit chat tiers
+        elif "codestral" in lname or "pixtral" in lname:
+            groups[Tier.OTHER].append(name)
+        elif "large" in lname:
+            groups[Tier.QUALITY_CHAT].append(name)
+        elif "medium" in lname:
+            groups[Tier.BALANCE_CHAT].append(name)
+        else:
+            # small, ministral, open-mistral-nemo
+            groups[Tier.SPEED_CHAT].append(name)
+
+    for g in groups.values():
+        g.sort(reverse=True)
+    return groups
+
+
+# ---------------------------------------------------------
 # Unified entry point
 # ---------------------------------------------------------
 def classify_models(provider: str, raw: List[str]):
@@ -518,6 +555,8 @@ def classify_models(provider: str, raw: List[str]):
         return classify_openrouter_models(raw)
     if provider == "moonshot":
         return classify_moonshot_models(raw)
+    if provider == "mistral":
+        return classify_mistral_models(raw)
     if provider in ("azure", "azure-openai"):
         return classify_openai_models(raw)
 

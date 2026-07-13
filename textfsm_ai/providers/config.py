@@ -134,6 +134,13 @@ def load_config_from_env() -> OrchestratorConfig:
             params={"api_key": os.getenv("MOONSHOT_API_KEY")},
         )
 
+    if os.getenv("MISTRAL_API_KEY"):
+        providers_cfg["mistral"] = ProviderConfig(
+            name="mistral",
+            type="mistral",
+            params={"api_key": os.getenv("MISTRAL_API_KEY")},
+        )
+
     if os.getenv("AZURE_OPENAI_ENDPOINT") and os.getenv("AZURE_OPENAI_API_KEY"):
         providers_cfg["azure"] = ProviderConfig(
             name="azure",

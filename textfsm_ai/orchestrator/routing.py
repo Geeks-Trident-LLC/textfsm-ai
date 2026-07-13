@@ -119,6 +119,19 @@ def create_default_routing_table() -> RoutingTable:
     # shorter prefix it would otherwise be swallowed by (e.g.
     # "deepseek-"), since "deepseek-ai/..." legitimately starts with
     # "deepseek-" too.
+    #
+    # Mistral AI, unlike every other native (non-aggregator) provider
+    # above, has no single shared prefix across its catalog - it spans
+    # several sub-brands with genuinely different name shapes:
+    # "mistral-" (large/medium/small tiers), "magistral-" (reasoning
+    # line), "ministral-" (small edge models), "open-mistral-" (open-
+    # weight models like Nemo), "codestral" (code-specialized, no
+    # trailing hyphen since some names are exactly "codestral-latest"
+    # but the family itself is just "codestral"), and "pixtral-"
+    # (vision). All six prefixes are verified collision-free against
+    # every rule above - most notably, "mistral-" is a different string
+    # from Together's "mistralai/" (diverges at the 8th character) and
+    # from Groq's "mixtral-" (unrelated string, not a Mistral product).
     return RoutingTable(
         rules=[
             RoutingRule("gpt-oss-", "cerebras"),  # must precede "gpt-" (OpenAI)
@@ -152,5 +165,11 @@ def create_default_routing_table() -> RoutingTable:
             RoutingRule("qwen/", "openrouter"),
             RoutingRule("moonshot-", "moonshot"),
             RoutingRule("kimi-", "moonshot"),
+            RoutingRule("mistral-", "mistral"),
+            RoutingRule("magistral-", "mistral"),
+            RoutingRule("ministral-", "mistral"),
+            RoutingRule("open-mistral-", "mistral"),
+            RoutingRule("codestral", "mistral"),
+            RoutingRule("pixtral-", "mistral"),
         ]
     )

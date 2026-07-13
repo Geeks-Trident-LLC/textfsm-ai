@@ -287,3 +287,25 @@ class model:
                 chat = ModelRegistry.get("moonshot", "thinking", "speed", "chat")
 
         default = ModelRegistry.alias("moonshot_default")
+
+    class mistral:
+        class quality:
+            chat = ModelRegistry.get("mistral", "quality", "chat")
+
+        class balance:
+            chat = ModelRegistry.get("mistral", "balance", "chat")
+
+        class speed:
+            chat = ModelRegistry.get("mistral", "speed", "chat")
+
+        class thinking:
+            class quality:
+                chat = ModelRegistry.get("mistral", "thinking", "quality", "chat")
+
+            class balance:
+                chat = ModelRegistry.get("mistral", "thinking", "balance", "chat")
+
+            class speed:
+                chat = ModelRegistry.get("mistral", "thinking", "speed", "chat")
+
+        default = ModelRegistry.alias("mistral_default")

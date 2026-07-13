@@ -211,3 +211,29 @@ OPENROUTER_PATTERN = re.compile(
 #   moonshot-v1-auto  -> context="auto"
 # ---------------------------------------------------------
 MOONSHOT_PATTERN = re.compile(r"^moonshot-v1-(8k|32k|128k|auto)$")
+
+
+# ---------------------------------------------------------
+# Mistral AI. Bare, un-namespaced model IDs spanning several
+# sub-brands: "mistral-<tier>-*" (large/medium/small), "magistral-*"
+# (Mistral's reasoning-focused line), "ministral-<n>b-*" (small edge
+# models), "open-mistral-*" (open-weight models like Nemo), "codestral"
+# (code-specialized), and "pixtral-*" (vision). This is a full-name
+# anchor purely to validate "is this a known Mistral model shape" -
+# tier assignment itself is done via keyword checks in
+# classify_mistral_models(), since there's no single numeric
+# size/suffix scheme shared across all these sub-brands.
+# Examples:
+#   mistral-large-latest
+#   mistral-medium-2508
+#   magistral-medium-latest
+#   ministral-8b-latest
+#   open-mistral-nemo
+#   codestral-latest
+# ---------------------------------------------------------
+MISTRAL_PATTERN = re.compile(
+    r"^(?:mistral-(?:large|medium|small)|magistral-(?:medium|small)|"
+    r"ministral-[0-9]+b|open-mistral-[a-z0-9]+|codestral|pixtral-[a-z]+)"
+    r"(?:-[a-z0-9.]+)*$",
+    re.IGNORECASE,
+)

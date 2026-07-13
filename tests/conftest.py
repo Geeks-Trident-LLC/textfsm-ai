@@ -98,6 +98,11 @@ def moonshot_key(require_real_tests):
 
 
 @pytest.fixture(scope="session")
+def mistral_key(require_real_tests):
+    return _require_env("MISTRAL_API_KEY")
+
+
+@pytest.fixture(scope="session")
 def azure_key(require_real_tests):
     return _require_env("AZURE_OPENAI_API_KEY")
 

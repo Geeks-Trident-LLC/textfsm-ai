@@ -120,6 +120,12 @@ def test_create_default_routing_table_routes_known_prefixes():
     assert table.route("qwen/qwen-2.5-72b-instruct") == "openrouter"
     assert table.route("moonshot-v1-8k") == "moonshot"
     assert table.route("kimi-k2-0711-preview") == "moonshot"
+    assert table.route("mistral-large-latest") == "mistral"
+    assert table.route("magistral-medium-latest") == "mistral"
+    assert table.route("ministral-8b-latest") == "mistral"
+    assert table.route("open-mistral-nemo") == "mistral"
+    assert table.route("codestral-latest") == "mistral"
+    assert table.route("pixtral-large-latest") == "mistral"
 
 
 def test_deepseek_ai_prefix_does_not_collide_with_native_deepseek_rule():
@@ -154,3 +160,14 @@ def test_openrouter_does_not_claim_together_vendor_slugs():
     assert table.route("meta-llama/Llama-3.3-70B-Instruct-Turbo") == "together"
     assert table.route("mistralai/Mixtral-8x7B-Instruct-v0.1") == "together"
     assert table.route("Qwen/Qwen2.5-32B-Instruct") == "together"
+
+
+def test_mistral_prefixes_do_not_collide_with_together_or_groq():
+    # Mistral's "mistral-" prefix is a different string from Together's
+    # "mistralai/" (diverges at the 8th character) and from Groq's
+    # "mixtral-" (an unrelated MoE model name, not a Mistral product) -
+    # confirm neither existing route is disturbed.
+    table = create_default_routing_table()
+    assert table.route("mistralai/Mixtral-8x7B-Instruct-v0.1") == "together"
+    assert table.route("mixtral-8x7b-32768") == "groq"
+    assert table.route("mistral-large-latest") == "mistral"

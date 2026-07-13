@@ -243,6 +243,29 @@ def test_moonshot_classification():
     assert "some-unknown-model" in groups[Tier.OTHER]
 
 
+def test_mistral_classification():
+    raw = [
+        "mistral-large-latest",  # large -> quality
+        "mistral-medium-latest",  # medium -> balance
+        "mistral-small-latest",  # small -> speed
+        "magistral-medium-latest",  # reasoning line -> thinking
+        "ministral-8b-latest",  # small edge model -> speed
+        "open-mistral-nemo",  # open-weight, no tier keyword -> speed
+        "codestral-latest",  # code-specialized -> other
+        "some-unknown-model",  # no match -> other
+    ]
+    groups = classify_models("mistral", raw)
+
+    assert "mistral-large-latest" in groups[Tier.QUALITY_CHAT]
+    assert "mistral-medium-latest" in groups[Tier.BALANCE_CHAT]
+    assert "mistral-small-latest" in groups[Tier.SPEED_CHAT]
+    assert "magistral-medium-latest" in groups[Tier.THINKING_CHAT]
+    assert "ministral-8b-latest" in groups[Tier.SPEED_CHAT]
+    assert "open-mistral-nemo" in groups[Tier.SPEED_CHAT]
+    assert "codestral-latest" in groups[Tier.OTHER]
+    assert "some-unknown-model" in groups[Tier.OTHER]
+
+
 # ---------------------------------------------------------
 # _normalize (via the "provider/model" prefix form)
 # ---------------------------------------------------------
@@ -316,7 +339,9 @@ def test_classify_models_azure_uses_openai_classifier():
 
 
 def test_classify_models_unknown_provider_falls_to_other():
-    groups = classify_models("mistral", ["mistral-large", "provider/mistral-small"])
+    groups = classify_models(
+        "some-unregistered-provider", ["some-model", "provider/some-other-model"]
+    )
 
-    assert "mistral-large" in groups[Tier.OTHER]
-    assert "mistral-small" in groups[Tier.OTHER]
+    assert "some-model" in groups[Tier.OTHER]
+    assert "some-other-model" in groups[Tier.OTHER]
