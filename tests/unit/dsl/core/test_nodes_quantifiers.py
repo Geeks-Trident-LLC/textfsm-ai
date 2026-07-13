@@ -12,6 +12,7 @@ DIGIT = r"[0-9]"
 DIGITS = r"[0-9]+"
 WORD = r"[A-Za-z0-9_]*[A-Za-z][A-Za-z0-9_]*"
 WORD_ITEM = rf"{WORD}(?:\s+{WORD})*"
+WORD_GROUP = rf"{WORD}(?:\s+{WORD})+"
 
 # ------------------------------------------------------------
 # optional-
@@ -58,11 +59,22 @@ def test_maybe(keyword, expected):
         ("zero-or-more-digits", rf"{DIGIT}*"),
         ("zero-or-more-word", rf"(?:{WORD_ITEM})*"),
         ("zero-or-more-word-item", rf"(?:{WORD_ITEM})*"),
+        ("zero-or-more-word-group", rf"(?:{WORD_GROUP})*"),
     ],
 )
 def test_zero_or_more(keyword, expected):
     node = create_node(keyword)
     assert node.to_regex() == expected
+
+
+def test_zero_or_more_to_expression():
+    node = create_node("zero-or-more-digit")
+    assert node.to_expression() == "zero_or_more-digit()"
+
+
+def test_one_or_more_to_expression():
+    node = create_node("one-or-more-digit")
+    assert node.to_expression() == "one_or_more-digit()"
 
 
 # ------------------------------------------------------------

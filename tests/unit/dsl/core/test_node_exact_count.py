@@ -1,5 +1,7 @@
 # tests/unit/dsl/core/test_node_exact_count.py
 
+import pytest
+
 from textfsm_ai.dsl.core.nodes import ExactCountNode, create_node
 
 WORD = "[A-Za-z0-9_]*[A-Za-z][A-Za-z0-9_]*"
@@ -52,3 +54,32 @@ def test_exact_atomic():
 def test_exact_atomic_plus():
     node = ExactCountNode(create_node("digits"), 3)
     assert node.to_regex() == "[0-9]{3}"
+
+
+def test_exact_1_atomic():
+    node = ExactCountNode(create_node("digit"), 1)
+    assert node.to_regex() == "[0-9]"
+
+
+def test_exact_1_atomic_plus():
+    node = ExactCountNode(create_node("digits"), 1)
+    assert node.to_regex() == "[0-9]"
+
+
+def test_exact_1_atomic_plus_raises_when_base_regex_lacks_plus():
+    # "any" is classified as atomic-plus but its custom regex is ".*",
+    # which doesn't end with "+" - the defensive guard should fire.
+    node = ExactCountNode(create_node("any"), 1)
+    with pytest.raises(ValueError, match="atomic-plus regex must end with"):
+        node.to_regex()
+
+
+def test_exact_n_atomic_plus_raises_when_base_regex_lacks_plus():
+    node = ExactCountNode(create_node("any"), 2)
+    with pytest.raises(ValueError, match="atomic-plus regex must end with"):
+        node.to_regex()
+
+
+def test_exact_to_expression():
+    node = ExactCountNode(create_node("word"), 3)
+    assert node.to_expression() == "exact-3-word()"

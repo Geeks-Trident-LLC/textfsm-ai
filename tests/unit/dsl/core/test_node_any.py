@@ -29,3 +29,8 @@ def test_any_atomic():
 def test_any_atomic_plus():
     node = AnyNode(create_node("digits"))
     assert node.to_regex() == "[0-9]*"
+
+
+def test_any_to_expression():
+    node = AnyNode(create_node("digit"))
+    assert node.to_expression() == "any-digit()"
