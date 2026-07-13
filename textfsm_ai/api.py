@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Dict, List
 
 from textfsm_ai.api_models import DSLResult, LLMResult
+from textfsm_ai.core.models import ValidationResult
 from textfsm_ai.core.utils.template import (  # noqa: F401
     parse_to_dicts,
     parse_to_lists,
@@ -19,6 +20,9 @@ from textfsm_ai.generation.controller.generation_controller import GenerationCon
 __all__ = [
     "DSLResult",
     "LLMResult",
+    "DeliveryOutput",
+    "TemplateAST",
+    "ValidationResult",
     "compile_dsl",
     "generate",
     "parse_to_dicts",

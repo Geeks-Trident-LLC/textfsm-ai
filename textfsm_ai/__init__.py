@@ -8,8 +8,11 @@ version = __version__
 BASE_DIR: Path = Path(__file__).resolve().parent
 
 from .api import (  # noqa: E402
+    DeliveryOutput,
     DSLResult,
     LLMResult,
+    TemplateAST,
+    ValidationResult,
     compile_dsl,
     generate,
     parse_to_dicts,
@@ -34,6 +37,9 @@ __all__ = [
     "__version__",
     "LLMResult",
     "DSLResult",
+    "TemplateAST",
+    "DeliveryOutput",
+    "ValidationResult",
     "generate",
     "to_llm_result",
     "to_llm_template",

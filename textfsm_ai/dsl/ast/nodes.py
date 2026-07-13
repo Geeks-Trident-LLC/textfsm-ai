@@ -80,6 +80,12 @@ class ValueNode:
 
 @dataclass
 class TemplateAST:
-    # fill with ValueNode in your real code
+    """Parsed representation of a TextFSM/DSL template.
+
+    Attributes:
+        values: The `Value` declarations parsed from the template.
+        states: The states (each with its rules) parsed from the template.
+    """
+
     values: List[ValueNode] = field(default_factory=list)
     states: List[StateNode] = field(default_factory=list)
