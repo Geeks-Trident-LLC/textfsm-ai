@@ -18,6 +18,7 @@ environment variable:
 | Groq        | `"groq"`          | `GROQ_API_KEY`            |
 | xAI (Grok)  | `"xai"`           | `XAI_API_KEY`             |
 | Together AI | `"together"`      | `TOGETHER_API_KEY`        |
+| Fireworks AI| `"fireworks"`     | `FIREWORKS_API_KEY`       |
 | Azure OpenAI| `"azure"`         | `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_VERSION` |
 
 ```bash

@@ -108,6 +108,41 @@ def test_together_classification_preserves_vendor_prefix():
     assert "Llama-3.1-8B-Instruct-Turbo" not in groups[Tier.SPEED_CHAT]
 
 
+def test_fireworks_classification():
+    raw = [
+        "accounts/fireworks/models/llama-v3p3-70b-instruct",  # 70B -> quality
+        "accounts/fireworks/models/mixtral-8x22b-instruct",  # MoE -> quality
+        "accounts/fireworks/models/qwen2p5-32b-instruct",  # 32B -> balance
+        "accounts/fireworks/models/llama-v3p1-8b-instruct",  # 8B -> speed
+        "accounts/fireworks/models/deepseek-r1",  # reasoning -> thinking
+        "accounts/fireworks/models/deepseek-v3",  # no size token -> other
+    ]
+    groups = classify_models("fireworks", raw)
+
+    assert (
+        "accounts/fireworks/models/llama-v3p3-70b-instruct" in groups[Tier.QUALITY_CHAT]
+    )
+    assert (
+        "accounts/fireworks/models/mixtral-8x22b-instruct" in groups[Tier.QUALITY_CHAT]
+    )
+    assert "accounts/fireworks/models/qwen2p5-32b-instruct" in groups[Tier.BALANCE_CHAT]
+    assert "accounts/fireworks/models/llama-v3p1-8b-instruct" in groups[Tier.SPEED_CHAT]
+    assert "accounts/fireworks/models/deepseek-r1" in groups[Tier.THINKING_CHAT]
+    assert "accounts/fireworks/models/deepseek-v3" in groups[Tier.OTHER]
+
+
+def test_fireworks_classification_preserves_account_prefix():
+    # Like Together, Fireworks' classifier must NOT strip the
+    # "accounts/fireworks/models/" prefix - it's required to actually
+    # call the model.
+    groups = classify_models(
+        "fireworks", ["accounts/fireworks/models/llama-v3p1-8b-instruct"]
+    )
+
+    assert "accounts/fireworks/models/llama-v3p1-8b-instruct" in groups[Tier.SPEED_CHAT]
+    assert "llama-v3p1-8b-instruct" not in groups[Tier.SPEED_CHAT]
+
+
 # ---------------------------------------------------------
 # _normalize (via the "provider/model" prefix form)
 # ---------------------------------------------------------

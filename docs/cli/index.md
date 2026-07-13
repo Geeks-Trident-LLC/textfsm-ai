@@ -24,7 +24,8 @@ textfsm-ai generate sample.txt --provider openai --model gpt-4o-mini
 Provider credentials are resolved in this order: CLI flag > provider-specific
 environment variable (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`,
 `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, `GROQ_API_KEY`, `XAI_API_KEY`,
-`TOGETHER_API_KEY`, `AZURE_OPENAI_API_KEY`) > `providers.yaml`.
+`TOGETHER_API_KEY`, `FIREWORKS_API_KEY`, `AZURE_OPENAI_API_KEY`) >
+`providers.yaml`.
 
 Azure additionally resolves `--model` (as the deployment name), `--endpoint`,
 and `--api-version` from `AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_ENDPOINT`,
@@ -34,7 +35,7 @@ Key options:
 
 | Option | Purpose |
 |---|---|
-| `--provider` (required) | Provider name: `openai`, `anthropic`, `gemini`, `deepseek`, `groq`, `xai`, `together`, `azure` |
+| `--provider` (required) | Provider name: `openai`, `anthropic`, `gemini`, `deepseek`, `groq`, `xai`, `together`, `fireworks`, `azure` |
 | `--api-key` | Override the resolved API key |
 | `--model` | Model name (or Azure deployment name) |
 | `--endpoint`, `--api-version` | Azure-only |
@@ -77,6 +78,7 @@ NAME           DESCRIPTION
 anthropic      Anthropic Claude models
 azure          Azure AI Inference / Azure OpenAI
 deepseek       DeepSeek (OpenAI-compatible API)
+fireworks      Fireworks AI (open-model hosting, OpenAI-compatible API)
 gemini         Google Gemini models
 groq           Groq (fast open-model inference, OpenAI-compatible API)
 openai         Native OpenAI API

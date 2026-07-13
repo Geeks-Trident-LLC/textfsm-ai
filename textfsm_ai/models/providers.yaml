@@ -147,6 +147,27 @@ together:
       chat:
         - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
 
+fireworks:
+  quality:
+    chat:
+      - accounts/fireworks/models/llama-v3p3-70b-instruct
+  balance:
+    chat:
+      - accounts/fireworks/models/qwen2p5-32b-instruct
+  speed:
+    chat:
+      - accounts/fireworks/models/llama-v3p1-8b-instruct
+  thinking:
+    quality:
+      chat:
+        - accounts/fireworks/models/deepseek-r1
+    balance:
+      chat:
+        - accounts/fireworks/models/deepseek-r1
+    speed:
+      chat:
+        - accounts/fireworks/models/deepseek-r1
+
 aliases:
   openai_default: gpt-4o-mini
   anthropic_default: claude-haiku-4-5-20251001
@@ -155,3 +176,4 @@ aliases:
   groq_default: llama-3.1-8b-instant
   xai_default: grok-3-mini
   together_default: meta-llama/Llama-3.1-8B-Instruct-Turbo
+  fireworks_default: accounts/fireworks/models/llama-v3p1-8b-instruct

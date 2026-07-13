@@ -115,3 +115,23 @@ TOGETHER_PATTERN = re.compile(
     r"(?:(?P<moe>[0-9]+)x(?P<moe_size>[0-9]+)b" r"|(?P<size>[0-9]+(?:\.[0-9]+)?)b)",
     re.IGNORECASE,
 )
+
+
+# ---------------------------------------------------------
+# Fireworks AI (hosts open models under
+# "accounts/fireworks/models/<slug>", e.g.
+# "accounts/fireworks/models/llama-v3p3-70b-instruct" - note Fireworks
+# uses "p" in place of "." for version numbers, e.g. "v3p3" = "v3.3").
+# Same search-based approach as TOGETHER_PATTERN, for the same reason:
+# looks for a "<size>B" or "<n>x<size>B" token anywhere in the model
+# name rather than anchoring the whole name.
+# Examples:
+#   accounts/fireworks/models/llama-v3p3-70b-instruct  -> size="70"
+#   accounts/fireworks/models/llama-v3p1-8b-instruct    -> size="8"
+#   accounts/fireworks/models/qwen2p5-32b-instruct      -> size="32"
+#   accounts/fireworks/models/mixtral-8x22b-instruct    -> moe="8", moe_size="22"
+# ---------------------------------------------------------
+FIREWORKS_PATTERN = re.compile(
+    r"(?:(?P<moe>[0-9]+)x(?P<moe_size>[0-9]+)b" r"|(?P<size>[0-9]+(?:\.[0-9]+)?)b)",
+    re.IGNORECASE,
+)

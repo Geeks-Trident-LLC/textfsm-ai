@@ -99,6 +99,13 @@ def load_config_from_env() -> OrchestratorConfig:
             params={"api_key": os.getenv("TOGETHER_API_KEY")},
         )
 
+    if os.getenv("FIREWORKS_API_KEY"):
+        providers_cfg["fireworks"] = ProviderConfig(
+            name="fireworks",
+            type="fireworks",
+            params={"api_key": os.getenv("FIREWORKS_API_KEY")},
+        )
+
     if os.getenv("AZURE_OPENAI_ENDPOINT") and os.getenv("AZURE_OPENAI_API_KEY"):
         providers_cfg["azure"] = ProviderConfig(
             name="azure",

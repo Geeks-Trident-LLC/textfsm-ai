@@ -102,6 +102,9 @@ def test_create_default_routing_table_routes_known_prefixes():
     assert table.route("Qwen/Qwen2.5-32B-Instruct") == "together"
     assert table.route("mistralai/Mixtral-8x7B-Instruct-v0.1") == "together"
     assert table.route("deepseek-ai/DeepSeek-R1-Distill-Llama-70B") == "together"
+    assert (
+        table.route("accounts/fireworks/models/llama-v3p3-70b-instruct") == "fireworks"
+    )
 
 
 def test_deepseek_ai_prefix_does_not_collide_with_native_deepseek_rule():

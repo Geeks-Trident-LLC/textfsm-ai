@@ -10,6 +10,7 @@ _ENV_VARS = [
     "GROQ_API_KEY",
     "XAI_API_KEY",
     "TOGETHER_API_KEY",
+    "FIREWORKS_API_KEY",
     "AZURE_OPENAI_ENDPOINT",
     "AZURE_OPENAI_API_KEY",
     "AZURE_OPENAI_API_VERSION",
@@ -150,6 +151,14 @@ def test_load_config_from_env_together(monkeypatch):
     assert cfg.providers["together"].params == {"api_key": "sk-together"}
 
 
+def test_load_config_from_env_fireworks(monkeypatch):
+    monkeypatch.setenv("FIREWORKS_API_KEY", "sk-fireworks")
+    cfg = load_config_from_env()
+
+    assert set(cfg.providers.keys()) == {"fireworks"}
+    assert cfg.providers["fireworks"].params == {"api_key": "sk-fireworks"}
+
+
 def test_load_config_from_env_azure_requires_both_endpoint_and_key(monkeypatch):
     monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
     # api key missing -> azure should NOT appear
@@ -187,6 +196,7 @@ def test_load_config_from_env_all_providers_at_once(monkeypatch):
     monkeypatch.setenv("GROQ_API_KEY", "k6")
     monkeypatch.setenv("XAI_API_KEY", "k7")
     monkeypatch.setenv("TOGETHER_API_KEY", "k8")
+    monkeypatch.setenv("FIREWORKS_API_KEY", "k9")
     monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
     monkeypatch.setenv("AZURE_OPENAI_API_KEY", "k5")
 
@@ -200,5 +210,6 @@ def test_load_config_from_env_all_providers_at_once(monkeypatch):
         "groq",
         "xai",
         "together",
+        "fireworks",
         "azure",
     }
