@@ -4,8 +4,14 @@ from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
 
-from textfsm_ai.cli.providers_cmd import providers_test
+from textfsm_ai.cli.providers_cmd import (
+    _load_config,
+    providers_info,
+    providers_list,
+    providers_test,
+)
 from textfsm_ai.orchestrator.types import OrchestratorResponse
+from textfsm_ai.providers.config import OrchestratorConfig, ProviderConfig
 
 
 def test_providers_test_cli():
@@ -46,3 +52,70 @@ def test_providers_test_cli():
     # Ensure orchestrator was actually called
     mock_async_run.assert_called_once()
     mock_factory.assert_called_once()
+
+
+# ---------------------------------------------------------
+# _load_config
+# ---------------------------------------------------------
+def test_load_config_uses_env_when_no_path():
+    sentinel = OrchestratorConfig(providers={})
+
+    with patch(
+        "textfsm_ai.cli.providers_cmd.load_config_from_env", return_value=sentinel
+    ) as mock_env:
+        result = _load_config(None)
+
+    mock_env.assert_called_once_with()
+    assert result is sentinel
+
+
+def test_load_config_uses_file_when_path_given():
+    sentinel = OrchestratorConfig(providers={})
+
+    with patch(
+        "textfsm_ai.cli.providers_cmd.load_config_from_file", return_value=sentinel
+    ) as mock_file:
+        result = _load_config("some/config.yaml")
+
+    mock_file.assert_called_once_with("some/config.yaml")
+    assert result is sentinel
+
+
+# ---------------------------------------------------------
+# providers list
+# ---------------------------------------------------------
+def test_providers_list_empty_registry():
+    runner = CliRunner()
+
+    with patch("textfsm_ai.cli.providers_cmd.registry") as mock_registry:
+        mock_registry.all.return_value = {}
+        result = runner.invoke(providers_list)
+
+    assert result.exit_code == 0
+    assert "No providers registered." in result.output
+
+
+# ---------------------------------------------------------
+# providers info: configured provider found
+# ---------------------------------------------------------
+def test_providers_info_found_masks_sensitive_params():
+    runner = CliRunner()
+
+    cfg = OrchestratorConfig(
+        providers={
+            "openai": ProviderConfig(
+                name="openai",
+                type="openai",
+                params={"api_key": "sk-secret", "model": "gpt-4o-mini"},
+            )
+        }
+    )
+
+    with patch("textfsm_ai.cli.providers_cmd._load_config", return_value=cfg):
+        result = runner.invoke(providers_info, ["--name", "openai"])
+
+    assert result.exit_code == 0
+    assert "Name: openai" in result.output
+    assert "Type: openai" in result.output
+    assert "'api_key': '***'" in result.output
+    assert "'model': 'gpt-4o-mini'" in result.output
