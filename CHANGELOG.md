@@ -1,3 +1,28 @@
+## v0.4.2 — 2026‑07‑13
+
+### Added
+- New standardized public Python API facade: `generate()`/`compile_dsl()`/`run_pipeline()`
+  (verb functions, always return a full result object) plus a `to_llm_*`/`to_*` shortcut
+  family with identical parameters, returning either a single field or (for string-typed
+  shortcuts) the failure reason on failure
+- New `LLMResult`/`DSLResult` result dataclasses (`textfsm_ai/api_models.py`); `TemplateAST`,
+  `DeliveryOutput`, and `ValidationResult` now also exported at the top level
+- Quickstart guide, mkdocstrings-generated API Reference, a real CLI Guide, and a new
+  Human-in-the-Loop Review guide (reviewing a generated template without reading regex)
+- Test coverage raised to ~99% across nearly the entire codebase
+
+### Changed
+- Removed `ask_ai()`, the old raw single-provider-call primitive, superseded by
+  `generate()`/`run_pipeline()`
+- Removed broken/stale docs pages (`docs/providers/openai.md`, `docs/cli/providers-list.md`,
+  `docs/golden-tests/`) describing unfinished scaffolding or a nonexistent golden-test framework
+
+### Fixed
+- `generate()` now sources `.ready`/`.reason` from the top-level generation pipeline (which
+  accounts for retries and template-syntax validation) instead of the nested LLM response
+  object (which only reflected whether the raw JSON had a template field) — the old logic
+  could report success for a pipeline that had actually failed
+
 ## v0.4.1 — 2026‑07‑12
 
 ### Added
