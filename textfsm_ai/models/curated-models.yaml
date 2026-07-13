@@ -42,6 +42,17 @@ gemini:
   - gemini-2.5-flash-lite
   thinking-chat: []
   other: []
+groq:
+  quality-chat:
+  - llama-3.3-70b-versatile
+  balance-chat:
+  - llama-3.1-8b-instant
+  - qwen-2.5-32b
+  speed-chat:
+  - gemma2-9b-it
+  thinking-chat:
+  - deepseek-r1-distill-llama-70b
+  other: []
 openai:
   quality-chat:
   - gpt-5.5

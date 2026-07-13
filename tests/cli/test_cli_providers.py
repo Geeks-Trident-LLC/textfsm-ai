@@ -20,6 +20,7 @@ def test_providers_list_runs():
     assert "anthropic" in result.output
     assert "gemini" in result.output
     assert "azure" in result.output
+    assert "groq" in result.output
 
 
 def test_providers_info_no_config(monkeypatch):

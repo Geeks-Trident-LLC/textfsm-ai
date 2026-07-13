@@ -87,6 +87,16 @@ PRICING_TABLE: Dict[str, Dict[str, Dict[str, float]]] = {
         "gemini-2.5-flash": {"input": 0.30, "output": 2.50},
         "gemini-2.5-flash-lite": {"input": 0.10, "output": 0.40},
     },
+    # Approximate rates — verify against https://groq.com/pricing before relying
+    # on these for real cost estimates.
+    "groq": {
+        "llama-3.3-70b-versatile": {"input": 0.59, "output": 0.79},
+        "llama-3.1-8b-instant": {"input": 0.05, "output": 0.08},
+        "gemma2-9b-it": {"input": 0.20, "output": 0.20},
+        "qwen-2.5-32b": {"input": 0.79, "output": 0.79},
+        "mixtral-8x7b-32768": {"input": 0.24, "output": 0.24},
+        "deepseek-r1-distill-llama-70b": {"input": 0.75, "output": 0.99},
+    },
 }
 
 

@@ -93,3 +93,7 @@ def test_create_default_routing_table_routes_known_prefixes():
     assert table.route("gemini-2.5-flash") == "gemini"
     assert table.route("azure-gpt-4o") == "azure"
     assert table.route("deepseek-v4-pro") == "deepseek"
+    assert table.route("llama-3.3-70b-versatile") == "groq"
+    assert table.route("gemma2-9b-it") == "groq"
+    assert table.route("qwen-2.5-32b") == "groq"
+    assert table.route("mixtral-8x7b-32768") == "groq"

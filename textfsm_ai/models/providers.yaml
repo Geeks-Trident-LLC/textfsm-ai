@@ -84,8 +84,30 @@ deepseek:
       chat:
         - deepseek-chat
 
+groq:
+  quality:
+    chat:
+      - llama-3.3-70b-versatile
+  balance:
+    chat:
+      - llama-3.1-8b-instant
+  speed:
+    chat:
+      - gemma2-9b-it
+  thinking:
+    quality:
+      chat:
+        - deepseek-r1-distill-llama-70b
+    balance:
+      chat:
+        - deepseek-r1-distill-llama-70b
+    speed:
+      chat:
+        - deepseek-r1-distill-llama-70b
+
 aliases:
   openai_default: gpt-4o-mini
   anthropic_default: claude-haiku-4-5-20251001
   gemini_default: gemini-2.5-flash
   deepseek_default: deepseek-v4-flash
+  groq_default: llama-3.1-8b-instant
