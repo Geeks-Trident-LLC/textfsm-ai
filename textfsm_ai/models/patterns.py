@@ -96,3 +96,22 @@ GROQ_PATTERN = re.compile(
 XAI_PATTERN = re.compile(
     r"^grok-[0-9]+(?:\.[0-9]+)?" r"(?:-(mini|vision|fast))?" r"(?:-[0-9]+)?$"
 )
+
+
+# ---------------------------------------------------------
+# Together AI (hosts many open-model families under vendor/model
+# namespaces, e.g. "meta-llama/Llama-3.3-70B-Instruct-Turbo"). Unlike
+# the other providers' patterns above, this is NOT a full-name anchor -
+# it searches for a "<size>B" or "<n>x<size>B" token anywhere in the
+# model name, since Together's catalog spans far too many vendor
+# naming conventions for one anchored pattern to describe.
+# Examples:
+#   Llama-3.3-70B-Instruct-Turbo  -> size="70"
+#   Llama-3.1-8B-Instruct-Turbo   -> size="8"
+#   Qwen2.5-32B-Instruct          -> size="32"
+#   Mixtral-8x7B-Instruct-v0.1    -> moe="8", moe_size="7"
+# ---------------------------------------------------------
+TOGETHER_PATTERN = re.compile(
+    r"(?:(?P<moe>[0-9]+)x(?P<moe_size>[0-9]+)b" r"|(?P<size>[0-9]+(?:\.[0-9]+)?)b)",
+    re.IGNORECASE,
+)

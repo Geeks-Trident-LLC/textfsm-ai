@@ -66,6 +66,19 @@ def create_default_routing_table() -> RoutingTable:
     # serves. None of these collide with another provider's models today;
     # if a future provider hosts the same open-weight models under the
     # same names, these rules will need to be reconciled at that point.
+    #
+    # Together AI also hosts open models, but under "vendor/Model-Name"
+    # namespaces (e.g. "meta-llama/Llama-3.3-70B-Instruct-Turbo"), so it
+    # needs one rule per vendor namespace it serves. This is NOT an
+    # exhaustive list of every vendor Together hosts - just the ones in
+    # our curated model set; add more namespaces as needed.
+    #
+    # route() and select_provider() both return on the FIRST matching
+    # rule (order matters, this is not longest-prefix-match), so a more
+    # specific prefix (e.g. "deepseek-ai/") must be listed before a
+    # shorter prefix it would otherwise be swallowed by (e.g.
+    # "deepseek-"), since "deepseek-ai/..." legitimately starts with
+    # "deepseek-" too.
     return RoutingTable(
         rules=[
             RoutingRule("gpt-", "openai"),
@@ -74,11 +87,15 @@ def create_default_routing_table() -> RoutingTable:
             RoutingRule("claude-", "anthropic"),
             RoutingRule("gemini-", "gemini"),
             RoutingRule("azure-", "azure"),
+            RoutingRule("deepseek-ai/", "together"),
             RoutingRule("deepseek-", "deepseek"),
             RoutingRule("llama-", "groq"),
             RoutingRule("gemma", "groq"),
             RoutingRule("qwen-", "groq"),
             RoutingRule("mixtral-", "groq"),
             RoutingRule("grok-", "xai"),
+            RoutingRule("meta-llama/", "together"),
+            RoutingRule("Qwen/", "together"),
+            RoutingRule("mistralai/", "together"),
         ]
     )

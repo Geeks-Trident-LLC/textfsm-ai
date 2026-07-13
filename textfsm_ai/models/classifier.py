@@ -9,6 +9,7 @@ from .patterns import (
     GEMINI_PATTERN,
     GROQ_PATTERN,
     OPENAI_PATTERN,
+    TOGETHER_PATTERN,
     XAI_PATTERN,
 )
 from .tiers import Tier, empty_tier_groups
@@ -223,6 +224,49 @@ def classify_xai_models(raw: List[str]):
 
 
 # ---------------------------------------------------------
+# Together AI (hosts many open-model families under vendor/model
+# namespaces). Deliberately does NOT use _normalize(): Together's real
+# API model IDs (e.g. "meta-llama/Llama-3.3-70B-Instruct-Turbo") need
+# the vendor prefix to be usable in a real API call, unlike other
+# providers where a "/" prefix (if present at all) is just noise from
+# a router wrapper. Stripping it here would hand back unusable model
+# names from `list-models together --latest`.
+# ---------------------------------------------------------
+def classify_together_models(raw: List[str]):
+    groups = empty_tier_groups()
+
+    for name in map(str.strip, raw):
+        lname = name.lower()
+
+        # Reasoning/distilled models go to thinking-chat regardless of size
+        if "r1" in lname or "reasoner" in lname or "distill" in lname or "qwq" in lname:
+            groups[Tier.THINKING_CHAT].append(name)
+            continue
+
+        m = TOGETHER_PATTERN.search(lname)
+        if not m:
+            groups[Tier.OTHER].append(name)
+            continue
+
+        # Mixture-of-experts sizes (e.g. "8x7b") count as quality tier
+        if m.group("moe"):
+            groups[Tier.QUALITY_CHAT].append(name)
+            continue
+
+        size_num = float(m.group("size"))
+        if size_num >= 70:
+            groups[Tier.QUALITY_CHAT].append(name)
+        elif size_num >= 30:
+            groups[Tier.BALANCE_CHAT].append(name)
+        else:
+            groups[Tier.SPEED_CHAT].append(name)
+
+    for g in groups.values():
+        g.sort(reverse=True)
+    return groups
+
+
+# ---------------------------------------------------------
 # Unified entry point
 # ---------------------------------------------------------
 def classify_models(provider: str, raw: List[str]):
@@ -240,6 +284,8 @@ def classify_models(provider: str, raw: List[str]):
         return classify_groq_models(raw)
     if provider == "xai":
         return classify_xai_models(raw)
+    if provider == "together":
+        return classify_together_models(raw)
     if provider in ("azure", "azure-openai"):
         return classify_openai_models(raw)
 

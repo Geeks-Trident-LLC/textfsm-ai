@@ -98,3 +98,16 @@ def test_create_default_routing_table_routes_known_prefixes():
     assert table.route("qwen-2.5-32b") == "groq"
     assert table.route("mixtral-8x7b-32768") == "groq"
     assert table.route("grok-4") == "xai"
+    assert table.route("meta-llama/Llama-3.3-70B-Instruct-Turbo") == "together"
+    assert table.route("Qwen/Qwen2.5-32B-Instruct") == "together"
+    assert table.route("mistralai/Mixtral-8x7B-Instruct-v0.1") == "together"
+    assert table.route("deepseek-ai/DeepSeek-R1-Distill-Llama-70B") == "together"
+
+
+def test_deepseek_ai_prefix_does_not_collide_with_native_deepseek_rule():
+    # "deepseek-ai/..." (Together) starts with "deepseek-" too, so the more
+    # specific rule must be checked first or this would misroute to the
+    # native DeepSeek provider.
+    table = create_default_routing_table()
+    assert table.route("deepseek-v4-pro") == "deepseek"
+    assert table.route("deepseek-ai/DeepSeek-R1") == "together"

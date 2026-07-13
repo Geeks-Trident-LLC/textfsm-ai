@@ -22,6 +22,7 @@ PROVIDER_DESCRIPTIONS = {
     "gemini": "Google Gemini models",
     "groq": "Groq (fast open-model inference, OpenAI-compatible API)",
     "xai": "xAI Grok models (OpenAI-compatible API)",
+    "together": "Together AI (open-model hosting, OpenAI-compatible API)",
 }
 
 

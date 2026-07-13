@@ -126,6 +126,27 @@ xai:
       chat:
         - grok-3-mini
 
+together:
+  quality:
+    chat:
+      - meta-llama/Llama-3.3-70B-Instruct-Turbo
+  balance:
+    chat:
+      - Qwen/Qwen2.5-32B-Instruct
+  speed:
+    chat:
+      - meta-llama/Llama-3.1-8B-Instruct-Turbo
+  thinking:
+    quality:
+      chat:
+        - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    balance:
+      chat:
+        - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    speed:
+      chat:
+        - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+
 aliases:
   openai_default: gpt-4o-mini
   anthropic_default: claude-haiku-4-5-20251001
@@ -133,3 +154,4 @@ aliases:
   deepseek_default: deepseek-v4-flash
   groq_default: llama-3.1-8b-instant
   xai_default: grok-3-mini
+  together_default: meta-llama/Llama-3.1-8B-Instruct-Turbo

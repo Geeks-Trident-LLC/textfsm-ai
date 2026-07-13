@@ -155,3 +155,25 @@ class model:
                 chat = ModelRegistry.get("xai", "thinking", "speed", "chat")
 
         default = ModelRegistry.alias("xai_default")
+
+    class together:
+        class quality:
+            chat = ModelRegistry.get("together", "quality", "chat")
+
+        class balance:
+            chat = ModelRegistry.get("together", "balance", "chat")
+
+        class speed:
+            chat = ModelRegistry.get("together", "speed", "chat")
+
+        class thinking:
+            class quality:
+                chat = ModelRegistry.get("together", "thinking", "quality", "chat")
+
+            class balance:
+                chat = ModelRegistry.get("together", "thinking", "balance", "chat")
+
+            class speed:
+                chat = ModelRegistry.get("together", "thinking", "speed", "chat")
+
+        default = ModelRegistry.alias("together_default")

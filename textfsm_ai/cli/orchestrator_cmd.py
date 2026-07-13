@@ -60,6 +60,7 @@ def orchestrator_route(model: str) -> None:
         "deepseek": DummyProvider("deepseek"),
         "groq": DummyProvider("groq"),
         "xai": DummyProvider("xai"),
+        "together": DummyProvider("together"),
     }
 
     req = OrchestratorRequest(model=model, prompt="")
