@@ -73,6 +73,12 @@ def create_default_routing_table() -> RoutingTable:
     # exhaustive list of every vendor Together hosts - just the ones in
     # our curated model set; add more namespaces as needed.
     #
+    # Fireworks AI also hosts open models, but under a single shared
+    # "accounts/fireworks/models/" namespace for its first-party
+    # catalog, so one rule covers it (unlike Together's multi-vendor
+    # namespaces). Third-party/fine-tuned models under other Fireworks
+    # accounts ("accounts/<other>/models/...") are not covered here.
+    #
     # route() and select_provider() both return on the FIRST matching
     # rule (order matters, this is not longest-prefix-match), so a more
     # specific prefix (e.g. "deepseek-ai/") must be listed before a
@@ -97,5 +103,6 @@ def create_default_routing_table() -> RoutingTable:
             RoutingRule("meta-llama/", "together"),
             RoutingRule("Qwen/", "together"),
             RoutingRule("mistralai/", "together"),
+            RoutingRule("accounts/fireworks/models/", "fireworks"),
         ]
     )

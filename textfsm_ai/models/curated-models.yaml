@@ -33,6 +33,17 @@ deepseek:
     - deepseek-r1-distill
     - deepseek-reasoner
   other: []
+fireworks:
+  quality-chat:
+  - accounts/fireworks/models/llama-v3p3-70b-instruct
+  - accounts/fireworks/models/mixtral-8x22b-instruct
+  balance-chat:
+  - accounts/fireworks/models/qwen2p5-32b-instruct
+  speed-chat:
+  - accounts/fireworks/models/llama-v3p1-8b-instruct
+  thinking-chat:
+  - accounts/fireworks/models/deepseek-r1
+  other: []
 gemini:
   quality-chat:
   - gemini-2.5-pro

@@ -6,6 +6,7 @@ from .patterns import (
     ANTHROPIC_PATTERN,
     DEEPSEEK_NATIVE_PATTERN,
     DEEPSEEK_PATTERN_V4,
+    FIREWORKS_PATTERN,
     GEMINI_PATTERN,
     GROQ_PATTERN,
     OPENAI_PATTERN,
@@ -267,6 +268,47 @@ def classify_together_models(raw: List[str]):
 
 
 # ---------------------------------------------------------
+# Fireworks AI (hosts open models under
+# "accounts/fireworks/models/<slug>"). Same reasoning as
+# classify_together_models(): deliberately does NOT use _normalize(),
+# since the "accounts/fireworks/models/" prefix is required to
+# actually call the model, not noise from a router wrapper.
+# ---------------------------------------------------------
+def classify_fireworks_models(raw: List[str]):
+    groups = empty_tier_groups()
+
+    for name in map(str.strip, raw):
+        lname = name.lower()
+
+        # Reasoning/distilled models go to thinking-chat regardless of size
+        if "r1" in lname or "reasoner" in lname or "distill" in lname or "qwq" in lname:
+            groups[Tier.THINKING_CHAT].append(name)
+            continue
+
+        m = FIREWORKS_PATTERN.search(lname)
+        if not m:
+            groups[Tier.OTHER].append(name)
+            continue
+
+        # Mixture-of-experts sizes (e.g. "8x22b") count as quality tier
+        if m.group("moe"):
+            groups[Tier.QUALITY_CHAT].append(name)
+            continue
+
+        size_num = float(m.group("size"))
+        if size_num >= 70:
+            groups[Tier.QUALITY_CHAT].append(name)
+        elif size_num >= 30:
+            groups[Tier.BALANCE_CHAT].append(name)
+        else:
+            groups[Tier.SPEED_CHAT].append(name)
+
+    for g in groups.values():
+        g.sort(reverse=True)
+    return groups
+
+
+# ---------------------------------------------------------
 # Unified entry point
 # ---------------------------------------------------------
 def classify_models(provider: str, raw: List[str]):
@@ -286,6 +328,8 @@ def classify_models(provider: str, raw: List[str]):
         return classify_xai_models(raw)
     if provider == "together":
         return classify_together_models(raw)
+    if provider == "fireworks":
+        return classify_fireworks_models(raw)
     if provider in ("azure", "azure-openai"):
         return classify_openai_models(raw)
 

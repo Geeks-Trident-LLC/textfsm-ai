@@ -33,6 +33,7 @@ def test_pricing_table_loaded_from_yaml_has_expected_providers():
         "groq",
         "xai",
         "together",
+        "fireworks",
     ):
         assert provider in PRICING_TABLE
         assert isinstance(PRICING_TABLE[provider], dict)
@@ -101,6 +102,21 @@ def test_extract_base_model_together():
         (
             "mistralai/Mixtral-8x7B-Instruct-v0.1",
             "mistralai/Mixtral-8x7B-Instruct-v0.1",
+        ),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_fireworks():
+    provider = "fireworks"
+    for model, based_model in (
+        (
+            "accounts/fireworks/models/llama-v3p1-8b-instruct",
+            "accounts/fireworks/models/llama-v3p1-8b-instruct",
+        ),
+        (
+            "accounts/fireworks/models/mixtral-8x22b-instruct",
+            "accounts/fireworks/models/mixtral-8x22b-instruct",
         ),
     ):
         assert extract_base_model(provider, model) == based_model
@@ -201,6 +217,33 @@ def test_estimate_cost_together():
     assert (
         result.output_per_million
         == PRICING_TABLE["together"]["meta-llama/Llama-3.1-8B-Instruct-Turbo"]["output"]
+    )
+    assert result.warning is None
+
+
+def test_estimate_cost_fireworks():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="fireworks",
+        model="accounts/fireworks/models/llama-v3p1-8b-instruct",
+    )
+
+    assert result.provider == "fireworks"
+    assert result.based_model == "accounts/fireworks/models/llama-v3p1-8b-instruct"
+    assert (
+        result.input_per_million
+        == PRICING_TABLE["fireworks"][
+            "accounts/fireworks/models/llama-v3p1-8b-instruct"
+        ]["input"]
+    )
+    assert (
+        result.output_per_million
+        == PRICING_TABLE["fireworks"][
+            "accounts/fireworks/models/llama-v3p1-8b-instruct"
+        ]["output"]
     )
     assert result.warning is None
 

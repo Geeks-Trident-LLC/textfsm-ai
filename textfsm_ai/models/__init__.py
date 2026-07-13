@@ -177,3 +177,25 @@ class model:
                 chat = ModelRegistry.get("together", "thinking", "speed", "chat")
 
         default = ModelRegistry.alias("together_default")
+
+    class fireworks:
+        class quality:
+            chat = ModelRegistry.get("fireworks", "quality", "chat")
+
+        class balance:
+            chat = ModelRegistry.get("fireworks", "balance", "chat")
+
+        class speed:
+            chat = ModelRegistry.get("fireworks", "speed", "chat")
+
+        class thinking:
+            class quality:
+                chat = ModelRegistry.get("fireworks", "thinking", "quality", "chat")
+
+            class balance:
+                chat = ModelRegistry.get("fireworks", "thinking", "balance", "chat")
+
+            class speed:
+                chat = ModelRegistry.get("fireworks", "thinking", "speed", "chat")
+
+        default = ModelRegistry.alias("fireworks_default")
