@@ -16,6 +16,7 @@ environment variable:
 | Gemini      | `"gemini"`        | `GEMINI_API_KEY`          |
 | DeepSeek    | `"deepseek"`      | `DEEPSEEK_API_KEY`        |
 | Groq        | `"groq"`          | `GROQ_API_KEY`            |
+| xAI (Grok)  | `"xai"`           | `XAI_API_KEY`             |
 | Azure OpenAI| `"azure"`         | `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_VERSION` |
 
 ```bash

@@ -9,6 +9,7 @@ from .patterns import (
     GEMINI_PATTERN,
     GROQ_PATTERN,
     OPENAI_PATTERN,
+    XAI_PATTERN,
 )
 from .tiers import Tier, empty_tier_groups
 
@@ -194,6 +195,34 @@ def classify_groq_models(raw: List[str]):
 
 
 # ---------------------------------------------------------
+# xAI (Grok)
+# ---------------------------------------------------------
+def classify_xai_models(raw: List[str]):
+    groups = empty_tier_groups()
+
+    for name in map(_normalize, raw):
+        m = XAI_PATTERN.match(name)
+        if not m:
+            groups[Tier.OTHER].append(name)
+            continue
+
+        suffix = m.group(1)  # mini, vision, fast, or None
+
+        if suffix == "vision":
+            groups[Tier.OTHER].append(name)
+        elif suffix == "mini":
+            groups[Tier.SPEED_CHAT].append(name)
+        elif suffix == "fast":
+            groups[Tier.BALANCE_CHAT].append(name)
+        else:
+            groups[Tier.QUALITY_CHAT].append(name)
+
+    for g in groups.values():
+        g.sort(reverse=True)
+    return groups
+
+
+# ---------------------------------------------------------
 # Unified entry point
 # ---------------------------------------------------------
 def classify_models(provider: str, raw: List[str]):
@@ -209,6 +238,8 @@ def classify_models(provider: str, raw: List[str]):
         return classify_deepseek_models(raw)
     if provider == "groq":
         return classify_groq_models(raw)
+    if provider == "xai":
+        return classify_xai_models(raw)
     if provider in ("azure", "azure-openai"):
         return classify_openai_models(raw)
 

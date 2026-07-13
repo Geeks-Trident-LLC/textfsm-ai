@@ -12,6 +12,7 @@ from textfsm_ai.providers.gemini_provider import GeminiProvider
 from textfsm_ai.providers.groq_provider import GroqProvider
 from textfsm_ai.providers.openai_compat_provider import OpenAICompatProvider
 from textfsm_ai.providers.openai_provider import OpenAIProvider
+from textfsm_ai.providers.xai_provider import XAIProvider
 
 
 class ProviderRegistry:
@@ -36,6 +37,7 @@ registry.register(AnthropicProvider)
 registry.register(GeminiProvider)
 registry.register(DeepSeekProvider)
 registry.register(GroqProvider)
+registry.register(XAIProvider)
 
 
 def get_provider_by_name(provider_name: str) -> Type[Provider]:

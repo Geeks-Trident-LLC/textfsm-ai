@@ -63,6 +63,23 @@ def test_groq_classification():
     assert "some-unknown-model" in groups[Tier.OTHER]
 
 
+def test_xai_classification():
+    raw = [
+        "grok-4",  # no suffix -> quality
+        "grok-3-fast",  # fast -> balance
+        "grok-3-mini",  # mini -> speed
+        "grok-2-vision-1212",  # vision -> other
+        "some-unknown-model",  # no match -> other
+    ]
+    groups = classify_models("xai", raw)
+
+    assert "grok-4" in groups[Tier.QUALITY_CHAT]
+    assert "grok-3-fast" in groups[Tier.BALANCE_CHAT]
+    assert "grok-3-mini" in groups[Tier.SPEED_CHAT]
+    assert "grok-2-vision-1212" in groups[Tier.OTHER]
+    assert "some-unknown-model" in groups[Tier.OTHER]
+
+
 # ---------------------------------------------------------
 # _normalize (via the "provider/model" prefix form)
 # ---------------------------------------------------------

@@ -25,7 +25,7 @@ def test_pricing_data_path_exists_and_is_yaml():
 def test_pricing_table_loaded_from_yaml_has_expected_providers():
     # "azure" is deliberately excluded here - it's derived at import time,
     # not present in pricing.yaml itself.
-    for provider in ("anthropic", "openai", "deepseek", "gemini", "groq"):
+    for provider in ("anthropic", "openai", "deepseek", "gemini", "groq", "xai"):
         assert provider in PRICING_TABLE
         assert isinstance(PRICING_TABLE[provider], dict)
         assert PRICING_TABLE[provider]  # non-empty
@@ -70,6 +70,15 @@ def test_extract_base_model_groq():
     for model, based_model in (
         ("llama-3.3-70b-versatile", "llama-3.3-70b-versatile"),
         ("llama-3.1-8b-instant", "llama-3.1-8b-instant"),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_xai():
+    provider = "xai"
+    for model, based_model in (
+        ("grok-4", "grok-4"),
+        ("grok-3-mini", "grok-3-mini"),
     ):
         assert extract_base_model(provider, model) == based_model
 
@@ -130,6 +139,23 @@ def test_estimate_cost_groq():
         result.output_per_million
         == PRICING_TABLE["groq"]["llama-3.1-8b-instant"]["output"]
     )
+    assert result.warning is None
+
+
+def test_estimate_cost_xai():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="xai",
+        model="grok-3-mini",
+    )
+
+    assert result.provider == "xai"
+    assert result.based_model == "grok-3-mini"
+    assert result.input_per_million == PRICING_TABLE["xai"]["grok-3-mini"]["input"]
+    assert result.output_per_million == PRICING_TABLE["xai"]["grok-3-mini"]["output"]
     assert result.warning is None
 
 

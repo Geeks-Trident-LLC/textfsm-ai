@@ -79,5 +79,6 @@ def create_default_routing_table() -> RoutingTable:
             RoutingRule("gemma", "groq"),
             RoutingRule("qwen-", "groq"),
             RoutingRule("mixtral-", "groq"),
+            RoutingRule("grok-", "xai"),
         ]
     )
