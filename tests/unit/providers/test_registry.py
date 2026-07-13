@@ -4,6 +4,7 @@ from textfsm_ai.providers.anthropic_provider import AnthropicProvider
 from textfsm_ai.providers.cerebras_provider import CerebrasProvider
 from textfsm_ai.providers.fireworks_provider import FireworksProvider
 from textfsm_ai.providers.groq_provider import GroqProvider
+from textfsm_ai.providers.mistral_provider import MistralProvider
 from textfsm_ai.providers.moonshot_provider import MoonshotProvider
 from textfsm_ai.providers.openai_provider import OpenAIProvider
 from textfsm_ai.providers.openrouter_provider import OpenRouterProvider
@@ -28,6 +29,7 @@ def test_registry_get_returns_registered_class():
     assert registry.get("perplexity") is PerplexityProvider
     assert registry.get("openrouter") is OpenRouterProvider
     assert registry.get("moonshot") is MoonshotProvider
+    assert registry.get("mistral") is MistralProvider
 
 
 def test_registry_get_unknown_raises_keyerror():

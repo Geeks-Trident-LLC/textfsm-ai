@@ -28,6 +28,7 @@ PROVIDER_DESCRIPTIONS = {
     "perplexity": "Perplexity (search-grounded Sonar models, OpenAI-compatible API)",
     "openrouter": "OpenRouter (multi-provider model aggregator, OpenAI-compatible API)",
     "moonshot": "Moonshot AI / Kimi models (OpenAI-compatible API)",
+    "mistral": "Mistral AI (native SDK)",
 }
 
 

@@ -23,6 +23,7 @@ environment variable:
 | Perplexity  | `"perplexity"`    | `PERPLEXITY_API_KEY`      |
 | OpenRouter  | `"openrouter"`    | `OPENROUTER_API_KEY`      |
 | Moonshot AI (Kimi) | `"moonshot"` | `MOONSHOT_API_KEY`     |
+| Mistral AI  | `"mistral"`       | `MISTRAL_API_KEY`         |
 | Azure OpenAI| `"azure"`         | `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_VERSION` |
 
 ```bash

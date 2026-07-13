@@ -75,6 +75,17 @@ groq:
   thinking-chat:
   - deepseek-r1-distill-llama-70b
   other: []
+mistral:
+  quality-chat:
+  - mistral-large-latest
+  balance-chat:
+  - mistral-medium-latest
+  speed-chat:
+  - mistral-small-latest
+  thinking-chat:
+  - magistral-medium-latest
+  other:
+  - codestral-latest
 moonshot:
   quality-chat:
   - kimi-k2-0711-preview
