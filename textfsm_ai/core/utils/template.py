@@ -14,11 +14,13 @@ def _create_parser(template: str) -> TextFSM:
 
 
 def parse_to_lists(template: str, sample: str) -> List[List[str]]:
+    """Parse `sample` with a TextFSM `template`, returning rows of raw values."""
     parser = _create_parser(template)
     return parser.ParseText(sample)
 
 
 def parse_to_dicts(template: str, sample: str) -> List[Dict[str, str]]:
+    """Parse `sample` with a TextFSM `template`, returning rows as dicts."""
     parser = _create_parser(template)
     return parser.ParseTextToDicts(sample)
 
