@@ -143,6 +143,34 @@ def test_fireworks_classification_preserves_account_prefix():
     assert "llama-v3p1-8b-instruct" not in groups[Tier.SPEED_CHAT]
 
 
+def test_cerebras_classification():
+    raw = [
+        "llama-4-maverick-17b-128e-instruct",  # codename -> quality
+        "llama-4-scout-17b-16e-instruct",  # codename -> balance
+        "qwen-3-32b",  # 32B -> balance
+        "llama3.1-8b",  # 8B -> speed
+        "gpt-oss-120b",  # reasoning-flagged -> thinking
+        "some-unknown-model",  # no match -> other
+    ]
+    groups = classify_models("cerebras", raw)
+
+    assert "llama-4-maverick-17b-128e-instruct" in groups[Tier.QUALITY_CHAT]
+    assert "llama-4-scout-17b-16e-instruct" in groups[Tier.BALANCE_CHAT]
+    assert "qwen-3-32b" in groups[Tier.BALANCE_CHAT]
+    assert "llama3.1-8b" in groups[Tier.SPEED_CHAT]
+    assert "gpt-oss-120b" in groups[Tier.THINKING_CHAT]
+    assert "some-unknown-model" in groups[Tier.OTHER]
+
+
+def test_cerebras_classification_moe_uses_first_size_token():
+    # "qwen-3-235b-a22b-instruct-2507" has two size-like tokens (total
+    # params "235b" and active params "a22b") - the first one found
+    # (total params) should win, landing this in quality-chat.
+    groups = classify_models("cerebras", ["qwen-3-235b-a22b-instruct-2507"])
+
+    assert "qwen-3-235b-a22b-instruct-2507" in groups[Tier.QUALITY_CHAT]
+
+
 # ---------------------------------------------------------
 # _normalize (via the "provider/model" prefix form)
 # ---------------------------------------------------------

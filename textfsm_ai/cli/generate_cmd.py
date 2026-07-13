@@ -242,6 +242,7 @@ def resolve_api_key(provider, api_key, pconf):
         "xai": "XAI_API_KEY",
         "together": "TOGETHER_API_KEY",
         "fireworks": "FIREWORKS_API_KEY",
+        "cerebras": "CEREBRAS_API_KEY",
     }
 
     env_var = env_map.get(provider)

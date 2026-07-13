@@ -199,3 +199,25 @@ class model:
                 chat = ModelRegistry.get("fireworks", "thinking", "speed", "chat")
 
         default = ModelRegistry.alias("fireworks_default")
+
+    class cerebras:
+        class quality:
+            chat = ModelRegistry.get("cerebras", "quality", "chat")
+
+        class balance:
+            chat = ModelRegistry.get("cerebras", "balance", "chat")
+
+        class speed:
+            chat = ModelRegistry.get("cerebras", "speed", "chat")
+
+        class thinking:
+            class quality:
+                chat = ModelRegistry.get("cerebras", "thinking", "quality", "chat")
+
+            class balance:
+                chat = ModelRegistry.get("cerebras", "thinking", "balance", "chat")
+
+            class speed:
+                chat = ModelRegistry.get("cerebras", "thinking", "speed", "chat")
+
+        default = ModelRegistry.alias("cerebras_default")

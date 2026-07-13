@@ -79,6 +79,20 @@ def create_default_routing_table() -> RoutingTable:
     # namespaces). Third-party/fine-tuned models under other Fireworks
     # accounts ("accounts/<other>/models/...") are not covered here.
     #
+    # Cerebras also hosts bare, un-namespaced open models (like Groq),
+    # and its catalog genuinely overlaps Groq's family prefixes
+    # ("llama-", "qwen-") and OpenAI's "gpt-" prefix (both host the
+    # open-weight "gpt-oss" models). Cerebras' specific sub-prefixes
+    # ("gpt-oss-", "llama-4-", "qwen-3-") are listed BEFORE the broader
+    # rules they'd otherwise be swallowed by. This does NOT resolve
+    # every possible collision - e.g. Cerebras' bare "llama-3.3-70b"
+    # would still match Groq's "llama-" rule first (Groq's
+    # "llama-3.3-70b-versatile" is a different, longer string, but the
+    # prefix-match mechanism can't tell "llama-3.3-70b" apart from a
+    # prefix of it) - so that exact model name is deliberately left out
+    # of Cerebras' curated/default set until routing supports more than
+    # simple prefix matching.
+    #
     # route() and select_provider() both return on the FIRST matching
     # rule (order matters, this is not longest-prefix-match), so a more
     # specific prefix (e.g. "deepseek-ai/") must be listed before a
@@ -87,6 +101,7 @@ def create_default_routing_table() -> RoutingTable:
     # "deepseek-" too.
     return RoutingTable(
         rules=[
+            RoutingRule("gpt-oss-", "cerebras"),  # must precede "gpt-" (OpenAI)
             RoutingRule("gpt-", "openai"),
             RoutingRule("o1-", "openai"),  # Omni 1
             RoutingRule("o3-", "openai"),  # Omni 3
@@ -95,6 +110,8 @@ def create_default_routing_table() -> RoutingTable:
             RoutingRule("azure-", "azure"),
             RoutingRule("deepseek-ai/", "together"),
             RoutingRule("deepseek-", "deepseek"),
+            RoutingRule("llama-4-", "cerebras"),  # must precede "llama-" (Groq)
+            RoutingRule("qwen-3-", "cerebras"),  # must precede "qwen-" (Groq)
             RoutingRule("llama-", "groq"),
             RoutingRule("gemma", "groq"),
             RoutingRule("qwen-", "groq"),
@@ -104,5 +121,6 @@ def create_default_routing_table() -> RoutingTable:
             RoutingRule("Qwen/", "together"),
             RoutingRule("mistralai/", "together"),
             RoutingRule("accounts/fireworks/models/", "fireworks"),
+            RoutingRule("llama3.", "cerebras"),  # e.g. "llama3.1-8b" (no hyphen)
         ]
     )

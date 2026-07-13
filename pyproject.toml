@@ -68,6 +68,7 @@ keywords = [
     "grok",
     "together-ai",
     "fireworks-ai",
+    "cerebras",
     "device output parsing",
     "log extraction",
     "structured data extraction",

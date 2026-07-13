@@ -11,6 +11,7 @@ _ENV_VARS = [
     "XAI_API_KEY",
     "TOGETHER_API_KEY",
     "FIREWORKS_API_KEY",
+    "CEREBRAS_API_KEY",
     "AZURE_OPENAI_ENDPOINT",
     "AZURE_OPENAI_API_KEY",
     "AZURE_OPENAI_API_VERSION",
@@ -159,6 +160,14 @@ def test_load_config_from_env_fireworks(monkeypatch):
     assert cfg.providers["fireworks"].params == {"api_key": "sk-fireworks"}
 
 
+def test_load_config_from_env_cerebras(monkeypatch):
+    monkeypatch.setenv("CEREBRAS_API_KEY", "sk-cerebras")
+    cfg = load_config_from_env()
+
+    assert set(cfg.providers.keys()) == {"cerebras"}
+    assert cfg.providers["cerebras"].params == {"api_key": "sk-cerebras"}
+
+
 def test_load_config_from_env_azure_requires_both_endpoint_and_key(monkeypatch):
     monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
     # api key missing -> azure should NOT appear
@@ -197,6 +206,7 @@ def test_load_config_from_env_all_providers_at_once(monkeypatch):
     monkeypatch.setenv("XAI_API_KEY", "k7")
     monkeypatch.setenv("TOGETHER_API_KEY", "k8")
     monkeypatch.setenv("FIREWORKS_API_KEY", "k9")
+    monkeypatch.setenv("CEREBRAS_API_KEY", "k10")
     monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
     monkeypatch.setenv("AZURE_OPENAI_API_KEY", "k5")
 
@@ -211,5 +221,6 @@ def test_load_config_from_env_all_providers_at_once(monkeypatch):
         "xai",
         "together",
         "fireworks",
+        "cerebras",
         "azure",
     }

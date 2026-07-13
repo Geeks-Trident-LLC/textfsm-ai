@@ -135,3 +135,20 @@ FIREWORKS_PATTERN = re.compile(
     r"(?:(?P<moe>[0-9]+)x(?P<moe_size>[0-9]+)b" r"|(?P<size>[0-9]+(?:\.[0-9]+)?)b)",
     re.IGNORECASE,
 )
+
+
+# ---------------------------------------------------------
+# Cerebras (hosts open models under bare IDs, e.g. "qwen-3-32b",
+# "llama3.1-8b" - note some Cerebras IDs drop the hyphen after
+# "llama" that Groq/Together/Fireworks all use). Same search-based
+# size-token approach as TOGETHER_PATTERN/FIREWORKS_PATTERN, used as
+# the fallback path for dense models in classify_cerebras_models();
+# Llama 4's MoE models (llama-4-scout/-maverick) are classified by
+# codename instead, since their names only expose *active* params
+# (e.g. "17b"), not total params, which would misclassify their tier.
+# Examples:
+#   qwen-3-32b       -> size="32"
+#   llama3.1-8b       -> size="8"
+#   qwen-3-235b-a22b-instruct-2507 -> size="235" (first size token wins)
+# ---------------------------------------------------------
+CEREBRAS_PATTERN = re.compile(r"(?P<size>[0-9]+(?:\.[0-9]+)?)b", re.IGNORECASE)

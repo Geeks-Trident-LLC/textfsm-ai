@@ -105,6 +105,10 @@ def test_create_default_routing_table_routes_known_prefixes():
     assert (
         table.route("accounts/fireworks/models/llama-v3p3-70b-instruct") == "fireworks"
     )
+    assert table.route("llama-4-maverick-17b-128e-instruct") == "cerebras"
+    assert table.route("qwen-3-32b") == "cerebras"
+    assert table.route("llama3.1-8b") == "cerebras"
+    assert table.route("gpt-oss-120b") == "cerebras"
 
 
 def test_deepseek_ai_prefix_does_not_collide_with_native_deepseek_rule():
@@ -114,3 +118,16 @@ def test_deepseek_ai_prefix_does_not_collide_with_native_deepseek_rule():
     table = create_default_routing_table()
     assert table.route("deepseek-v4-pro") == "deepseek"
     assert table.route("deepseek-ai/DeepSeek-R1") == "together"
+
+
+def test_cerebras_specific_prefixes_do_not_collide_with_broader_rules():
+    # Cerebras hosts open-weight families that overlap Groq's broad
+    # "llama-"/"qwen-" rules and OpenAI's "gpt-" rule (gpt-oss is an
+    # open-weight model hosted by multiple providers). The Cerebras-
+    # specific sub-prefixes ("llama-4-", "qwen-3-", "gpt-oss-") must be
+    # checked before those broader rules, without swallowing the
+    # existing Groq/OpenAI models that legitimately match them.
+    table = create_default_routing_table()
+    assert table.route("gpt-4o") == "openai"
+    assert table.route("llama-3.3-70b-versatile") == "groq"
+    assert table.route("qwen-2.5-32b") == "groq"
