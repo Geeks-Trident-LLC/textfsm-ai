@@ -25,7 +25,11 @@ class VertexAIProvider(Provider, ModelListingMixin):
     the SDK falls back to Google Cloud's Application Default Credentials
     (a service account key file via GOOGLE_APPLICATION_CREDENTIALS,
     `gcloud auth application-default login`, or workload identity on GCP
-    infra) - so this provider never handles a secret directly.
+    infra) - so this provider never handles a secret directly. `project`/
+    `location` are resolved from this app's own app-namespaced
+    VERTEXAI_PROJECT/VERTEXAI_REGION env vars (not GCP's own
+    GOOGLE_CLOUD_PROJECT/GOOGLE_CLOUD_LOCATION, since both are always
+    passed explicitly to genai.Client() below).
 
     Vertex AI serves the SAME Gemini model catalog as the native Gemini
     Developer API under IDENTICAL model IDs (e.g. "gemini-2.5-pro") -
@@ -51,17 +55,16 @@ class VertexAIProvider(Provider, ModelListingMixin):
         location: Optional[str] = None,
         default_model: str = MODEL.vertexai.default,
     ) -> None:
-        project = project or os.getenv("GOOGLE_CLOUD_PROJECT")
-        location = location or os.getenv("GOOGLE_CLOUD_LOCATION")
+        project = project or os.getenv("VERTEXAI_PROJECT")
+        location = location or os.getenv("VERTEXAI_REGION")
 
         if not project:
             raise ValueError(
-                "GCP project is not set (pass project= or set GOOGLE_CLOUD_PROJECT)"
+                "GCP project is not set (pass project= or set VERTEXAI_PROJECT)"
             )
         if not location:
             raise ValueError(
-                "GCP location is not set (pass location= or set "
-                "GOOGLE_CLOUD_LOCATION)"
+                "GCP location is not set (pass location= or set VERTEXAI_REGION)"
             )
 
         self.client = genai.Client(vertexai=True, project=project, location=location)
@@ -141,13 +144,13 @@ class VertexAIProvider(Provider, ModelListingMixin):
 
     @classmethod
     def from_env(cls) -> "VertexAIProvider":
-        project = os.getenv("GOOGLE_CLOUD_PROJECT")
-        location = os.getenv("GOOGLE_CLOUD_LOCATION")
+        project = os.getenv("VERTEXAI_PROJECT")
+        location = os.getenv("VERTEXAI_REGION")
 
         if not project:
-            raise RuntimeError("GOOGLE_CLOUD_PROJECT is not set")
+            raise RuntimeError("VERTEXAI_PROJECT is not set")
         if not location:
-            raise RuntimeError("GOOGLE_CLOUD_LOCATION is not set")
+            raise RuntimeError("VERTEXAI_REGION is not set")
 
         return cls(project, location, MODEL.vertexai.default)
 

@@ -28,14 +28,14 @@ _PROVIDER_ENV_VARS = [
     "ANTHROPIC_API_KEY",
     "GEMINI_API_KEY",
     "DEEPSEEK_API_KEY",
-    "AZURE_OPENAI_API_KEY",
-    "AZURE_OPENAI_DEPLOYMENT",
-    "AZURE_OPENAI_ENDPOINT",
-    "AZURE_OPENAI_API_VERSION",
-    "AWS_REGION",
-    "AWS_DEFAULT_REGION",
-    "GOOGLE_CLOUD_PROJECT",
-    "GOOGLE_CLOUD_LOCATION",
+    "AZURE_API_KEY",
+    "AZURE_DEPLOYMENT",
+    "AZURE_ENDPOINT",
+    "AZURE_API_VERSION",
+    "BEDROCK_REGION",
+    "BEDROCK_DEFAULT_REGION",
+    "VERTEXAI_PROJECT",
+    "VERTEXAI_REGION",
     "OCI_COMPARTMENT_ID",
     "OCI_REGION",
 ]
@@ -592,7 +592,7 @@ def test_resolve_model_explicit_flag_wins():
 
 
 def test_resolve_model_azure_from_env_deployment(monkeypatch):
-    monkeypatch.setenv("AZURE_OPENAI_DEPLOYMENT", "my-deployment")
+    monkeypatch.setenv("AZURE_DEPLOYMENT", "my-deployment")
     assert resolve_model("azure", None, pconf=None) == "my-deployment"
 
 
@@ -638,7 +638,7 @@ def test_resolve_endpoint_azure_explicit_flag_wins():
 
 
 def test_resolve_endpoint_azure_from_env(monkeypatch):
-    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://env.example.com")
+    monkeypatch.setenv("AZURE_ENDPOINT", "https://env.example.com")
     assert resolve_endpoint("azure", None, pconf=None) == "https://env.example.com"
 
 
@@ -669,7 +669,7 @@ def test_resolve_api_version_azure_explicit_flag_wins():
 
 
 def test_resolve_api_version_azure_from_env(monkeypatch):
-    monkeypatch.setenv("AZURE_OPENAI_API_VERSION", "2024-05-01")
+    monkeypatch.setenv("AZURE_API_VERSION", "2024-05-01")
     assert resolve_api_version("azure", None, pconf=None) == "2024-05-01"
 
 
@@ -699,12 +699,12 @@ def test_resolve_region_bedrock_explicit_flag_wins():
 
 
 def test_resolve_region_bedrock_from_aws_region_env(monkeypatch):
-    monkeypatch.setenv("AWS_REGION", "us-east-1")
+    monkeypatch.setenv("BEDROCK_REGION", "us-east-1")
     assert resolve_region("bedrock", None, pconf=None) == "us-east-1"
 
 
 def test_resolve_region_bedrock_from_aws_default_region_env(monkeypatch):
-    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-west-1")
+    monkeypatch.setenv("BEDROCK_DEFAULT_REGION", "eu-west-1")
     assert resolve_region("bedrock", None, pconf=None) == "eu-west-1"
 
 
@@ -726,7 +726,7 @@ def test_resolve_region_vertexai_explicit_flag_wins():
 
 
 def test_resolve_region_vertexai_from_google_cloud_location_env(monkeypatch):
-    monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+    monkeypatch.setenv("VERTEXAI_REGION", "us-central1")
     assert resolve_region("vertexai", None, pconf=None) == "us-central1"
 
 
@@ -781,7 +781,7 @@ def test_resolve_project_vertexai_explicit_flag_wins():
 
 
 def test_resolve_project_vertexai_from_env(monkeypatch):
-    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "env-project")
+    monkeypatch.setenv("VERTEXAI_PROJECT", "env-project")
     assert resolve_project("vertexai", None, pconf=None) == "env-project"
 
 

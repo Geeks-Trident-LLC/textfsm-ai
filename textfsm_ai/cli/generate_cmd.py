@@ -302,7 +302,7 @@ def resolve_api_key(provider, api_key, pconf):
         "anthropic": "ANTHROPIC_API_KEY",
         "gemini": "GEMINI_API_KEY",
         "deepseek": "DEEPSEEK_API_KEY",
-        "azure": "AZURE_OPENAI_API_KEY",
+        "azure": "AZURE_API_KEY",
         "groq": "GROQ_API_KEY",
         "xai": "XAI_API_KEY",
         "together": "TOGETHER_API_KEY",
@@ -336,7 +336,7 @@ def resolve_model(provider, model, pconf):
 
     if provider == "azure":
         # Azure uses deployment names, not model names
-        deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT")
+        deployment = os.getenv("AZURE_DEPLOYMENT")
         if deployment:
             return deployment
 
@@ -345,8 +345,7 @@ def resolve_model(provider, model, pconf):
             return pconf.params["model"]
 
         raise click.ClickException(
-            "Azure requires a deployment name. Use --model or "
-            "set AZURE_OPENAI_DEPLOYMENT."
+            "Azure requires a deployment name. Use --model or " "set AZURE_DEPLOYMENT."
         )
 
     # Non-Azure providers use providers.yaml
@@ -365,7 +364,7 @@ def resolve_endpoint(provider, endpoint, pconf):
     if endpoint:
         return endpoint
 
-    env = os.getenv("AZURE_OPENAI_ENDPOINT")
+    env = os.getenv("AZURE_ENDPOINT")
     if env:
         return env
 
@@ -373,7 +372,7 @@ def resolve_endpoint(provider, endpoint, pconf):
         return pconf.params["endpoint"]
 
     raise click.ClickException(
-        "Azure requires an endpoint. Use --endpoint or set AZURE_OPENAI_ENDPOINT."
+        "Azure requires an endpoint. Use --endpoint or set AZURE_ENDPOINT."
     )
 
 
@@ -384,7 +383,7 @@ def resolve_api_version(provider, api_version, pconf):
     if api_version:
         return api_version
 
-    env = os.getenv("AZURE_OPENAI_API_VERSION")
+    env = os.getenv("AZURE_API_VERSION")
     if env:
         return env
 
@@ -402,11 +401,11 @@ def resolve_region(provider, region, pconf):
         return region
 
     if provider == "bedrock":
-        env = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION")
+        env = os.getenv("BEDROCK_REGION") or os.getenv("BEDROCK_DEFAULT_REGION")
     elif provider == "vertexai":
         # Vertex AI calls this "location" in GCP terminology, but reuses
         # this app's generic "region" concept/field for consistency.
-        env = os.getenv("GOOGLE_CLOUD_LOCATION")
+        env = os.getenv("VERTEXAI_REGION")
     else:
         env = os.getenv("OCI_REGION")
 
@@ -418,13 +417,12 @@ def resolve_region(provider, region, pconf):
 
     if provider == "bedrock":
         raise click.ClickException(
-            "Bedrock requires an AWS region. Use --region or set AWS_REGION/"
-            "AWS_DEFAULT_REGION."
+            "Bedrock requires an AWS region. Use --region or set "
+            "BEDROCK_REGION/BEDROCK_DEFAULT_REGION."
         )
     if provider == "vertexai":
         raise click.ClickException(
-            "Vertex AI requires a GCP location. Use --region or set "
-            "GOOGLE_CLOUD_LOCATION."
+            "Vertex AI requires a GCP location. Use --region or set " "VERTEXAI_REGION."
         )
     # OCI is the one exception: region is OPTIONAL here, unlike Bedrock/
     # Vertex AI - OCIProvider falls back to whatever's already in
@@ -440,7 +438,7 @@ def resolve_project(provider, project, pconf):
     if project:
         return project
 
-    env = os.getenv("GOOGLE_CLOUD_PROJECT")
+    env = os.getenv("VERTEXAI_PROJECT")
     if env:
         return env
 
@@ -448,8 +446,7 @@ def resolve_project(provider, project, pconf):
         return pconf.params["project"]
 
     raise click.ClickException(
-        "Vertex AI requires a GCP project. Use --project or set "
-        "GOOGLE_CLOUD_PROJECT."
+        "Vertex AI requires a GCP project. Use --project or set " "VERTEXAI_PROJECT."
     )
 
 

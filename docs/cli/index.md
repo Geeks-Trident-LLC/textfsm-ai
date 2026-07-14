@@ -26,23 +26,23 @@ environment variable (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`,
 `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, `GROQ_API_KEY`, `XAI_API_KEY`,
 `TOGETHER_API_KEY`, `FIREWORKS_API_KEY`, `CEREBRAS_API_KEY`,
 `PERPLEXITY_API_KEY`, `OPENROUTER_API_KEY`, `MOONSHOT_API_KEY`,
-`MISTRAL_API_KEY`, `COHERE_API_KEY`, `AZURE_OPENAI_API_KEY`) > `providers.yaml`.
+`MISTRAL_API_KEY`, `COHERE_API_KEY`, `AZURE_API_KEY`) > `providers.yaml`.
 
 Azure additionally resolves `--model` (as the deployment name), `--endpoint`,
-and `--api-version` from `AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_ENDPOINT`,
-and `AZURE_OPENAI_API_VERSION` the same way.
+and `--api-version` from `AZURE_DEPLOYMENT`, `AZURE_ENDPOINT`, and
+`AZURE_API_VERSION` the same way.
 
 Bedrock, Vertex AI, and OCI are the exceptions to the credential rule
 above: none of them has a project-level API key at all.
 
-- Bedrock resolves `--region` from `AWS_REGION`/`AWS_DEFAULT_REGION` (or
-  `providers.yaml`), and authenticates via boto3's own AWS credential
+- Bedrock resolves `--region` from `BEDROCK_REGION`/`BEDROCK_DEFAULT_REGION`
+  (or `providers.yaml`), and authenticates via boto3's own AWS credential
   chain (`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`/`AWS_SESSION_TOKEN`,
   `~/.aws/credentials`, or an IAM role) — nothing AWS-secret-shaped ever
   passes through this CLI.
-- Vertex AI resolves `--region` from `GOOGLE_CLOUD_LOCATION` and
-  `--project` from `GOOGLE_CLOUD_PROJECT` (or `providers.yaml`), and
-  authenticates via the `google-genai` SDK's own Application Default
+- Vertex AI resolves `--region` from `VERTEXAI_REGION` and `--project`
+  from `VERTEXAI_PROJECT` (or `providers.yaml`), and authenticates via
+  the `google-genai` SDK's own Application Default
   Credentials chain (a service account key file via
   `GOOGLE_APPLICATION_CREDENTIALS`, `gcloud auth application-default
   login`, or workload identity) — same principle, nothing GCP-secret-shaped

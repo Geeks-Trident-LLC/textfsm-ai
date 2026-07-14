@@ -104,18 +104,18 @@ class AzureOpenAIProvider(Provider, ModelListingMixin):
     # -----------------------------
     @classmethod
     def from_env(cls) -> "AzureOpenAIProvider":
-        api_key = os.environ.get("AZURE_OPENAI_API_KEY")
-        endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT")
-        api_version = os.environ.get("AZURE_OPENAI_API_VERSION", "2024-02-15-preview")
+        api_key = os.environ.get("AZURE_API_KEY")
+        endpoint = os.environ.get("AZURE_ENDPOINT")
+        api_version = os.environ.get("AZURE_API_VERSION", "2024-02-15-preview")
 
         if not api_key:
-            raise ValueError("AZURE_OPENAI_API_KEY is not set")
+            raise ValueError("AZURE_API_KEY is not set")
         if not endpoint:
-            raise ValueError("AZURE_OPENAI_ENDPOINT is not set")
+            raise ValueError("AZURE_ENDPOINT is not set")
 
-        deployment = os.environ.get("AZURE_OPENAI_DEPLOYMENT")
+        deployment = os.environ.get("AZURE_DEPLOYMENT")
         if not deployment:
-            raise ValueError("AZURE_OPENAI_DEPLOYMENT is not set")
+            raise ValueError("AZURE_DEPLOYMENT is not set")
 
         return cls(
             api_key=api_key,

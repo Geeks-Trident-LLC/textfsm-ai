@@ -19,22 +19,22 @@ def _fake_response(
 
 
 def test_init_missing_project_raises(monkeypatch):
-    monkeypatch.delenv("GOOGLE_CLOUD_PROJECT", raising=False)
-    monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+    monkeypatch.delenv("VERTEXAI_PROJECT", raising=False)
+    monkeypatch.setenv("VERTEXAI_REGION", "us-central1")
     with pytest.raises(ValueError, match="GCP project"):
         VertexAIProvider(project=None, location=None, default_model="gemini-2.5-flash")
 
 
 def test_init_missing_location_raises(monkeypatch):
-    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "my-project")
-    monkeypatch.delenv("GOOGLE_CLOUD_LOCATION", raising=False)
+    monkeypatch.setenv("VERTEXAI_PROJECT", "my-project")
+    monkeypatch.delenv("VERTEXAI_REGION", raising=False)
     with pytest.raises(ValueError, match="GCP location"):
         VertexAIProvider(project=None, location=None, default_model="gemini-2.5-flash")
 
 
 def test_init_uses_env_vars_when_no_explicit_args(monkeypatch):
-    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "env-project")
-    monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "europe-west4")
+    monkeypatch.setenv("VERTEXAI_PROJECT", "env-project")
+    monkeypatch.setenv("VERTEXAI_REGION", "europe-west4")
     p = VertexAIProvider(default_model="gemini-2.5-flash")
     assert p.project == "env-project"
     assert p.location == "europe-west4"
@@ -113,22 +113,22 @@ def test_generate_sync_wraps_exceptions_in_provider_error():
 
 
 def test_from_env_missing_project_raises(monkeypatch):
-    monkeypatch.delenv("GOOGLE_CLOUD_PROJECT", raising=False)
-    monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "us-central1")
-    with pytest.raises(RuntimeError, match="GOOGLE_CLOUD_PROJECT"):
+    monkeypatch.delenv("VERTEXAI_PROJECT", raising=False)
+    monkeypatch.setenv("VERTEXAI_REGION", "us-central1")
+    with pytest.raises(RuntimeError, match="VERTEXAI_PROJECT"):
         VertexAIProvider.from_env()
 
 
 def test_from_env_missing_location_raises(monkeypatch):
-    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "my-project")
-    monkeypatch.delenv("GOOGLE_CLOUD_LOCATION", raising=False)
-    with pytest.raises(RuntimeError, match="GOOGLE_CLOUD_LOCATION"):
+    monkeypatch.setenv("VERTEXAI_PROJECT", "my-project")
+    monkeypatch.delenv("VERTEXAI_REGION", raising=False)
+    with pytest.raises(RuntimeError, match="VERTEXAI_REGION"):
         VertexAIProvider.from_env()
 
 
 def test_from_env_success(monkeypatch):
-    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "my-project")
-    monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+    monkeypatch.setenv("VERTEXAI_PROJECT", "my-project")
+    monkeypatch.setenv("VERTEXAI_REGION", "us-central1")
     p = VertexAIProvider.from_env()
     assert isinstance(p, VertexAIProvider)
 

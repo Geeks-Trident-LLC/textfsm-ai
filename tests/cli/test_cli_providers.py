@@ -44,8 +44,8 @@ def test_providers_info_no_config(monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
-    monkeypatch.delenv("AZURE_OPENAI_API_KEY", raising=False)
-    monkeypatch.delenv("AZURE_OPENAI_ENDPOINT", raising=False)
+    monkeypatch.delenv("AZURE_API_KEY", raising=False)
+    monkeypatch.delenv("AZURE_ENDPOINT", raising=False)
 
     runner = CliRunner()
     result = runner.invoke(main, ["providers", "info", "--name", "openai"])

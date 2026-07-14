@@ -24,11 +24,11 @@ environment variable:
 | OpenRouter  | `"openrouter"`    | `OPENROUTER_API_KEY`      |
 | Moonshot AI (Kimi) | `"moonshot"` | `MOONSHOT_API_KEY`     |
 | Mistral AI  | `"mistral"`       | `MISTRAL_API_KEY`         |
-| Amazon Bedrock | `"bedrock"`    | `AWS_REGION` (or `AWS_DEFAULT_REGION`) + AWS credential chain |
+| Amazon Bedrock | `"bedrock"`    | `BEDROCK_REGION` (or `BEDROCK_DEFAULT_REGION`) + AWS credential chain |
 | Cohere      | `"cohere"`        | `COHERE_API_KEY`          |
-| Google Vertex AI | `"vertexai"` | `GOOGLE_CLOUD_PROJECT` + `GOOGLE_CLOUD_LOCATION` + GCP ADC credential chain |
+| Google Vertex AI | `"vertexai"` | `VERTEXAI_PROJECT` + `VERTEXAI_REGION` + GCP ADC credential chain |
 | Oracle OCI  | `"oci"`           | `OCI_COMPARTMENT_ID` + `~/.oci/config` credential file (`OCI_REGION` optional) |
-| Azure OpenAI| `"azure"`         | `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_VERSION` |
+| Azure OpenAI| `"azure"`         | `AZURE_API_KEY`, `AZURE_ENDPOINT`, `AZURE_API_VERSION` |
 
 ```bash
 pip install textfsm-ai
@@ -131,10 +131,10 @@ Azure uses a deployment name in place of `model`, plus `endpoint` and
 result = textfsm_ai.generate(
     sample,
     provider="azure",
-    api_key=os.environ["AZURE_OPENAI_API_KEY"],
-    model=os.environ["AZURE_OPENAI_DEPLOYMENT"],  # deployment name
-    endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
-    api_version=os.environ["AZURE_OPENAI_API_VERSION"],
+    api_key=os.environ["AZURE_API_KEY"],
+    model=os.environ["AZURE_DEPLOYMENT"],  # deployment name
+    endpoint=os.environ["AZURE_ENDPOINT"],
+    api_version=os.environ["AZURE_API_VERSION"],
 )
 ```
 
@@ -151,7 +151,7 @@ result = textfsm_ai.generate(
     provider="bedrock",
     api_key="",
     model="anthropic.claude-haiku-4-5-v1:0",
-    region=os.environ["AWS_REGION"],
+    region=os.environ["BEDROCK_REGION"],
 )
 ```
 
@@ -171,8 +171,8 @@ result = textfsm_ai.generate(
     provider="vertexai",
     api_key="",
     model="gemini-2.5-flash",
-    project=os.environ["GOOGLE_CLOUD_PROJECT"],
-    region=os.environ["GOOGLE_CLOUD_LOCATION"],
+    project=os.environ["VERTEXAI_PROJECT"],
+    region=os.environ["VERTEXAI_REGION"],
 )
 ```
 
@@ -213,6 +213,8 @@ providers instead.
 
 ## Next steps
 
+- See [Providers](../providers/index.md) for the full list of supported
+  providers, their credentials, and any provider-specific quirks.
 - See the [API Reference](../reference/index.md) for every function and
   result type.
 - See the [CLI Guide](../cli/index.md) for the equivalent `textfsm-ai`

@@ -25,7 +25,11 @@ class BedrockProvider(Provider, ModelListingMixin):
     than a project-level API key - boto3 resolves credentials on its own,
     so this provider never handles a secret directly. The only
     Bedrock-specific parameter is `region`, since every Bedrock call is
-    region-scoped.
+    region-scoped. This app resolves it from its own app-namespaced
+    BEDROCK_REGION/BEDROCK_DEFAULT_REGION env vars (not boto3's own
+    AWS_REGION/AWS_DEFAULT_REGION, since region_name is always passed
+    explicitly to boto3.client() below, boto3 never gets a chance to fall
+    back to its own env vars in this code path).
 
     boto3 has no native async client, so `generate()` wraps the sync
     `converse()` call in `asyncio.to_thread`, same as AzureOpenAIProvider.
@@ -38,11 +42,13 @@ class BedrockProvider(Provider, ModelListingMixin):
         region: Optional[str] = None,
         default_model: str = MODEL.bedrock.default,
     ) -> None:
-        region = region or os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION")
+        region = (
+            region or os.getenv("BEDROCK_REGION") or os.getenv("BEDROCK_DEFAULT_REGION")
+        )
         if not region:
             raise ValueError(
-                "AWS region is not set (pass region= or set AWS_REGION/"
-                "AWS_DEFAULT_REGION)"
+                "AWS region is not set (pass region= or set BEDROCK_REGION/"
+                "BEDROCK_DEFAULT_REGION)"
             )
 
         self.client = boto3.client("bedrock-runtime", region_name=region)
@@ -91,9 +97,9 @@ class BedrockProvider(Provider, ModelListingMixin):
 
     @classmethod
     def from_env(cls) -> "BedrockProvider":
-        region = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION")
+        region = os.getenv("BEDROCK_REGION") or os.getenv("BEDROCK_DEFAULT_REGION")
         if not region:
-            raise RuntimeError("AWS_REGION or AWS_DEFAULT_REGION is not set")
+            raise RuntimeError("BEDROCK_REGION or BEDROCK_DEFAULT_REGION is not set")
 
         return cls(region, MODEL.bedrock.default)
 
