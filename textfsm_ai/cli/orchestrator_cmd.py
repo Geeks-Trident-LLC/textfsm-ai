@@ -58,6 +58,19 @@ def orchestrator_route(model: str) -> None:
         "gemini": DummyProvider("gemini"),
         "azure": DummyProvider("azure"),
         "deepseek": DummyProvider("deepseek"),
+        "groq": DummyProvider("groq"),
+        "xai": DummyProvider("xai"),
+        "together": DummyProvider("together"),
+        "fireworks": DummyProvider("fireworks"),
+        "cerebras": DummyProvider("cerebras"),
+        "perplexity": DummyProvider("perplexity"),
+        "openrouter": DummyProvider("openrouter"),
+        "moonshot": DummyProvider("moonshot"),
+        "mistral": DummyProvider("mistral"),
+        "bedrock": DummyProvider("bedrock"),
+        "cohere": DummyProvider("cohere"),
+        "vertexai": DummyProvider("vertexai"),
+        "oci": DummyProvider("oci"),
     }
 
     req = OrchestratorRequest(model=model, prompt="")

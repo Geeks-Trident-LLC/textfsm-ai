@@ -20,6 +20,19 @@ def test_providers_list_runs():
     assert "anthropic" in result.output
     assert "gemini" in result.output
     assert "azure" in result.output
+    assert "groq" in result.output
+    assert "xai" in result.output
+    assert "together" in result.output
+    assert "fireworks" in result.output
+    assert "cerebras" in result.output
+    assert "perplexity" in result.output
+    assert "openrouter" in result.output
+    assert "moonshot" in result.output
+    assert "mistral" in result.output
+    assert "bedrock" in result.output
+    assert "cohere" in result.output
+    assert "vertexai" in result.output
+    assert "oci" in result.output
 
 
 def test_providers_info_no_config(monkeypatch):
@@ -31,8 +44,8 @@ def test_providers_info_no_config(monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
-    monkeypatch.delenv("AZURE_OPENAI_API_KEY", raising=False)
-    monkeypatch.delenv("AZURE_OPENAI_ENDPOINT", raising=False)
+    monkeypatch.delenv("AZURE_API_KEY", raising=False)
+    monkeypatch.delenv("AZURE_ENDPOINT", raising=False)
 
     runner = CliRunner()
     result = runner.invoke(main, ["providers", "info", "--name", "openai"])

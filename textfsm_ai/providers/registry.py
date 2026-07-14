@@ -7,10 +7,23 @@ from typing import Dict, Type
 from textfsm_ai.orchestrator.provider import Provider
 from textfsm_ai.providers.anthropic_provider import AnthropicProvider
 from textfsm_ai.providers.azure_provider import AzureOpenAIProvider
+from textfsm_ai.providers.bedrock_provider import BedrockProvider
+from textfsm_ai.providers.cerebras_provider import CerebrasProvider
+from textfsm_ai.providers.cohere_provider import CohereProvider
 from textfsm_ai.providers.deepseek_provider import DeepSeekProvider
+from textfsm_ai.providers.fireworks_provider import FireworksProvider
 from textfsm_ai.providers.gemini_provider import GeminiProvider
+from textfsm_ai.providers.groq_provider import GroqProvider
+from textfsm_ai.providers.mistral_provider import MistralProvider
+from textfsm_ai.providers.moonshot_provider import MoonshotProvider
+from textfsm_ai.providers.oci_provider import OCIProvider
 from textfsm_ai.providers.openai_compat_provider import OpenAICompatProvider
 from textfsm_ai.providers.openai_provider import OpenAIProvider
+from textfsm_ai.providers.openrouter_provider import OpenRouterProvider
+from textfsm_ai.providers.perplexity_provider import PerplexityProvider
+from textfsm_ai.providers.together_provider import TogetherProvider
+from textfsm_ai.providers.vertexai_provider import VertexAIProvider
+from textfsm_ai.providers.xai_provider import XAIProvider
 
 
 class ProviderRegistry:
@@ -34,6 +47,19 @@ registry.register(AzureOpenAIProvider)
 registry.register(AnthropicProvider)
 registry.register(GeminiProvider)
 registry.register(DeepSeekProvider)
+registry.register(GroqProvider)
+registry.register(XAIProvider)
+registry.register(TogetherProvider)
+registry.register(FireworksProvider)
+registry.register(CerebrasProvider)
+registry.register(PerplexityProvider)
+registry.register(OpenRouterProvider)
+registry.register(MoonshotProvider)
+registry.register(MistralProvider)
+registry.register(BedrockProvider)
+registry.register(CohereProvider)
+registry.register(VertexAIProvider)
+registry.register(OCIProvider)
 
 
 def get_provider_by_name(provider_name: str) -> Type[Provider]:

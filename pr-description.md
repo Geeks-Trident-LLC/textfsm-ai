@@ -1,47 +1,65 @@
 ## Summary
 
-This PR prepares the v0.4.2 release: a new standardized public Python API,
-the documentation to go with it, and a further pass of test coverage
-across the codebase, following v0.4.1.
+This PR prepares the v0.5.0 release: a new Oracle OCI provider, a
+breaking standardization of every provider's environment variable naming,
+a new providers overview doc page, a refreshed docs homepage, and a ~4x
+test suite speedup, following v0.4.2.
 
 ## What's Included
 
-### Public API
-- New facade: `generate()`/`compile_dsl()`/`run_pipeline()` (verb functions,
-  always return a full result object, never raise for expected failures)
-  plus `to_llm_result`/`to_llm_template`/`to_llm_records`/`to_llm_variables`/
-  `to_llm_handling` and `to_dsl_result`/`to_ast`/`to_canonical`/`to_readable`/
-  `to_recognizers` shortcuts with identical parameters to their verb function
-- New `LLMResult`/`DSLResult` result types (`textfsm_ai/api_models.py`);
-  `TemplateAST`, `DeliveryOutput`, `ValidationResult` now also exported at
-  the top level
-- Removed `ask_ai()`, superseded by `generate()`/`run_pipeline()`
+### New Provider
+- Oracle Cloud Infrastructure (OCI) Generative AI (`provider="oci"`) —
+  Meta Llama and xAI Grok models via OCI's Generic chat format
+- Authenticates via `~/.oci/config` (no project-level API key, same shape
+  as Bedrock/Vertex AI); new `compartment_id` parameter / `--compartment-id`
+  CLI flag threaded through the full plumbing chain
+- Deliberately excluded from auto-routing — its `meta.`/`xai.` model-ID
+  prefixes collide with Bedrock's re-hosted namespace, so `--provider oci`
+  must be explicit
+
+### Breaking Change: Environment Variable Standardization
+- Every provider's env vars now follow one uniform `<PROVIDER>_<FIELD>`
+  pattern, no exceptions:
+  - `AZURE_OPENAI_API_KEY`/`AZURE_OPENAI_ENDPOINT`/`AZURE_OPENAI_API_VERSION`/
+    `AZURE_OPENAI_DEPLOYMENT` → `AZURE_API_KEY`/`AZURE_ENDPOINT`/
+    `AZURE_API_VERSION`/`AZURE_DEPLOYMENT`
+  - `AWS_REGION`/`AWS_DEFAULT_REGION` → `BEDROCK_REGION`/`BEDROCK_DEFAULT_REGION`
+  - `GOOGLE_CLOUD_PROJECT`/`GOOGLE_CLOUD_LOCATION` → `VERTEXAI_PROJECT`/`VERTEXAI_REGION`
+- None of the renamed vars were read by the underlying SDKs themselves
+  (boto3/google-genai/azure-ai-inference always get explicit values passed
+  in), only by this app's own `os.getenv()` calls — no functional reason to
+  keep the old ecosystem-convention names once Azure/AWS/GCP naming is
+  already being broken from for consistency
+- **Anyone with the old env var names already set must update them.**
 
 ### Documentation
-- Quickstart guide covering the full API end to end
-- mkdocstrings-generated API Reference (all public functions/types)
-- Real CLI Guide (every command, verified against the live CLI)
-- New Human-in-the-Loop Review guide: reviewing a generated template using
-  the plain-English "readable" DSL form and a real parse-and-diff step,
-  with no regex required
-- Removed broken/stale docs pages and a nonexistent golden-test framework doc
+- New `docs/providers/index.md` — single overview page listing all 18
+  providers, credentials, extra params, Shape A/B split, and
+  routing-collision notes
+- Refreshed `docs/index.md` — intro now leads with the AI-powered
+  generation angle (the actual headline feature) instead of reading like a
+  generic parsing library; removed the false "Zero external dependencies"
+  claim; replaced Documentation/Installation sections with a single
+  "Explore the Docs" links section
 
-### Bug Fix
-- `generate()` now sources `.ready`/`.reason` from the top-level generation
-  pipeline (accounts for retries and template-syntax validation) instead of
-  the nested LLM response object — the old logic could report success for a
-  pipeline that had actually failed
-
-### Test Coverage
-- Raised to ~99% across nearly the entire codebase, closing every file that
-  had a genuinely testable gap
+### Test Suite
+- Removed `tests/unit/test_providers.py` and
+  `tests/unit/test_providers_openai_compat.py` — fully redundant with
+  `tests/unit/providers/*.py`, zero coverage loss
+- Added session-scoped SSL-context caching (`tests/unit/conftest.py`) —
+  provider/orchestrator-factory tests were spending most of their runtime
+  re-parsing the CA certificate bundle on every real SDK client
+  construction; full suite runtime drops from 60+s to ~15-20s
+- Added a test covering `Orchestrator.run()`'s previously-untested
+  retry-exhaustion re-raise path — `orchestrator.py` moves from 91% to
+  100% coverage
 
 ## Release Artifacts
-- CHANGELOG updated for v0.4.2
+- CHANGELOG updated for v0.5.0
 - Release notes generated
-- Version bumped from 0.4.1 → 0.4.2
+- Version bumped from 0.4.2 → 0.5.0
 
 ## Testing
-- Full unit and integration suite passing
+- Full unit and integration suite passing (901 passed, 44 skipped)
 - `tox -e format,lint,typecheck` clean
-- TestPyPI release validated (`v0.4.2-test`)
+- TestPyPI release validated (`v0.5.0-test`)

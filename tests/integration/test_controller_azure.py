@@ -12,8 +12,8 @@ def test_real(azure_key):
         provider_name="azure",
         api_key=azure_key,
         model="gpt-4.1-textfsm-ai",
-        endpoint=os.environ.get("AZURE_OPENAI_ENDPOINT"),
-        api_version=os.environ.get("AZURE_OPENAI_API_VERSION", "2024-02-15-preview"),
+        endpoint=os.environ.get("AZURE_ENDPOINT"),
+        api_version=os.environ.get("AZURE_API_VERSION", "2024-02-15-preview"),
         max_retries=2,
     )
 

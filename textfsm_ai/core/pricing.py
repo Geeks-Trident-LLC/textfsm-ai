@@ -9,85 +9,25 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+import yaml
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Pricing registry (per provider → per model family)
-# Prices are per 1 million tokens.
+# Prices are per 1 million tokens. Loaded from pricing.yaml so adding a new
+# provider/model doesn't require touching this module.
 # ---------------------------------------------------------------------------
 
+PRICING_DATA_PATH = Path(__file__).parent / "pricing.yaml"
 
-# All prices in USD per 1M tokens. Verified against official pricing pages, July 2026.
-PRICING_TABLE: Dict[str, Dict[str, Dict[str, float]]] = {
-    "anthropic": {
-        "claude-fable-5": {"input": 10.00, "output": 50.00},
-        "claude-opus-3": {"input": 15.00, "output": 75.00},
-        "claude-opus-4": {"input": 15.00, "output": 75.00},
-        "claude-opus-4-1": {"input": 15.00, "output": 75.00},
-        "claude-opus-4-5": {"input": 5.00, "output": 25.00},
-        "claude-opus-4-6": {"input": 5.00, "output": 25.00},
-        "claude-opus-4-7": {"input": 5.00, "output": 25.00},
-        "claude-opus-4-8": {"input": 5.00, "output": 25.00},
-        "claude-sonnet-3-5": {"input": 3.00, "output": 15.00},
-        "claude-sonnet-3-7": {"input": 3.00, "output": 15.00},
-        "claude-sonnet-4": {"input": 3.00, "output": 15.00},
-        # $6/$22.50 beyond 200K context
-        "claude-sonnet-4-5": {"input": 3.00, "output": 15.00},
-        # 1M context at standard rate, no surcharge
-        "claude-sonnet-4-6": {"input": 3.00, "output": 15.00},
-        # intro pricing through Aug 31, 2026; then $3/$15
-        "claude-sonnet-5": {"input": 2.00, "output": 10.00},
-        "claude-haiku-3": {"input": 0.25, "output": 1.25},
-        "claude-haiku-3-5": {"input": 0.80, "output": 4.00},
-        "claude-haiku-4-5": {"input": 1.00, "output": 5.00},
-    },
-    "openai": {
-        # GPT-5.5 (current flagship)
-        "gpt-5.5": {"input": 5.00, "output": 30.00},
-        "gpt-5.5-pro": {"input": 30.00, "output": 180.00},
-        # GPT-5.4 (recommended production workhorse)
-        "gpt-5.4": {"input": 2.50, "output": 15.00},
-        "gpt-5.4-mini": {"input": 0.75, "output": 4.50},
-        "gpt-5.4-nano": {"input": 0.20, "output": 1.25},
-        # GPT-5 family (previous generation, still callable)
-        "gpt-5": {"input": 1.25, "output": 10.00},
-        "gpt-5-mini": {"input": 0.25, "output": 2.00},
-        "gpt-5-nano": {"input": 0.05, "output": 0.40},
-        "gpt-5-pro": {"input": 15.00, "output": 120.00},
-        # GPT-4.1 family — cheapest long-context (1M) option
-        "gpt-4.1": {"input": 2.00, "output": 8.00},
-        "gpt-4.1-mini": {"input": 0.40, "output": 1.60},
-        "gpt-4.1-nano": {"input": 0.10, "output": 0.40},
-        # o-series reasoning models
-        "o3": {"input": 2.00, "output": 8.00},
-        "o3-pro": {"input": 20.00, "output": 80.00},
-        "o4-mini": {"input": 1.10, "output": 4.40},
-        # Legacy, still callable:
-        "gpt-4o": {"input": 2.50, "output": 10.00},
-        "gpt-4o-mini": {"input": 0.15, "output": 0.60},
-        "o1-pro": {"input": 150.00, "output": 600.00},
-    },
-    "deepseek": {
-        "deepseek-v4-flash": {"input": 0.14, "output": 0.28},
-        # "deepseek-v4-pro":   {"input": 0.435, "output": 0.87},   # promo rate
-        "deepseek-v4-pro": {"input": 1.74, "output": 3.48},  # full rate $1.74/$3.48
-    },
-    "gemini": {
-        # Gemini 3.5 (current flagship Flash — beats 3.1 Pro on coding at lower cost)
-        "gemini-3.5-flash": {"input": 1.50, "output": 9.00},
-        # Gemini 3.1 family
-        # doubles above 200K context
-        "gemini-3.1-pro": {"input": 2.00, "output": 12.00},
-        "gemini-3.1-flash-lite": {"input": 0.25, "output": 1.50},
-        # Gemini 3 (previous gen, still available)
-        "gemini-3-flash": {"input": 0.50, "output": 3.00},
-        # Gemini 2.5 family
-        # $2.50/$15 above 200K context
-        "gemini-2.5-pro": {"input": 1.25, "output": 10.00},
-        "gemini-2.5-flash": {"input": 0.30, "output": 2.50},
-        "gemini-2.5-flash-lite": {"input": 0.10, "output": 0.40},
-    },
-}
+
+def _load_pricing_table() -> Dict[str, Dict[str, Dict[str, float]]]:
+    with open(PRICING_DATA_PATH, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
+PRICING_TABLE: Dict[str, Dict[str, Dict[str, float]]] = _load_pricing_table()
 
 
 PRICING_TABLE.setdefault("azure", copy.deepcopy(PRICING_TABLE["openai"]))

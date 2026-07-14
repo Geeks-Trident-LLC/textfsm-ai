@@ -16,6 +16,9 @@ class GenerationController:
         model: str,
         endpoint: str = "",
         api_version: str = "",
+        region: str = "",
+        project: str = "",
+        compartment_id: str = "",
         max_retries: int = 1,
     ):
         self.provider_name = provider_name
@@ -24,6 +27,9 @@ class GenerationController:
         self.max_retries = max_retries
         self.endpoint = endpoint
         self.api_version = api_version
+        self.region = region
+        self.project = project
+        self.compartment_id = compartment_id
 
     def run(self, sample: str, **kwargs) -> GenerationPipeline:
 
@@ -43,6 +49,9 @@ class GenerationController:
                 sample=sample,
                 endpoint=self.endpoint,
                 api_version=self.api_version,
+                region=self.region,
+                project=self.project,
+                compartment_id=self.compartment_id,
                 **kwargs,
             )
             last_result = result
@@ -103,6 +112,9 @@ class GenerationController:
                 prev_result=last_result,
                 endpoint=self.endpoint,
                 api_version=self.api_version,
+                region=self.region,
+                project=self.project,
+                compartment_id=self.compartment_id,
                 **kwargs,
             )
             last_result = result

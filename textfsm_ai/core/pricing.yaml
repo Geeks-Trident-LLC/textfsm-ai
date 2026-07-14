@@ -1,0 +1,214 @@
+# textfsm_ai/core/pricing.yaml
+#
+# Pricing registry (per provider -> per model family).
+# Prices are per 1 million tokens, in USD.
+# Verified against official pricing pages, July 2026.
+#
+# Note: "azure" is NOT defined here - it's derived at import time in
+# pricing.py (inherits OpenAI's full catalog, plus the Anthropic/DeepSeek
+# models actually GA on Azure-hosted Foundry). claude-sonnet-5's intro
+# pricing is also auto-updated at runtime by update_claude_sonnet_5(); see
+# pricing.py.
+
+anthropic:
+  claude-fable-5: {input: 10.00, output: 50.00}
+  claude-opus-3: {input: 15.00, output: 75.00}
+  claude-opus-4: {input: 15.00, output: 75.00}
+  claude-opus-4-1: {input: 15.00, output: 75.00}
+  claude-opus-4-5: {input: 5.00, output: 25.00}
+  claude-opus-4-6: {input: 5.00, output: 25.00}
+  claude-opus-4-7: {input: 5.00, output: 25.00}
+  claude-opus-4-8: {input: 5.00, output: 25.00}
+  claude-sonnet-3-5: {input: 3.00, output: 15.00}
+  claude-sonnet-3-7: {input: 3.00, output: 15.00}
+  claude-sonnet-4: {input: 3.00, output: 15.00}
+  # $6/$22.50 beyond 200K context
+  claude-sonnet-4-5: {input: 3.00, output: 15.00}
+  # 1M context at standard rate, no surcharge
+  claude-sonnet-4-6: {input: 3.00, output: 15.00}
+  # intro pricing through Aug 31, 2026; then $3/$15
+  claude-sonnet-5: {input: 2.00, output: 10.00}
+  claude-haiku-3: {input: 0.25, output: 1.25}
+  claude-haiku-3-5: {input: 0.80, output: 4.00}
+  claude-haiku-4-5: {input: 1.00, output: 5.00}
+
+openai:
+  # GPT-5.5 (current flagship)
+  gpt-5.5: {input: 5.00, output: 30.00}
+  gpt-5.5-pro: {input: 30.00, output: 180.00}
+  # GPT-5.4 (recommended production workhorse)
+  gpt-5.4: {input: 2.50, output: 15.00}
+  gpt-5.4-mini: {input: 0.75, output: 4.50}
+  gpt-5.4-nano: {input: 0.20, output: 1.25}
+  # GPT-5 family (previous generation, still callable)
+  gpt-5: {input: 1.25, output: 10.00}
+  gpt-5-mini: {input: 0.25, output: 2.00}
+  gpt-5-nano: {input: 0.05, output: 0.40}
+  gpt-5-pro: {input: 15.00, output: 120.00}
+  # GPT-4.1 family - cheapest long-context (1M) option
+  gpt-4.1: {input: 2.00, output: 8.00}
+  gpt-4.1-mini: {input: 0.40, output: 1.60}
+  gpt-4.1-nano: {input: 0.10, output: 0.40}
+  # o-series reasoning models
+  o3: {input: 2.00, output: 8.00}
+  o3-pro: {input: 20.00, output: 80.00}
+  o4-mini: {input: 1.10, output: 4.40}
+  # Legacy, still callable:
+  gpt-4o: {input: 2.50, output: 10.00}
+  gpt-4o-mini: {input: 0.15, output: 0.60}
+  o1-pro: {input: 150.00, output: 600.00}
+
+deepseek:
+  deepseek-v4-flash: {input: 0.14, output: 0.28}
+  # deepseek-v4-pro: {input: 0.435, output: 0.87}   # promo rate
+  deepseek-v4-pro: {input: 1.74, output: 3.48}  # full rate $1.74/$3.48
+
+gemini:
+  # Gemini 3.5 (current flagship Flash - beats 3.1 Pro on coding at lower cost)
+  gemini-3.5-flash: {input: 1.50, output: 9.00}
+  # Gemini 3.1 family
+  # doubles above 200K context
+  gemini-3.1-pro: {input: 2.00, output: 12.00}
+  gemini-3.1-flash-lite: {input: 0.25, output: 1.50}
+  # Gemini 3 (previous gen, still available)
+  gemini-3-flash: {input: 0.50, output: 3.00}
+  # Gemini 2.5 family
+  # $2.50/$15 above 200K context
+  gemini-2.5-pro: {input: 1.25, output: 10.00}
+  gemini-2.5-flash: {input: 0.30, output: 2.50}
+  gemini-2.5-flash-lite: {input: 0.10, output: 0.40}
+
+# Approximate rates - verify against https://groq.com/pricing before relying
+# on these for real cost estimates.
+groq:
+  llama-3.3-70b-versatile: {input: 0.59, output: 0.79}
+  llama-3.1-8b-instant: {input: 0.05, output: 0.08}
+  gemma2-9b-it: {input: 0.20, output: 0.20}
+  qwen-2.5-32b: {input: 0.79, output: 0.79}
+  mixtral-8x7b-32768: {input: 0.24, output: 0.24}
+  deepseek-r1-distill-llama-70b: {input: 0.75, output: 0.99}
+
+# Approximate rates - verify against https://x.ai/api pricing page before
+# relying on these for real cost estimates.
+xai:
+  grok-4: {input: 3.00, output: 15.00}
+  grok-3: {input: 3.00, output: 15.00}
+  grok-3-mini: {input: 0.30, output: 0.50}
+  grok-2-vision-1212: {input: 2.00, output: 10.00}
+
+# Approximate rates - verify against https://www.together.ai/pricing before
+# relying on these for real cost estimates.
+together:
+  meta-llama/Llama-3.3-70B-Instruct-Turbo: {input: 0.88, output: 0.88}
+  meta-llama/Llama-3.1-8B-Instruct-Turbo: {input: 0.18, output: 0.18}
+  Qwen/Qwen2.5-32B-Instruct: {input: 0.80, output: 0.80}
+  mistralai/Mixtral-8x7B-Instruct-v0.1: {input: 0.60, output: 0.60}
+  deepseek-ai/DeepSeek-R1-Distill-Llama-70B: {input: 2.00, output: 2.00}
+
+# Approximate rates - verify against https://fireworks.ai/pricing before
+# relying on these for real cost estimates.
+fireworks:
+  accounts/fireworks/models/llama-v3p3-70b-instruct: {input: 0.90, output: 0.90}
+  accounts/fireworks/models/llama-v3p1-8b-instruct: {input: 0.20, output: 0.20}
+  accounts/fireworks/models/qwen2p5-32b-instruct: {input: 0.90, output: 0.90}
+  accounts/fireworks/models/mixtral-8x22b-instruct: {input: 0.90, output: 0.90}
+  accounts/fireworks/models/deepseek-r1: {input: 3.00, output: 8.00}
+
+# Approximate rates - verify against https://www.cerebras.ai/pricing before
+# relying on these for real cost estimates.
+cerebras:
+  llama-4-maverick-17b-128e-instruct: {input: 0.20, output: 0.60}
+  llama-4-scout-17b-16e-instruct: {input: 0.65, output: 0.85}
+  qwen-3-32b: {input: 0.40, output: 0.80}
+  llama3.1-8b: {input: 0.10, output: 0.10}
+  gpt-oss-120b: {input: 0.25, output: 0.69}
+
+# Approximate rates - verify against https://docs.perplexity.ai/getting-started/pricing
+# before relying on these for real cost estimates. Perplexity also bills a
+# per-request search/citation fee not modeled here.
+perplexity:
+  sonar: {input: 1.00, output: 1.00}
+  sonar-pro: {input: 3.00, output: 15.00}
+  sonar-reasoning: {input: 1.00, output: 5.00}
+  sonar-reasoning-pro: {input: 2.00, output: 8.00}
+  sonar-deep-research: {input: 2.00, output: 8.00}
+
+# Approximate rates - verify against https://openrouter.ai/models before
+# relying on these for real cost estimates; OpenRouter's per-model rates
+# generally track the upstream provider's own pricing.
+#
+# "openrouter/auto" is deliberately NOT priced here: it dynamically picks
+# the underlying model per request, so it has no single fixed rate -
+# estimate_cost() will correctly report it as an unpriced/unknown model
+# rather than guessing a number that could be wrong by an order of
+# magnitude depending on what "auto" actually routed to.
+openrouter:
+  anthropic/claude-3.5-sonnet: {input: 3.00, output: 15.00}
+  openai/gpt-4o: {input: 2.50, output: 10.00}
+  google/gemini-2.5-flash-lite: {input: 0.10, output: 0.40}
+  deepseek/deepseek-r1: {input: 0.55, output: 2.19}
+
+# Approximate rates - verify against https://platform.moonshot.ai/pricing
+# before relying on these for real cost estimates.
+#
+# "moonshot-v1-auto" is deliberately NOT priced here: it dynamically picks
+# the context-length bucket per request (same rationale as
+# "openrouter/auto" above), so it has no single fixed rate.
+moonshot:
+  moonshot-v1-8k: {input: 0.20, output: 2.00}
+  moonshot-v1-32k: {input: 1.00, output: 3.00}
+  moonshot-v1-128k: {input: 2.00, output: 5.00}
+  kimi-k2-0711-preview: {input: 0.60, output: 2.50}
+  kimi-k2-turbo-preview: {input: 0.60, output: 2.50}
+
+# Approximate rates - verify against https://mistral.ai/pricing before
+# relying on these for real cost estimates.
+mistral:
+  mistral-large-latest: {input: 2.00, output: 6.00}
+  mistral-medium-latest: {input: 0.40, output: 2.00}
+  mistral-small-latest: {input: 0.10, output: 0.30}
+  magistral-medium-latest: {input: 2.00, output: 5.00}
+  codestral-latest: {input: 0.30, output: 0.90}
+
+# Approximate rates - verify against https://aws.amazon.com/bedrock/pricing
+# before relying on these for real cost estimates. Bedrock re-hosts
+# several vendors' models under "vendor.model-vN:M" IDs, each individually
+# priced by AWS (not necessarily identical to that vendor's own native
+# API pricing).
+bedrock:
+  anthropic.claude-opus-4-8-v1:0: {input: 5.00, output: 25.00}
+  anthropic.claude-sonnet-4-6-v1:0: {input: 3.00, output: 15.00}
+  anthropic.claude-haiku-4-5-v1:0: {input: 1.00, output: 5.00}
+  meta.llama4-maverick-v1:0: {input: 0.24, output: 0.97}
+  meta.llama4-scout-v1:0: {input: 0.17, output: 0.66}
+  meta.llama3-1-8b-instruct-v1:0: {input: 0.22, output: 0.22}
+  mistral.mistral-large-2-v1:0: {input: 2.00, output: 6.00}
+  amazon.titan-text-premier-v1:0: {input: 0.50, output: 1.50}
+  cohere.command-r-plus-v1:0: {input: 2.50, output: 10.00}
+
+# Approximate rates - verify against https://cohere.com/pricing before
+# relying on these for real cost estimates.
+cohere:
+  command-a: {input: 2.50, output: 10.00}
+  command-r-plus: {input: 2.50, output: 10.00}
+  command-r: {input: 0.15, output: 0.60}
+  command-light: {input: 0.075, output: 0.30}
+
+# Approximate rates - verify against https://cloud.google.com/vertex-ai/pricing
+# before relying on these for real cost estimates. Vertex AI serves the
+# SAME Gemini models as the native Gemini Developer API (see the
+# "gemini:" block above) but through GCP's separate enterprise billing -
+# mirrored here rather than shared, matching how Bedrock's re-hosted
+# models got their own independent pricing block too.
+vertexai:
+  gemini-2.5-pro: {input: 1.25, output: 10.00}
+  gemini-2.5-flash: {input: 0.30, output: 2.50}
+  gemini-2.5-flash-lite: {input: 0.10, output: 0.40}
+
+# Approximate rates - verify against https://www.oracle.com/cloud/price-list/
+# before relying on these for real cost estimates. Deliberately minimal:
+# only the two model IDs actually confirmed against Oracle's docs (see
+# models/providers.yaml's oci: block comment for why).
+oci:
+  meta.llama-3.3-70b-instruct: {input: 0.75, output: 0.75}
+  xai.grok-4-fast-reasoning: {input: 0.35, output: 1.50}

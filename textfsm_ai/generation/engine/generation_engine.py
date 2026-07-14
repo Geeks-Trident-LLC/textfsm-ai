@@ -19,12 +19,21 @@ def run(
     sample: str,
     endpoint: str = "",
     api_version: str = "",
+    region: str = "",
+    project: str = "",
+    compartment_id: str = "",
     **kwargs,
 ):
     provider_type = get_provider_by_name(provider_name)
     if provider_type.name == "azure":
         deployment = model
         provider = provider_type(api_key, endpoint, api_version, deployment)
+    elif provider_type.name == "bedrock":
+        provider = provider_type(region, model)
+    elif provider_type.name == "vertexai":
+        provider = provider_type(project, region, model)
+    elif provider_type.name == "oci":
+        provider = provider_type(compartment_id, region, model)
     else:
         provider = provider_type(api_key, model)
 
@@ -48,11 +57,20 @@ def run_correction_prompt(
     prev_result: GenerationStage,
     endpoint: str = "",
     api_version: str = "",
+    region: str = "",
+    project: str = "",
+    compartment_id: str = "",
     **kwargs,
 ):
     provider_type = get_provider_by_name(provider_name)
     if provider_type.name == "azure":
         provider = provider_type(api_key, endpoint, api_version, model)
+    elif provider_type.name == "bedrock":
+        provider = provider_type(region, model)
+    elif provider_type.name == "vertexai":
+        provider = provider_type(project, region, model)
+    elif provider_type.name == "oci":
+        provider = provider_type(compartment_id, region, model)
     else:
         provider = provider_type(api_key, model)
 

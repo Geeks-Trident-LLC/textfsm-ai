@@ -84,8 +84,292 @@ deepseek:
       chat:
         - deepseek-chat
 
+groq:
+  quality:
+    chat:
+      - llama-3.3-70b-versatile
+  balance:
+    chat:
+      - llama-3.1-8b-instant
+  speed:
+    chat:
+      - gemma2-9b-it
+  thinking:
+    quality:
+      chat:
+        - deepseek-r1-distill-llama-70b
+    balance:
+      chat:
+        - deepseek-r1-distill-llama-70b
+    speed:
+      chat:
+        - deepseek-r1-distill-llama-70b
+
+xai:
+  quality:
+    chat:
+      - grok-4
+  balance:
+    chat:
+      - grok-3
+  speed:
+    chat:
+      - grok-3-mini
+  thinking:
+    quality:
+      chat:
+        - grok-4
+    balance:
+      chat:
+        - grok-3
+    speed:
+      chat:
+        - grok-3-mini
+
+together:
+  quality:
+    chat:
+      - meta-llama/Llama-3.3-70B-Instruct-Turbo
+  balance:
+    chat:
+      - Qwen/Qwen2.5-32B-Instruct
+  speed:
+    chat:
+      - meta-llama/Llama-3.1-8B-Instruct-Turbo
+  thinking:
+    quality:
+      chat:
+        - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    balance:
+      chat:
+        - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+    speed:
+      chat:
+        - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+
+fireworks:
+  quality:
+    chat:
+      - accounts/fireworks/models/llama-v3p3-70b-instruct
+  balance:
+    chat:
+      - accounts/fireworks/models/qwen2p5-32b-instruct
+  speed:
+    chat:
+      - accounts/fireworks/models/llama-v3p1-8b-instruct
+  thinking:
+    quality:
+      chat:
+        - accounts/fireworks/models/deepseek-r1
+    balance:
+      chat:
+        - accounts/fireworks/models/deepseek-r1
+    speed:
+      chat:
+        - accounts/fireworks/models/deepseek-r1
+
+cerebras:
+  quality:
+    chat:
+      - llama-4-maverick-17b-128e-instruct
+  balance:
+    chat:
+      - qwen-3-32b
+  speed:
+    chat:
+      - llama3.1-8b
+  thinking:
+    quality:
+      chat:
+        - gpt-oss-120b
+    balance:
+      chat:
+        - gpt-oss-120b
+    speed:
+      chat:
+        - gpt-oss-120b
+
+perplexity:
+  quality:
+    chat:
+      - sonar-pro
+  balance:
+    chat: []
+  speed:
+    chat:
+      - sonar
+  thinking:
+    quality:
+      chat:
+        - sonar-deep-research
+    balance:
+      chat:
+        - sonar-reasoning-pro
+    speed:
+      chat:
+        - sonar-reasoning
+
+openrouter:
+  quality:
+    chat:
+      - anthropic/claude-3.5-sonnet
+  balance:
+    chat:
+      - openai/gpt-4o
+  speed:
+    chat:
+      - google/gemini-2.5-flash-lite
+  thinking:
+    quality:
+      chat:
+        - deepseek/deepseek-r1
+    balance:
+      chat:
+        - deepseek/deepseek-r1
+    speed:
+      chat:
+        - deepseek/deepseek-r1
+
+moonshot:
+  quality:
+    chat:
+      - kimi-k2-0711-preview
+  balance:
+    chat:
+      - moonshot-v1-32k
+  speed:
+    chat:
+      - moonshot-v1-8k
+  thinking:
+    quality:
+      chat: []
+    balance:
+      chat: []
+    speed:
+      chat: []
+
+mistral:
+  quality:
+    chat:
+      - mistral-large-latest
+  balance:
+    chat:
+      - mistral-medium-latest
+  speed:
+    chat:
+      - mistral-small-latest
+  thinking:
+    quality:
+      chat:
+        - magistral-medium-latest
+    balance:
+      chat:
+        - magistral-medium-latest
+    speed:
+      chat:
+        - magistral-medium-latest
+
+bedrock:
+  quality:
+    chat:
+      - anthropic.claude-opus-4-8-v1:0
+  balance:
+    chat:
+      - anthropic.claude-sonnet-4-6-v1:0
+  speed:
+    chat:
+      - anthropic.claude-haiku-4-5-v1:0
+  thinking:
+    quality:
+      chat:
+        - anthropic.claude-opus-4-8-v1:0
+    balance:
+      chat:
+        - anthropic.claude-sonnet-4-6-v1:0
+    speed:
+      chat:
+        - anthropic.claude-haiku-4-5-v1:0
+
+cohere:
+  quality:
+    chat:
+      - command-a
+  balance:
+    chat:
+      - command-r
+  speed:
+    chat:
+      - command-light
+  thinking:
+    quality:
+      chat: []
+    balance:
+      chat: []
+    speed:
+      chat: []
+
+vertexai:
+  quality:
+    chat:
+      - gemini-2.5-pro
+  balance:
+    chat:
+      - gemini-2.5-flash
+  speed:
+    chat:
+      - gemini-2.5-flash-lite
+  thinking:
+    quality:
+      chat:
+        - gemini-2.5-pro
+    balance:
+      chat:
+        - gemini-2.5-flash
+    speed:
+      chat:
+        - gemini-2.5-flash-lite
+
+# Deliberately minimal: unlike every other provider's catalog, OCI model
+# IDs aren't easily fabricated as plausible-future-names (they're closer
+# to identifiers than product names), so only the two model IDs directly
+# confirmed against Oracle's own docs are listed here. balance/speed are
+# deliberately empty rather than guessing - use `list-models oci
+# --latest` (requires real OCI credentials) for the live catalog.
+oci:
+  quality:
+    chat:
+      - meta.llama-3.3-70b-instruct
+  balance:
+    chat: []
+  speed:
+    chat: []
+  thinking:
+    quality:
+      chat:
+        - xai.grok-4-fast-reasoning
+    balance:
+      chat: []
+    speed:
+      chat: []
+
 aliases:
   openai_default: gpt-4o-mini
   anthropic_default: claude-haiku-4-5-20251001
   gemini_default: gemini-2.5-flash
   deepseek_default: deepseek-v4-flash
+  groq_default: llama-3.1-8b-instant
+  xai_default: grok-3-mini
+  together_default: meta-llama/Llama-3.1-8B-Instruct-Turbo
+  fireworks_default: accounts/fireworks/models/llama-v3p1-8b-instruct
+  cerebras_default: llama3.1-8b
+  perplexity_default: sonar
+  openrouter_default: google/gemini-2.5-flash-lite
+  moonshot_default: moonshot-v1-8k
+  mistral_default: mistral-small-latest
+  bedrock_default: anthropic.claude-haiku-4-5-v1:0
+  cohere_default: command-light
+  vertexai_default: gemini-2.5-flash
+  # Not a "cheap/fast" pick like every other provider's default - it's
+  # the only OCI model ID confirmed against Oracle's own docs (see the
+  # comment on the oci: block above).
+  oci_default: meta.llama-3.3-70b-instruct

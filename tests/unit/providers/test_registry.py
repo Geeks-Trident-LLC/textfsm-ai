@@ -1,17 +1,43 @@
 import pytest
 
 from textfsm_ai.providers.anthropic_provider import AnthropicProvider
+from textfsm_ai.providers.bedrock_provider import BedrockProvider
+from textfsm_ai.providers.cerebras_provider import CerebrasProvider
+from textfsm_ai.providers.cohere_provider import CohereProvider
+from textfsm_ai.providers.fireworks_provider import FireworksProvider
+from textfsm_ai.providers.groq_provider import GroqProvider
+from textfsm_ai.providers.mistral_provider import MistralProvider
+from textfsm_ai.providers.moonshot_provider import MoonshotProvider
+from textfsm_ai.providers.oci_provider import OCIProvider
 from textfsm_ai.providers.openai_provider import OpenAIProvider
+from textfsm_ai.providers.openrouter_provider import OpenRouterProvider
+from textfsm_ai.providers.perplexity_provider import PerplexityProvider
 from textfsm_ai.providers.registry import (
     ProviderRegistry,
     get_provider_by_name,
     registry,
 )
+from textfsm_ai.providers.together_provider import TogetherProvider
+from textfsm_ai.providers.vertexai_provider import VertexAIProvider
+from textfsm_ai.providers.xai_provider import XAIProvider
 
 
 def test_registry_get_returns_registered_class():
     assert registry.get("openai") is OpenAIProvider
     assert registry.get("anthropic") is AnthropicProvider
+    assert registry.get("groq") is GroqProvider
+    assert registry.get("xai") is XAIProvider
+    assert registry.get("together") is TogetherProvider
+    assert registry.get("fireworks") is FireworksProvider
+    assert registry.get("cerebras") is CerebrasProvider
+    assert registry.get("perplexity") is PerplexityProvider
+    assert registry.get("openrouter") is OpenRouterProvider
+    assert registry.get("moonshot") is MoonshotProvider
+    assert registry.get("mistral") is MistralProvider
+    assert registry.get("bedrock") is BedrockProvider
+    assert registry.get("cohere") is CohereProvider
+    assert registry.get("vertexai") is VertexAIProvider
+    assert registry.get("oci") is OCIProvider
 
 
 def test_registry_get_unknown_raises_keyerror():

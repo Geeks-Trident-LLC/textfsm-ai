@@ -24,6 +24,9 @@ def _patched_controller(**init_kwargs):
             model=init_kwargs.get("model", "gpt-4o-mini"),
             endpoint=init_kwargs.get("endpoint", ""),
             api_version=init_kwargs.get("api_version", ""),
+            region=init_kwargs.get("region", ""),
+            project=init_kwargs.get("project", ""),
+            compartment_id=init_kwargs.get("compartment_id", ""),
             max_tries=init_kwargs.get("max_tries", 1),
         )
     return controller, mock_gen_cls, mock_dsl_cls, mock_engine_cls
@@ -45,6 +48,9 @@ def test_init_builds_model_info_and_constructs_gen_controller():
         "model": "claude-sonnet-4-5",
         "endpoint": "https://example.com",
         "api_version": "2024-01-01",
+        "region": "",
+        "project": "",
+        "compartment_id": "",
     }
 
     mock_gen_cls.assert_called_once_with(
@@ -53,10 +59,111 @@ def test_init_builds_model_info_and_constructs_gen_controller():
         model="claude-sonnet-4-5",
         endpoint="https://example.com",
         api_version="2024-01-01",
+        region="",
+        project="",
+        compartment_id="",
         max_retries=3,
     )
     mock_dsl_cls.assert_called_once_with()
     mock_engine_cls.assert_called_once_with()
+
+
+def test_init_builds_model_info_with_bedrock_region():
+    controller, mock_gen_cls, _mock_dsl_cls, _mock_engine_cls = _patched_controller(
+        provider_name="bedrock",
+        api_key="",
+        model="anthropic.claude-haiku-4-5-v1:0",
+        region="us-east-1",
+    )
+
+    assert controller._model_info == {
+        "provider_name": "bedrock",
+        "api_key": "",
+        "model": "anthropic.claude-haiku-4-5-v1:0",
+        "endpoint": "",
+        "api_version": "",
+        "region": "us-east-1",
+        "project": "",
+        "compartment_id": "",
+    }
+
+    mock_gen_cls.assert_called_once_with(
+        provider_name="bedrock",
+        api_key="",
+        model="anthropic.claude-haiku-4-5-v1:0",
+        endpoint="",
+        api_version="",
+        region="us-east-1",
+        project="",
+        compartment_id="",
+        max_retries=1,
+    )
+
+
+def test_init_builds_model_info_with_vertexai_project_and_region():
+    controller, mock_gen_cls, _mock_dsl_cls, _mock_engine_cls = _patched_controller(
+        provider_name="vertexai",
+        api_key="",
+        model="gemini-2.5-flash",
+        region="us-central1",
+        project="my-gcp-project",
+    )
+
+    assert controller._model_info == {
+        "provider_name": "vertexai",
+        "api_key": "",
+        "model": "gemini-2.5-flash",
+        "endpoint": "",
+        "api_version": "",
+        "region": "us-central1",
+        "project": "my-gcp-project",
+        "compartment_id": "",
+    }
+
+    mock_gen_cls.assert_called_once_with(
+        provider_name="vertexai",
+        api_key="",
+        model="gemini-2.5-flash",
+        endpoint="",
+        api_version="",
+        region="us-central1",
+        project="my-gcp-project",
+        compartment_id="",
+        max_retries=1,
+    )
+
+
+def test_init_builds_model_info_with_oci_compartment_id_and_region():
+    controller, mock_gen_cls, _mock_dsl_cls, _mock_engine_cls = _patched_controller(
+        provider_name="oci",
+        api_key="",
+        model="meta.llama-3.3-70b-instruct",
+        region="us-chicago-1",
+        compartment_id="ocid1.compartment.oc1..fake",
+    )
+
+    assert controller._model_info == {
+        "provider_name": "oci",
+        "api_key": "",
+        "model": "meta.llama-3.3-70b-instruct",
+        "endpoint": "",
+        "api_version": "",
+        "region": "us-chicago-1",
+        "project": "",
+        "compartment_id": "ocid1.compartment.oc1..fake",
+    }
+
+    mock_gen_cls.assert_called_once_with(
+        provider_name="oci",
+        api_key="",
+        model="meta.llama-3.3-70b-instruct",
+        endpoint="",
+        api_version="",
+        region="us-chicago-1",
+        project="",
+        compartment_id="ocid1.compartment.oc1..fake",
+        max_retries=1,
+    )
 
 
 def test_run_wires_gen_output_into_dsl_input():

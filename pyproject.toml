@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "textfsm_ai"
-version = "0.4.2"
+version = "0.5.0"
 description = "AI-powered TextFSM template generator with multi-provider routing"
 readme = "README.md"
 license = { text = "MIT" }
@@ -27,6 +27,28 @@ dependencies = [
     "google-genai>=0.2.0",
     "azure-ai-inference>=1.0.0b9",
     "anthropic>=0.8.0",
+    # Pinned exactly: 1.10.0 is the last mistralai release supporting
+    # Python 3.9 (1.10.1+ and all 2.x require Python >=3.10, which would
+    # break this package's >=3.9 support).
+    "mistralai==1.10.0",
+    # Pinned exactly for the same reason: 1.42.97 is the newest boto3
+    # release with a Python 3.9-compatible botocore; verified via
+    # `pip download --python-version 3.9` resolution, since boto3 bumps
+    # its Python floor frequently across even small version bumps.
+    "boto3==1.42.97",
+    # Pinned exactly for the same reason: 5.21.1 is the last cohere
+    # release supporting Python 3.9 (6.x/7.x require Python >=3.10);
+    # verified via `pip download --python-version 3.9` resolution.
+    "cohere==5.21.1",
+    # Pinned exactly for reproducibility (the latest release already
+    # supports Python 3.9, verified via `pip download --python-version
+    # 3.9` resolution, unlike mistralai/boto3/cohere above). Note: this
+    # is a much heavier dependency than every other provider SDK here -
+    # ~36MB, since it's Oracle's single all-services SDK (compute,
+    # storage, IAM, ...), not a Generative-AI-only package (no such
+    # package exists on PyPI) - plus crypto libs (cryptography,
+    # pyOpenSSL) needed for its request-signing auth model.
+    "oci==2.182.0",
     "tomli; python_version < '3.11'",
 ]
 
@@ -63,6 +85,24 @@ keywords = [
     "gemini",
     "azure-ai-inference",
     "deepseek",
+    "groq",
+    "xai",
+    "grok",
+    "together-ai",
+    "fireworks-ai",
+    "cerebras",
+    "perplexity",
+    "openrouter",
+    "moonshot",
+    "kimi",
+    "mistral",
+    "bedrock",
+    "aws",
+    "cohere",
+    "vertex ai",
+    "gcp",
+    "oracle cloud infrastructure",
+    "oci",
     "device output parsing",
     "log extraction",
     "structured data extraction",

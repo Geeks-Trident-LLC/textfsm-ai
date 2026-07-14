@@ -4,12 +4,50 @@ from datetime import datetime, timezone
 import pytest
 
 from textfsm_ai.core.pricing import (
+    PRICING_DATA_PATH,
     PRICING_TABLE,
     PricingResult,
     estimate_cost,
     extract_base_model,
     update_claude_sonnet_5,
 )
+
+# ---------------------------------------------------------------------------
+# pricing.yaml loading
+# ---------------------------------------------------------------------------
+
+
+def test_pricing_data_path_exists_and_is_yaml():
+    assert PRICING_DATA_PATH.exists()
+    assert PRICING_DATA_PATH.name == "pricing.yaml"
+
+
+def test_pricing_table_loaded_from_yaml_has_expected_providers():
+    # "azure" is deliberately excluded here - it's derived at import time,
+    # not present in pricing.yaml itself.
+    for provider in (
+        "anthropic",
+        "openai",
+        "deepseek",
+        "gemini",
+        "groq",
+        "xai",
+        "together",
+        "fireworks",
+        "cerebras",
+        "perplexity",
+        "openrouter",
+        "moonshot",
+        "mistral",
+        "bedrock",
+        "cohere",
+        "vertexai",
+        "oci",
+    ):
+        assert provider in PRICING_TABLE
+        assert isinstance(PRICING_TABLE[provider], dict)
+        assert PRICING_TABLE[provider]  # non-empty
+
 
 # ---------------------------------------------------------------------------
 # Model-family extraction
@@ -41,6 +79,150 @@ def test_extract_base_model_deepseek():
     for model, based_model in (
         ("deepseek-v4-flash", "deepseek-v4-flash"),
         ("deepseek-v4-pro-20250101", "deepseek-v4-pro"),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_groq():
+    provider = "groq"
+    for model, based_model in (
+        ("llama-3.3-70b-versatile", "llama-3.3-70b-versatile"),
+        ("llama-3.1-8b-instant", "llama-3.1-8b-instant"),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_xai():
+    provider = "xai"
+    for model, based_model in (
+        ("grok-4", "grok-4"),
+        ("grok-3-mini", "grok-3-mini"),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_together():
+    provider = "together"
+    for model, based_model in (
+        (
+            "meta-llama/Llama-3.1-8B-Instruct-Turbo",
+            "meta-llama/Llama-3.1-8B-Instruct-Turbo",
+        ),
+        (
+            "mistralai/Mixtral-8x7B-Instruct-v0.1",
+            "mistralai/Mixtral-8x7B-Instruct-v0.1",
+        ),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_fireworks():
+    provider = "fireworks"
+    for model, based_model in (
+        (
+            "accounts/fireworks/models/llama-v3p1-8b-instruct",
+            "accounts/fireworks/models/llama-v3p1-8b-instruct",
+        ),
+        (
+            "accounts/fireworks/models/mixtral-8x22b-instruct",
+            "accounts/fireworks/models/mixtral-8x22b-instruct",
+        ),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_cerebras():
+    provider = "cerebras"
+    for model, based_model in (
+        ("llama3.1-8b", "llama3.1-8b"),
+        ("qwen-3-32b", "qwen-3-32b"),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_perplexity():
+    provider = "perplexity"
+    for model, based_model in (
+        ("sonar", "sonar"),
+        ("sonar-pro", "sonar-pro"),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_openrouter():
+    provider = "openrouter"
+    for model, based_model in (
+        ("openai/gpt-4o", "openai/gpt-4o"),
+        ("google/gemini-2.5-flash-lite", "google/gemini-2.5-flash-lite"),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_openrouter_auto_unpriced():
+    # "openrouter/auto" is deliberately not in pricing.yaml - its cost
+    # varies by whichever underlying model it routes to.
+    assert extract_base_model("openrouter", "openrouter/auto") == ""
+
+
+def test_extract_base_model_moonshot():
+    provider = "moonshot"
+    for model, based_model in (
+        ("moonshot-v1-8k", "moonshot-v1-8k"),
+        ("kimi-k2-0711-preview", "kimi-k2-0711-preview"),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_moonshot_auto_unpriced():
+    # "moonshot-v1-auto" is deliberately not in pricing.yaml - its cost
+    # varies by whichever context-length bucket it dynamically picks.
+    assert extract_base_model("moonshot", "moonshot-v1-auto") == ""
+
+
+def test_extract_base_model_mistral():
+    provider = "mistral"
+    for model, based_model in (
+        ("mistral-large-latest", "mistral-large-latest"),
+        ("magistral-medium-latest", "magistral-medium-latest"),
+        ("codestral-latest", "codestral-latest"),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_bedrock():
+    provider = "bedrock"
+    for model, based_model in (
+        ("anthropic.claude-opus-4-8-v1:0", "anthropic.claude-opus-4-8-v1:0"),
+        ("meta.llama4-maverick-v1:0", "meta.llama4-maverick-v1:0"),
+        ("cohere.command-r-plus-v1:0", "cohere.command-r-plus-v1:0"),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_cohere():
+    provider = "cohere"
+    for model, based_model in (
+        ("command-a", "command-a"),
+        ("command-r-plus", "command-r-plus"),
+        ("command-light", "command-light"),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_vertexai():
+    provider = "vertexai"
+    for model, based_model in (
+        ("gemini-2.5-pro", "gemini-2.5-pro"),
+        ("gemini-2.5-flash", "gemini-2.5-flash"),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_oci():
+    provider = "oci"
+    for model, based_model in (
+        ("meta.llama-3.3-70b-instruct", "meta.llama-3.3-70b-instruct"),
+        ("xai.grok-4-fast-reasoning", "xai.grok-4-fast-reasoning"),
     ):
         assert extract_base_model(provider, model) == based_model
 
@@ -79,6 +261,326 @@ def test_estimate_cost_basic():
     output_cost = (2000 / 1_000_000) * result.output_per_million
     other_cost = (0 / 1_000_000) * result.output_per_million
     assert result.estimated_cost == pytest.approx(input_cost + output_cost + other_cost)
+
+
+def test_estimate_cost_groq():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="groq",
+        model="llama-3.1-8b-instant",
+    )
+
+    assert result.provider == "groq"
+    assert result.based_model == "llama-3.1-8b-instant"
+    assert (
+        result.input_per_million
+        == PRICING_TABLE["groq"]["llama-3.1-8b-instant"]["input"]
+    )
+    assert (
+        result.output_per_million
+        == PRICING_TABLE["groq"]["llama-3.1-8b-instant"]["output"]
+    )
+    assert result.warning is None
+
+
+def test_estimate_cost_xai():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="xai",
+        model="grok-3-mini",
+    )
+
+    assert result.provider == "xai"
+    assert result.based_model == "grok-3-mini"
+    assert result.input_per_million == PRICING_TABLE["xai"]["grok-3-mini"]["input"]
+    assert result.output_per_million == PRICING_TABLE["xai"]["grok-3-mini"]["output"]
+    assert result.warning is None
+
+
+def test_estimate_cost_together():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="together",
+        model="meta-llama/Llama-3.1-8B-Instruct-Turbo",
+    )
+
+    assert result.provider == "together"
+    assert result.based_model == "meta-llama/Llama-3.1-8B-Instruct-Turbo"
+    assert (
+        result.input_per_million
+        == PRICING_TABLE["together"]["meta-llama/Llama-3.1-8B-Instruct-Turbo"]["input"]
+    )
+    assert (
+        result.output_per_million
+        == PRICING_TABLE["together"]["meta-llama/Llama-3.1-8B-Instruct-Turbo"]["output"]
+    )
+    assert result.warning is None
+
+
+def test_estimate_cost_fireworks():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="fireworks",
+        model="accounts/fireworks/models/llama-v3p1-8b-instruct",
+    )
+
+    assert result.provider == "fireworks"
+    assert result.based_model == "accounts/fireworks/models/llama-v3p1-8b-instruct"
+    assert (
+        result.input_per_million
+        == PRICING_TABLE["fireworks"][
+            "accounts/fireworks/models/llama-v3p1-8b-instruct"
+        ]["input"]
+    )
+    assert (
+        result.output_per_million
+        == PRICING_TABLE["fireworks"][
+            "accounts/fireworks/models/llama-v3p1-8b-instruct"
+        ]["output"]
+    )
+    assert result.warning is None
+
+
+def test_estimate_cost_cerebras():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="cerebras",
+        model="llama3.1-8b",
+    )
+
+    assert result.provider == "cerebras"
+    assert result.based_model == "llama3.1-8b"
+    assert result.input_per_million == PRICING_TABLE["cerebras"]["llama3.1-8b"]["input"]
+    assert (
+        result.output_per_million == PRICING_TABLE["cerebras"]["llama3.1-8b"]["output"]
+    )
+    assert result.warning is None
+
+
+def test_estimate_cost_perplexity():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="perplexity",
+        model="sonar-pro",
+    )
+
+    assert result.provider == "perplexity"
+    assert result.based_model == "sonar-pro"
+    assert result.input_per_million == PRICING_TABLE["perplexity"]["sonar-pro"]["input"]
+    assert (
+        result.output_per_million == PRICING_TABLE["perplexity"]["sonar-pro"]["output"]
+    )
+    assert result.warning is None
+
+
+def test_estimate_cost_openrouter():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="openrouter",
+        model="google/gemini-2.5-flash-lite",
+    )
+
+    assert result.provider == "openrouter"
+    assert result.based_model == "google/gemini-2.5-flash-lite"
+    assert (
+        result.input_per_million
+        == PRICING_TABLE["openrouter"]["google/gemini-2.5-flash-lite"]["input"]
+    )
+    assert (
+        result.output_per_million
+        == PRICING_TABLE["openrouter"]["google/gemini-2.5-flash-lite"]["output"]
+    )
+    assert result.warning is None
+
+
+def test_estimate_cost_openrouter_auto_falls_back_to_unknown():
+    # "openrouter/auto" has no fixed rate (it dynamically picks the
+    # underlying model per request), so cost estimation must honestly
+    # report it as unpriced rather than guessing.
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="openrouter",
+        model="openrouter/auto",
+    )
+
+    assert result.based_model == "unknown"
+    assert result.estimated_cost == 0.0
+    assert "fallback" in result.warning.lower()
+
+
+def test_estimate_cost_bedrock():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="bedrock",
+        model="anthropic.claude-haiku-4-5-v1:0",
+    )
+
+    assert result.provider == "bedrock"
+    assert result.based_model == "anthropic.claude-haiku-4-5-v1:0"
+    assert (
+        result.input_per_million
+        == PRICING_TABLE["bedrock"]["anthropic.claude-haiku-4-5-v1:0"]["input"]
+    )
+    assert (
+        result.output_per_million
+        == PRICING_TABLE["bedrock"]["anthropic.claude-haiku-4-5-v1:0"]["output"]
+    )
+    assert result.warning is None
+
+
+def test_estimate_cost_vertexai():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="vertexai",
+        model="gemini-2.5-flash",
+    )
+
+    assert result.provider == "vertexai"
+    assert result.based_model == "gemini-2.5-flash"
+    assert (
+        result.input_per_million
+        == PRICING_TABLE["vertexai"]["gemini-2.5-flash"]["input"]
+    )
+    assert (
+        result.output_per_million
+        == PRICING_TABLE["vertexai"]["gemini-2.5-flash"]["output"]
+    )
+    assert result.warning is None
+
+
+def test_estimate_cost_oci():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="oci",
+        model="meta.llama-3.3-70b-instruct",
+    )
+
+    assert result.provider == "oci"
+    assert result.based_model == "meta.llama-3.3-70b-instruct"
+    assert (
+        result.input_per_million
+        == PRICING_TABLE["oci"]["meta.llama-3.3-70b-instruct"]["input"]
+    )
+    assert (
+        result.output_per_million
+        == PRICING_TABLE["oci"]["meta.llama-3.3-70b-instruct"]["output"]
+    )
+    assert result.warning is None
+
+
+def test_estimate_cost_cohere():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="cohere",
+        model="command-light",
+    )
+
+    assert result.provider == "cohere"
+    assert result.based_model == "command-light"
+    assert result.input_per_million == PRICING_TABLE["cohere"]["command-light"]["input"]
+    assert (
+        result.output_per_million == PRICING_TABLE["cohere"]["command-light"]["output"]
+    )
+    assert result.warning is None
+
+
+def test_estimate_cost_mistral():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="mistral",
+        model="mistral-small-latest",
+    )
+
+    assert result.provider == "mistral"
+    assert result.based_model == "mistral-small-latest"
+    assert (
+        result.input_per_million
+        == PRICING_TABLE["mistral"]["mistral-small-latest"]["input"]
+    )
+    assert (
+        result.output_per_million
+        == PRICING_TABLE["mistral"]["mistral-small-latest"]["output"]
+    )
+    assert result.warning is None
+
+
+def test_estimate_cost_moonshot():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="moonshot",
+        model="moonshot-v1-8k",
+    )
+
+    assert result.provider == "moonshot"
+    assert result.based_model == "moonshot-v1-8k"
+    assert (
+        result.input_per_million == PRICING_TABLE["moonshot"]["moonshot-v1-8k"]["input"]
+    )
+    assert (
+        result.output_per_million
+        == PRICING_TABLE["moonshot"]["moonshot-v1-8k"]["output"]
+    )
+    assert result.warning is None
+
+
+def test_estimate_cost_moonshot_auto_falls_back_to_unknown():
+    # "moonshot-v1-auto" has no fixed rate (it dynamically picks the
+    # context-length bucket per request), so cost estimation must
+    # honestly report it as unpriced rather than guessing.
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="moonshot",
+        model="moonshot-v1-auto",
+    )
+
+    assert result.based_model == "unknown"
+    assert result.estimated_cost == 0.0
+    assert "fallback" in result.warning.lower()
 
 
 def test_estimate_cost_with_reasoning_tokens():

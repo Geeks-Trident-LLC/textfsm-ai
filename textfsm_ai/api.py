@@ -61,6 +61,9 @@ def generate(
     *,
     endpoint: str = "",
     api_version: str = "",
+    region: str = "",
+    project: str = "",
+    compartment_id: str = "",
     max_retries: int = 1,
     **kwargs,
 ) -> LLMResult:
@@ -74,6 +77,9 @@ def generate(
         model=model,
         endpoint=endpoint,
         api_version=api_version,
+        region=region,
+        project=project,
+        compartment_id=compartment_id,
         max_retries=max_retries,
     ).run(sample, **kwargs)
 
@@ -97,6 +103,9 @@ def to_llm_result(
     *,
     endpoint: str = "",
     api_version: str = "",
+    region: str = "",
+    project: str = "",
+    compartment_id: str = "",
     max_retries: int = 1,
     **kwargs,
 ) -> LLMResult:
@@ -108,6 +117,9 @@ def to_llm_result(
         model,
         endpoint=endpoint,
         api_version=api_version,
+        region=region,
+        project=project,
+        compartment_id=compartment_id,
         max_retries=max_retries,
         **kwargs,
     )
@@ -121,6 +133,9 @@ def to_llm_template(
     *,
     endpoint: str = "",
     api_version: str = "",
+    region: str = "",
+    project: str = "",
+    compartment_id: str = "",
     max_retries: int = 1,
     **kwargs,
 ) -> str:
@@ -132,6 +147,9 @@ def to_llm_template(
         model,
         endpoint=endpoint,
         api_version=api_version,
+        region=region,
+        project=project,
+        compartment_id=compartment_id,
         max_retries=max_retries,
         **kwargs,
     )
@@ -146,6 +164,9 @@ def to_llm_records(
     *,
     endpoint: str = "",
     api_version: str = "",
+    region: str = "",
+    project: str = "",
+    compartment_id: str = "",
     max_retries: int = 1,
     **kwargs,
 ) -> List[Dict[str, str]]:
@@ -157,6 +178,9 @@ def to_llm_records(
         model,
         endpoint=endpoint,
         api_version=api_version,
+        region=region,
+        project=project,
+        compartment_id=compartment_id,
         max_retries=max_retries,
         **kwargs,
     )
@@ -171,6 +195,9 @@ def to_llm_variables(
     *,
     endpoint: str = "",
     api_version: str = "",
+    region: str = "",
+    project: str = "",
+    compartment_id: str = "",
     max_retries: int = 1,
     **kwargs,
 ) -> Dict[str, str]:
@@ -182,6 +209,9 @@ def to_llm_variables(
         model,
         endpoint=endpoint,
         api_version=api_version,
+        region=region,
+        project=project,
+        compartment_id=compartment_id,
         max_retries=max_retries,
         **kwargs,
     )
@@ -196,6 +226,9 @@ def to_llm_handling(
     *,
     endpoint: str = "",
     api_version: str = "",
+    region: str = "",
+    project: str = "",
+    compartment_id: str = "",
     max_retries: int = 1,
     **kwargs,
 ) -> List[str]:
@@ -207,6 +240,9 @@ def to_llm_handling(
         model,
         endpoint=endpoint,
         api_version=api_version,
+        region=region,
+        project=project,
+        compartment_id=compartment_id,
         max_retries=max_retries,
         **kwargs,
     )
@@ -276,6 +312,9 @@ def run_pipeline(
     *,
     endpoint: str = "",
     api_version: str = "",
+    region: str = "",
+    project: str = "",
+    compartment_id: str = "",
     mode: str = "default",
     as_json: bool = False,
     max_tries: int = 1,
@@ -292,5 +331,8 @@ def run_pipeline(
         model=model,
         endpoint=endpoint,
         api_version=api_version,
+        region=region,
+        project=project,
+        compartment_id=compartment_id,
         max_tries=max_tries,
     ).run(sample, mode=mode, as_json=as_json)

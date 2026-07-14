@@ -1,3 +1,46 @@
+## v0.5.0 — 2026‑07‑14
+
+### Added
+- Oracle Cloud Infrastructure (OCI) Generative AI provider (`provider="oci"`) —
+  Meta Llama and xAI Grok models via OCI's Generic chat format, authenticated
+  via `~/.oci/config` (no project-level API key); new `compartment_id`
+  parameter / `--compartment-id` CLI flag; deliberately excluded from
+  auto-routing (its `meta.`/`xai.` model-ID prefixes collide with Bedrock's
+  re-hosted namespace)
+- `docs/providers/index.md` — single overview page listing all 18 providers,
+  their credentials, extra parameters, and Shape A/B and routing-collision
+  notes
+- Session-scoped SSL-context caching for the unit test suite
+  (`tests/unit/conftest.py`) — cuts full suite runtime from 60+s to ~15-20s
+  by eliminating redundant CA-bundle re-parsing on every real SDK client
+  construction
+
+### Changed
+- **Breaking:** standardized every provider's environment variable naming to
+  `<PROVIDER>_<FIELD>` with no exceptions: `AZURE_OPENAI_API_KEY` /
+  `AZURE_OPENAI_ENDPOINT` / `AZURE_OPENAI_API_VERSION` /
+  `AZURE_OPENAI_DEPLOYMENT` → `AZURE_API_KEY` / `AZURE_ENDPOINT` /
+  `AZURE_API_VERSION` / `AZURE_DEPLOYMENT`; `AWS_REGION` /
+  `AWS_DEFAULT_REGION` → `BEDROCK_REGION` / `BEDROCK_DEFAULT_REGION`;
+  `GOOGLE_CLOUD_PROJECT` / `GOOGLE_CLOUD_LOCATION` → `VERTEXAI_PROJECT` /
+  `VERTEXAI_REGION`. Update any scripts/CI/deployment configs that set the
+  old names.
+- `docs/index.md` homepage intro now correctly describes the AI-powered
+  template-generation angle (previously read like a generic TextFSM parsing
+  library with no mention of LLM generation); removed the false "Zero
+  external dependencies" claim; replaced the redundant
+  Documentation/Installation sections with a single "Explore the Docs"
+  links section
+
+### Removed
+- `tests/unit/test_providers.py` and `tests/unit/test_providers_openai_compat.py`
+  — fully superseded by `tests/unit/providers/*.py`, zero coverage loss
+
+### Fixed
+- `orchestrator.py`'s retry-exhaustion re-raise path (when every candidate
+  provider has exhausted all retries) is now covered by a test; file moves
+  from 91% to 100% coverage
+
 ## v0.4.2 — 2026‑07‑13
 
 ### Added

@@ -78,16 +78,127 @@ def load_config_from_env() -> OrchestratorConfig:
             params={"api_key": os.getenv("DEEPSEEK_API_KEY")},
         )
 
-    if os.getenv("AZURE_OPENAI_ENDPOINT") and os.getenv("AZURE_OPENAI_API_KEY"):
+    if os.getenv("GROQ_API_KEY"):
+        providers_cfg["groq"] = ProviderConfig(
+            name="groq",
+            type="groq",
+            params={"api_key": os.getenv("GROQ_API_KEY")},
+        )
+
+    if os.getenv("XAI_API_KEY"):
+        providers_cfg["xai"] = ProviderConfig(
+            name="xai",
+            type="xai",
+            params={"api_key": os.getenv("XAI_API_KEY")},
+        )
+
+    if os.getenv("TOGETHER_API_KEY"):
+        providers_cfg["together"] = ProviderConfig(
+            name="together",
+            type="together",
+            params={"api_key": os.getenv("TOGETHER_API_KEY")},
+        )
+
+    if os.getenv("FIREWORKS_API_KEY"):
+        providers_cfg["fireworks"] = ProviderConfig(
+            name="fireworks",
+            type="fireworks",
+            params={"api_key": os.getenv("FIREWORKS_API_KEY")},
+        )
+
+    if os.getenv("CEREBRAS_API_KEY"):
+        providers_cfg["cerebras"] = ProviderConfig(
+            name="cerebras",
+            type="cerebras",
+            params={"api_key": os.getenv("CEREBRAS_API_KEY")},
+        )
+
+    if os.getenv("PERPLEXITY_API_KEY"):
+        providers_cfg["perplexity"] = ProviderConfig(
+            name="perplexity",
+            type="perplexity",
+            params={"api_key": os.getenv("PERPLEXITY_API_KEY")},
+        )
+
+    if os.getenv("OPENROUTER_API_KEY"):
+        providers_cfg["openrouter"] = ProviderConfig(
+            name="openrouter",
+            type="openrouter",
+            params={"api_key": os.getenv("OPENROUTER_API_KEY")},
+        )
+
+    if os.getenv("MOONSHOT_API_KEY"):
+        providers_cfg["moonshot"] = ProviderConfig(
+            name="moonshot",
+            type="moonshot",
+            params={"api_key": os.getenv("MOONSHOT_API_KEY")},
+        )
+
+    if os.getenv("MISTRAL_API_KEY"):
+        providers_cfg["mistral"] = ProviderConfig(
+            name="mistral",
+            type="mistral",
+            params={"api_key": os.getenv("MISTRAL_API_KEY")},
+        )
+
+    aws_region = os.getenv("BEDROCK_REGION") or os.getenv("BEDROCK_DEFAULT_REGION")
+    if aws_region:
+        providers_cfg["bedrock"] = ProviderConfig(
+            name="bedrock",
+            type="bedrock",
+            # No api_key here - boto3 resolves AWS credentials on its own
+            # (AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY/AWS_SESSION_TOKEN,
+            # ~/.aws/credentials, or an IAM role), so region is the only
+            # Bedrock-specific param this app needs to track.
+            params={"region": aws_region},
+        )
+
+    if os.getenv("COHERE_API_KEY"):
+        providers_cfg["cohere"] = ProviderConfig(
+            name="cohere",
+            type="cohere",
+            params={"api_key": os.getenv("COHERE_API_KEY")},
+        )
+
+    gcp_project = os.getenv("VERTEXAI_PROJECT")
+    gcp_location = os.getenv("VERTEXAI_REGION")
+    if gcp_project and gcp_location:
+        providers_cfg["vertexai"] = ProviderConfig(
+            name="vertexai",
+            type="vertexai",
+            # No api_key here - the google-genai SDK resolves Google Cloud
+            # credentials on its own (a service account key file via
+            # GOOGLE_APPLICATION_CREDENTIALS, `gcloud auth
+            # application-default login`, or workload identity on GCP
+            # infra), so project/location are the only Vertex AI-specific
+            # params this app needs to track.
+            params={"project": gcp_project, "region": gcp_location},
+        )
+
+    oci_compartment_id = os.getenv("OCI_COMPARTMENT_ID")
+    if oci_compartment_id:
+        oci_params: Dict[str, Any] = {"compartment_id": oci_compartment_id}
+        oci_region = os.getenv("OCI_REGION")
+        if oci_region:
+            oci_params["region"] = oci_region
+        providers_cfg["oci"] = ProviderConfig(
+            name="oci",
+            type="oci",
+            # No api_key here either - OCIProvider reads ~/.oci/config
+            # (DEFAULT profile) for credentials on its own. Region is
+            # optional (falls back to whatever's in that config file);
+            # compartment_id is the only param actually required here.
+            params=oci_params,
+        )
+
+    if os.getenv("AZURE_ENDPOINT") and os.getenv("AZURE_API_KEY"):
         providers_cfg["azure"] = ProviderConfig(
             name="azure",
             type="azure",
             params={
-                "endpoint": os.getenv("AZURE_OPENAI_ENDPOINT"),
-                "api_key": os.getenv("AZURE_OPENAI_API_KEY"),
-                "api_version": os.getenv(
-                    "AZURE_OPENAI_API_VERSION", "2024-02-15-preview"
-                ),
+                "endpoint": os.getenv("AZURE_ENDPOINT"),
+                "api_key": os.getenv("AZURE_API_KEY"),
+                "api_version": os.getenv("AZURE_API_VERSION", "2024-02-15-preview"),
             },
         )
 

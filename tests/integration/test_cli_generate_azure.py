@@ -29,9 +29,9 @@ def test_real_anthropic(tmp_path, azure_key):
             "--model",
             "gpt-4.1-textfsm-ai",
             "--endpoint",
-            os.environ.get("AZURE_OPENAI_ENDPOINT"),
+            os.environ.get("AZURE_ENDPOINT"),
             "--api-version",
-            os.environ.get("AZURE_OPENAI_API_VERSION", "2024-02-15-preview"),
+            os.environ.get("AZURE_API_VERSION", "2024-02-15-preview"),
         ],
     )
 
