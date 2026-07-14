@@ -146,6 +146,15 @@ def create_default_routing_table() -> RoutingTable:
     # inference profile IDs (e.g. "us.anthropic.claude-...") are NOT
     # covered by these rules - see the matching gap noted in
     # BEDROCK_PATTERN's comment in models/patterns.py.
+    #
+    # Cohere, unlike Mistral, has ONE shared prefix across its whole
+    # catalog - every model name starts with "command" (command-a,
+    # command-r-plus, command-r, command-light) - so a single rule
+    # covers it, same simplicity as xAI's single "grok-" rule. No
+    # collision with Bedrock's "cohere." rule above: that's Bedrock's
+    # own re-hosted namespace (dot after "cohere"), a completely
+    # different string from native Cohere's bare "command..." IDs,
+    # which have no "cohere" substring in them at all.
     return RoutingTable(
         rules=[
             RoutingRule("gpt-oss-", "cerebras"),  # must precede "gpt-" (OpenAI)
@@ -191,5 +200,6 @@ def create_default_routing_table() -> RoutingTable:
             RoutingRule("amazon.", "bedrock"),
             RoutingRule("cohere.", "bedrock"),
             RoutingRule("ai21.", "bedrock"),
+            RoutingRule("command", "cohere"),
         ]
     )

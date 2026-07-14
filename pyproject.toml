@@ -36,6 +36,10 @@ dependencies = [
     # `pip download --python-version 3.9` resolution, since boto3 bumps
     # its Python floor frequently across even small version bumps.
     "boto3==1.42.97",
+    # Pinned exactly for the same reason: 5.21.1 is the last cohere
+    # release supporting Python 3.9 (6.x/7.x require Python >=3.10);
+    # verified via `pip download --python-version 3.9` resolution.
+    "cohere==5.21.1",
     "tomli; python_version < '3.11'",
 ]
 
@@ -85,6 +89,7 @@ keywords = [
     "mistral",
     "bedrock",
     "aws",
+    "cohere",
     "device output parsing",
     "log extraction",
     "structured data extraction",

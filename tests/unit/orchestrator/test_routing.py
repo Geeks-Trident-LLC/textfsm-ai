@@ -132,6 +132,10 @@ def test_create_default_routing_table_routes_known_prefixes():
     assert table.route("amazon.titan-text-premier-v1:0") == "bedrock"
     assert table.route("cohere.command-r-plus-v1:0") == "bedrock"
     assert table.route("ai21.jamba-1-5-large-v1:0") == "bedrock"
+    assert table.route("command-a") == "cohere"
+    assert table.route("command-r-plus") == "cohere"
+    assert table.route("command-r") == "cohere"
+    assert table.route("command-light") == "cohere"
 
 
 def test_deepseek_ai_prefix_does_not_collide_with_native_deepseek_rule():
@@ -188,3 +192,11 @@ def test_bedrock_prefixes_do_not_collide_with_openrouter_or_native_mistral():
     assert table.route("anthropic.claude-opus-4-8-v1:0") == "bedrock"
     assert table.route("mistral-large-latest") == "mistral"
     assert table.route("mistral.mistral-large-2-v1:0") == "bedrock"
+
+
+def test_cohere_prefix_does_not_collide_with_bedrock_cohere_namespace():
+    # Native Cohere's bare "command..." IDs share no substring with
+    # Bedrock's "cohere." re-hosted namespace - confirm both coexist.
+    table = create_default_routing_table()
+    assert table.route("command-r-plus") == "cohere"
+    assert table.route("cohere.command-r-plus-v1:0") == "bedrock"

@@ -18,6 +18,7 @@ _ENV_VARS = [
     "MISTRAL_API_KEY",
     "AWS_REGION",
     "AWS_DEFAULT_REGION",
+    "COHERE_API_KEY",
     "AZURE_OPENAI_ENDPOINT",
     "AZURE_OPENAI_API_KEY",
     "AZURE_OPENAI_API_VERSION",
@@ -222,6 +223,14 @@ def test_load_config_from_env_bedrock_aws_default_region(monkeypatch):
     assert cfg.providers["bedrock"].params == {"region": "eu-central-1"}
 
 
+def test_load_config_from_env_cohere(monkeypatch):
+    monkeypatch.setenv("COHERE_API_KEY", "sk-cohere")
+    cfg = load_config_from_env()
+
+    assert set(cfg.providers.keys()) == {"cohere"}
+    assert cfg.providers["cohere"].params == {"api_key": "sk-cohere"}
+
+
 def test_load_config_from_env_azure_requires_both_endpoint_and_key(monkeypatch):
     monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
     # api key missing -> azure should NOT appear
@@ -266,6 +275,7 @@ def test_load_config_from_env_all_providers_at_once(monkeypatch):
     monkeypatch.setenv("MOONSHOT_API_KEY", "k13")
     monkeypatch.setenv("MISTRAL_API_KEY", "k14")
     monkeypatch.setenv("AWS_REGION", "us-east-1")
+    monkeypatch.setenv("COHERE_API_KEY", "k15")
     monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
     monkeypatch.setenv("AZURE_OPENAI_API_KEY", "k5")
 
@@ -286,5 +296,6 @@ def test_load_config_from_env_all_providers_at_once(monkeypatch):
         "moonshot",
         "mistral",
         "bedrock",
+        "cohere",
         "azure",
     }

@@ -30,6 +30,7 @@ def test_providers_list_runs():
     assert "moonshot" in result.output
     assert "mistral" in result.output
     assert "bedrock" in result.output
+    assert "cohere" in result.output
 
 
 def test_providers_info_no_config(monkeypatch):

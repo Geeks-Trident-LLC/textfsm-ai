@@ -111,6 +111,11 @@ def bedrock_region(require_real_tests):
 
 
 @pytest.fixture(scope="session")
+def cohere_key(require_real_tests):
+    return _require_env("COHERE_API_KEY")
+
+
+@pytest.fixture(scope="session")
 def azure_key(require_real_tests):
     return _require_env("AZURE_OPENAI_API_KEY")
 

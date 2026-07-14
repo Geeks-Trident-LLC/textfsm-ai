@@ -48,6 +48,17 @@ cerebras:
   thinking-chat:
   - gpt-oss-120b
   other: []
+cohere:
+  quality-chat:
+  - command-a
+  - command-r-plus
+  balance-chat:
+  - command-r
+  speed-chat:
+  - command-light
+  thinking-chat: []
+  other:
+  - command
 deepseek:
   quality-chat:
     - deepseek-v4-pro

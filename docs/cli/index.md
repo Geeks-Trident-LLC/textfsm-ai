@@ -26,7 +26,7 @@ environment variable (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`,
 `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, `GROQ_API_KEY`, `XAI_API_KEY`,
 `TOGETHER_API_KEY`, `FIREWORKS_API_KEY`, `CEREBRAS_API_KEY`,
 `PERPLEXITY_API_KEY`, `OPENROUTER_API_KEY`, `MOONSHOT_API_KEY`,
-`MISTRAL_API_KEY`, `AZURE_OPENAI_API_KEY`) > `providers.yaml`.
+`MISTRAL_API_KEY`, `COHERE_API_KEY`, `AZURE_OPENAI_API_KEY`) > `providers.yaml`.
 
 Azure additionally resolves `--model` (as the deployment name), `--endpoint`,
 and `--api-version` from `AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_ENDPOINT`,
@@ -43,7 +43,7 @@ Key options:
 
 | Option | Purpose |
 |---|---|
-| `--provider` (required) | Provider name: `openai`, `anthropic`, `gemini`, `deepseek`, `groq`, `xai`, `together`, `fireworks`, `cerebras`, `perplexity`, `openrouter`, `moonshot`, `mistral`, `bedrock`, `azure` |
+| `--provider` (required) | Provider name: `openai`, `anthropic`, `gemini`, `deepseek`, `groq`, `xai`, `together`, `fireworks`, `cerebras`, `perplexity`, `openrouter`, `moonshot`, `mistral`, `bedrock`, `cohere`, `azure` |
 | `--api-key` | Override the resolved API key (ignored for `bedrock`) |
 | `--model` | Model name (or Azure deployment name) |
 | `--endpoint`, `--api-version` | Azure-only |
@@ -88,6 +88,7 @@ anthropic      Anthropic Claude models
 azure          Azure AI Inference / Azure OpenAI
 bedrock        Amazon Bedrock (native SDK, AWS credential chain)
 cerebras       Cerebras (fast open-model inference, OpenAI-compatible API)
+cohere         Cohere Command models (native SDK)
 deepseek       DeepSeek (OpenAI-compatible API)
 fireworks      Fireworks AI (open-model hosting, OpenAI-compatible API)
 gemini         Google Gemini models

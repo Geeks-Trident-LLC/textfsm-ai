@@ -7,6 +7,7 @@ from .patterns import (
     ANTHROPIC_PATTERN,
     BEDROCK_PATTERN,
     CEREBRAS_PATTERN,
+    COHERE_PATTERN,
     DEEPSEEK_NATIVE_PATTERN,
     DEEPSEEK_PATTERN_V4,
     FIREWORKS_PATTERN,
@@ -628,6 +629,37 @@ def classify_bedrock_models(raw: List[str]):
 
 
 # ---------------------------------------------------------
+# Cohere. Bare, un-namespaced model IDs, so _normalize() is safe here.
+# Single shared "command" prefix, tiered by suffix keyword rather than
+# parameter size - see COHERE_PATTERN's comment for the full scheme.
+# ---------------------------------------------------------
+def classify_cohere_models(raw: List[str]):
+    groups = empty_tier_groups()
+
+    for name in map(_normalize, raw):
+        m = COHERE_PATTERN.match(name)
+        if not m:
+            groups[Tier.OTHER].append(name)
+            continue
+
+        suffix = m.group(1)  # a, r-plus, r, light, or None
+
+        if suffix in ("a", "r-plus"):
+            groups[Tier.QUALITY_CHAT].append(name)
+        elif suffix == "r":
+            groups[Tier.BALANCE_CHAT].append(name)
+        elif suffix == "light":
+            groups[Tier.SPEED_CHAT].append(name)
+        else:
+            # bare "command" - original, undifferentiated legacy model
+            groups[Tier.OTHER].append(name)
+
+    for g in groups.values():
+        g.sort(reverse=True)
+    return groups
+
+
+# ---------------------------------------------------------
 # Unified entry point
 # ---------------------------------------------------------
 def classify_models(provider: str, raw: List[str]):
@@ -661,6 +693,8 @@ def classify_models(provider: str, raw: List[str]):
         return classify_mistral_models(raw)
     if provider == "bedrock":
         return classify_bedrock_models(raw)
+    if provider == "cohere":
+        return classify_cohere_models(raw)
     if provider in ("azure", "azure-openai"):
         return classify_openai_models(raw)
 
