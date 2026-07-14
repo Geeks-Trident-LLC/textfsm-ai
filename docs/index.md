@@ -1,8 +1,9 @@
 ![banner](assets/images/banner.svg)
 
-`textfsm-ai` is a modern, Pythonic engine for parsing unstructured text using
-TextFSM templates — with a clean API, strong validation, and developer‑friendly
-tooling.
+`textfsm-ai` is an AI-powered engine for turning unstructured text into
+TextFSM templates — point an LLM at raw CLI output, log lines, or other
+semi-structured text and get back a validated, production-ready template,
+through a clean Python API and CLI.
 
 It is designed for:
 
@@ -13,21 +14,19 @@ It is designed for:
 
 ## Features
 
-- 🚀 Fast, deterministic parsing
-- 🧪 Golden tests for template validation
+- 🤖 AI-powered template generation across 18 LLM providers
+- 🧵 Readable DSL that compiles down to canonical TextFSM
+- 🚀 Deterministic, validated output every run
 - 🧰 Clean Python API and CLI
-- 📦 Zero external dependencies
-- 📚 Full versioned documentation
 - 🔍 Helpful error messages and template diagnostics
+- 📚 Full versioned documentation
 
-## Documentation
+## Explore the Docs
 
-- **Latest docs:** [https://geeks-trident-llc.github.io/textfsm-ai/latest/](https://geeks-trident-llc.github.io/textfsm-ai/latest/)
-- **All versions:** [https://geeks-trident-llc.github.io/textfsm-ai/](https://geeks-trident-llc.github.io/textfsm-ai/)
-
-## Installation
-
-```bash
-pip install textfsm-ai
-```
+- [Installation](getting-started/installation.md)
+- [Quickstart](getting-started/quickstart.md)
+- [CLI Guide](cli/index.md)
+- [Human-in-the-Loop Review](guides/human-in-the-loop-review.md)
+- [Providers](providers/index.md)
+- [API Reference](reference/index.md)
 

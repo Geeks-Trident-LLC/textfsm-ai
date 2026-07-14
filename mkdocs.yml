@@ -43,6 +43,8 @@ nav:
       - Installation: getting-started/installation.md
       - Quickstart: getting-started/quickstart.md
 
+  - Providers: providers/index.md
+
   - CLI Guide: cli/index.md
 
   - Guides:
