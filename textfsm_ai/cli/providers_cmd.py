@@ -31,6 +31,7 @@ PROVIDER_DESCRIPTIONS = {
     "mistral": "Mistral AI (native SDK)",
     "bedrock": "Amazon Bedrock (native SDK, AWS credential chain)",
     "cohere": "Cohere Command models (native SDK)",
+    "vertexai": "Google Vertex AI (Gemini via GCP, ADC credential chain)",
 }
 
 

@@ -308,6 +308,27 @@ cohere:
     speed:
       chat: []
 
+vertexai:
+  quality:
+    chat:
+      - gemini-2.5-pro
+  balance:
+    chat:
+      - gemini-2.5-flash
+  speed:
+    chat:
+      - gemini-2.5-flash-lite
+  thinking:
+    quality:
+      chat:
+        - gemini-2.5-pro
+    balance:
+      chat:
+        - gemini-2.5-flash
+    speed:
+      chat:
+        - gemini-2.5-flash-lite
+
 aliases:
   openai_default: gpt-4o-mini
   anthropic_default: claude-haiku-4-5-20251001
@@ -324,3 +345,4 @@ aliases:
   mistral_default: mistral-small-latest
   bedrock_default: anthropic.claude-haiku-4-5-v1:0
   cohere_default: command-light
+  vertexai_default: gemini-2.5-flash

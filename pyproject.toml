@@ -90,6 +90,8 @@ keywords = [
     "bedrock",
     "aws",
     "cohere",
+    "vertex ai",
+    "gcp",
     "device output parsing",
     "log extraction",
     "structured data extraction",

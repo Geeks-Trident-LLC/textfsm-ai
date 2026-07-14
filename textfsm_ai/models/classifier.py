@@ -697,6 +697,11 @@ def classify_models(provider: str, raw: List[str]):
         return classify_cohere_models(raw)
     if provider in ("azure", "azure-openai"):
         return classify_openai_models(raw)
+    if provider == "vertexai":
+        # Vertex AI serves the SAME Gemini catalog under IDENTICAL model
+        # IDs as the native Gemini Developer API - reuse that classifier
+        # directly, same precedent as azure reusing classify_openai_models().
+        return classify_gemini_models(raw)
 
     # Unknown provider → everything goes to OTHER
     groups = empty_tier_groups()

@@ -14,6 +14,7 @@ from textfsm_ai.cli.generate_cmd import (
     resolve_api_version,
     resolve_endpoint,
     resolve_model,
+    resolve_project,
     resolve_region,
 )
 from textfsm_ai.providers.config import OrchestratorConfig, ProviderConfig
@@ -32,6 +33,8 @@ _PROVIDER_ENV_VARS = [
     "AZURE_OPENAI_API_VERSION",
     "AWS_REGION",
     "AWS_DEFAULT_REGION",
+    "GOOGLE_CLOUD_PROJECT",
+    "GOOGLE_CLOUD_LOCATION",
 ]
 
 
@@ -192,6 +195,55 @@ def test_generate_bedrock_debug_output(tmp_path):
     # Bedrock has no project-level api_key - never printed/masked like others
     assert "<not used, resolved via AWS credential chain>" in result.output
     assert "region:         us-east-1" in result.output
+
+
+def test_generate_vertexai_missing_region_raises(tmp_path):
+    with _mocked_generate(
+        tmp_path,
+        provider="vertexai",
+        provider_params={"model": "gemini-2.5-flash", "project": "my-project"},
+    ) as (runner, _instance, input_file):
+        result = runner.invoke(generate, [str(input_file), "--provider", "vertexai"])
+
+    assert result.exit_code != 0
+    assert "Vertex AI requires a GCP location" in result.output
+
+
+def test_generate_vertexai_missing_project_raises(tmp_path):
+    with _mocked_generate(
+        tmp_path,
+        provider="vertexai",
+        provider_params={"model": "gemini-2.5-flash", "region": "us-central1"},
+    ) as (runner, _instance, input_file):
+        result = runner.invoke(generate, [str(input_file), "--provider", "vertexai"])
+
+    assert result.exit_code != 0
+    assert "Vertex AI requires a GCP project" in result.output
+
+
+def test_generate_vertexai_debug_output(tmp_path):
+    with _mocked_generate(
+        tmp_path,
+        provider="vertexai",
+        provider_params={
+            "model": "gemini-2.5-flash",
+            "region": "us-central1",
+            "project": "my-project",
+        },
+    ) as (runner, instance, input_file):
+        instance.run.return_value.ready = True
+        instance.run.return_value.last_stage.template = "tmpl"
+
+        result = runner.invoke(
+            generate, [str(input_file), "--provider", "vertexai", "--debug"]
+        )
+
+    assert result.exit_code == 0
+    assert "=== Debug Info ===" in result.output
+    # Vertex AI has no project-level api_key - never printed/masked like others
+    assert "<not used, resolved via GCP ADC credential chain>" in result.output
+    assert "region:         us-central1" in result.output
+    assert "project:        my-project" in result.output
 
 
 def test_generate_debug_output(tmp_path):
@@ -478,6 +530,12 @@ def test_resolve_api_key_bedrock_returns_none_even_if_explicit_flag_given():
     assert resolve_api_key("bedrock", "ignored-explicit-key", pconf=None) is None
 
 
+def test_resolve_api_key_vertexai_returns_none_even_if_explicit_flag_given():
+    # Vertex AI has no project-level api_key concept either - the
+    # google-genai SDK resolves GCP credentials (ADC) on its own.
+    assert resolve_api_key("vertexai", "ignored-explicit-key", pconf=None) is None
+
+
 # ============================================================
 # resolve_model
 # ============================================================
@@ -615,3 +673,58 @@ def test_resolve_region_bedrock_raises_when_missing():
     pconf = ProviderConfig(name="bedrock", type="bedrock", params={})
     with pytest.raises(Exception, match="Bedrock requires an AWS region"):
         resolve_region("bedrock", None, pconf)
+
+
+def test_resolve_region_vertexai_explicit_flag_wins():
+    assert resolve_region("vertexai", "europe-west4", pconf=None) == "europe-west4"
+
+
+def test_resolve_region_vertexai_from_google_cloud_location_env(monkeypatch):
+    monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+    assert resolve_region("vertexai", None, pconf=None) == "us-central1"
+
+
+def test_resolve_region_vertexai_from_pconf():
+    pconf = ProviderConfig(
+        name="vertexai", type="vertexai", params={"region": "asia-northeast1"}
+    )
+    assert resolve_region("vertexai", None, pconf) == "asia-northeast1"
+
+
+def test_resolve_region_vertexai_raises_when_missing():
+    pconf = ProviderConfig(name="vertexai", type="vertexai", params={})
+    with pytest.raises(Exception, match="Vertex AI requires a GCP location"):
+        resolve_region("vertexai", None, pconf)
+
+
+# ============================================================
+# resolve_project
+# ============================================================
+
+
+def test_resolve_project_non_vertexai_returns_none():
+    assert resolve_project("openai", "ignored-project", pconf=None) is None
+
+
+def test_resolve_project_vertexai_explicit_flag_wins():
+    assert resolve_project("vertexai", "explicit-project", pconf=None) == (
+        "explicit-project"
+    )
+
+
+def test_resolve_project_vertexai_from_env(monkeypatch):
+    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "env-project")
+    assert resolve_project("vertexai", None, pconf=None) == "env-project"
+
+
+def test_resolve_project_vertexai_from_pconf():
+    pconf = ProviderConfig(
+        name="vertexai", type="vertexai", params={"project": "yaml-project"}
+    )
+    assert resolve_project("vertexai", None, pconf) == "yaml-project"
+
+
+def test_resolve_project_vertexai_raises_when_missing():
+    pconf = ProviderConfig(name="vertexai", type="vertexai", params={})
+    with pytest.raises(Exception, match="Vertex AI requires a GCP project"):
+        resolve_project("vertexai", None, pconf)

@@ -87,6 +87,24 @@ def test_llm_info_to_string_bedrock_shows_region_not_api_key():
     assert "Endpoint" not in text
 
 
+def test_llm_info_to_string_vertexai_shows_region_and_project_not_api_key():
+    info = LLMInfo(
+        provider_name="vertexai",
+        model="gemini-2.5-flash",
+        region="us-central1",
+        project="my-gcp-project",
+    )
+    text = info.to_string()
+
+    assert "Provider    : vertexai" in text
+    assert "Model       : gemini-2.5-flash" in text
+    assert "Region      : us-central1" in text
+    assert "Project     : my-gcp-project" in text
+    assert "API Key     : <not used, resolved via GCP ADC credential chain>" in text
+    assert "Deployment" not in text
+    assert "Endpoint" not in text
+
+
 # ============================================================
 # LLMResponse
 # ============================================================

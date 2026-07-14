@@ -436,6 +436,19 @@ def test_classify_models_azure_uses_openai_classifier():
     assert "gpt-4.1" in groups[Tier.QUALITY_CHAT]
 
 
+def test_classify_models_vertexai_uses_gemini_classifier():
+    # Vertex AI serves the SAME Gemini catalog under identical model IDs
+    # as the native Gemini Developer API - reuses classify_gemini_models()
+    # directly, same precedent as azure reusing classify_openai_models().
+    groups = classify_models(
+        "vertexai", ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.5-flash-lite"]
+    )
+
+    assert "gemini-2.5-pro" in groups[Tier.QUALITY_CHAT]
+    assert "gemini-2.5-flash" in groups[Tier.BALANCE_CHAT]
+    assert "gemini-2.5-flash-lite" in groups[Tier.SPEED_CHAT]
+
+
 def test_classify_models_unknown_provider_falls_to_other():
     groups = classify_models(
         "some-unregistered-provider", ["some-model", "provider/some-other-model"]

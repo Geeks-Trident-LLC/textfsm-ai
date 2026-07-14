@@ -155,6 +155,23 @@ def create_default_routing_table() -> RoutingTable:
     # own re-hosted namespace (dot after "cohere"), a completely
     # different string from native Cohere's bare "command..." IDs,
     # which have no "cohere" substring in them at all.
+    #
+    # Google Vertex AI is deliberately given NO routing rule at all -
+    # unlike every other pairing above, this is a genuine, unresolvable
+    # collision, not just a textually-similar-looking one. Vertex AI
+    # serves the SAME Gemini model catalog under IDENTICAL model ID
+    # strings as native Gemini (e.g. "gemini-2.5-pro" means the exact
+    # same thing to both providers) - there is no distinguishing
+    # separator character or namespace to key a rule on, unlike
+    # Bedrock's "vendor." or OpenRouter's "vendor/". Adding a
+    # "gemini-" -> "vertexai" rule would either never fire (native
+    # Gemini's existing "gemini-" rule is checked first and always
+    # wins) or silently steal every native Gemini call if reordered -
+    # neither is acceptable. Vertex AI must always be selected
+    # explicitly via --provider vertexai (generate_cmd.py's --provider
+    # flag never consults this routing table), the same treatment
+    # already given to OpenRouter's unclaimed meta-llama/ and
+    # mistralai/ vendor slugs above.
     return RoutingTable(
         rules=[
             RoutingRule("gpt-oss-", "cerebras"),  # must precede "gpt-" (OpenAI)

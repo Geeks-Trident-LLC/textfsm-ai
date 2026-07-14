@@ -25,6 +25,7 @@ def _patched_controller(**init_kwargs):
             endpoint=init_kwargs.get("endpoint", ""),
             api_version=init_kwargs.get("api_version", ""),
             region=init_kwargs.get("region", ""),
+            project=init_kwargs.get("project", ""),
             max_tries=init_kwargs.get("max_tries", 1),
         )
     return controller, mock_gen_cls, mock_dsl_cls, mock_engine_cls
@@ -47,6 +48,7 @@ def test_init_builds_model_info_and_constructs_gen_controller():
         "endpoint": "https://example.com",
         "api_version": "2024-01-01",
         "region": "",
+        "project": "",
     }
 
     mock_gen_cls.assert_called_once_with(
@@ -56,6 +58,7 @@ def test_init_builds_model_info_and_constructs_gen_controller():
         endpoint="https://example.com",
         api_version="2024-01-01",
         region="",
+        project="",
         max_retries=3,
     )
     mock_dsl_cls.assert_called_once_with()
@@ -77,6 +80,7 @@ def test_init_builds_model_info_with_bedrock_region():
         "endpoint": "",
         "api_version": "",
         "region": "us-east-1",
+        "project": "",
     }
 
     mock_gen_cls.assert_called_once_with(
@@ -86,6 +90,38 @@ def test_init_builds_model_info_with_bedrock_region():
         endpoint="",
         api_version="",
         region="us-east-1",
+        project="",
+        max_retries=1,
+    )
+
+
+def test_init_builds_model_info_with_vertexai_project_and_region():
+    controller, mock_gen_cls, _mock_dsl_cls, _mock_engine_cls = _patched_controller(
+        provider_name="vertexai",
+        api_key="",
+        model="gemini-2.5-flash",
+        region="us-central1",
+        project="my-gcp-project",
+    )
+
+    assert controller._model_info == {
+        "provider_name": "vertexai",
+        "api_key": "",
+        "model": "gemini-2.5-flash",
+        "endpoint": "",
+        "api_version": "",
+        "region": "us-central1",
+        "project": "my-gcp-project",
+    }
+
+    mock_gen_cls.assert_called_once_with(
+        provider_name="vertexai",
+        api_key="",
+        model="gemini-2.5-flash",
+        endpoint="",
+        api_version="",
+        region="us-central1",
+        project="my-gcp-project",
         max_retries=1,
     )
 

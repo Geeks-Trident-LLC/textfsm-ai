@@ -353,3 +353,25 @@ class model:
                 chat = ModelRegistry.get("cohere", "thinking", "speed", "chat")
 
         default = ModelRegistry.alias("cohere_default")
+
+    class vertexai:
+        class quality:
+            chat = ModelRegistry.get("vertexai", "quality", "chat")
+
+        class balance:
+            chat = ModelRegistry.get("vertexai", "balance", "chat")
+
+        class speed:
+            chat = ModelRegistry.get("vertexai", "speed", "chat")
+
+        class thinking:
+            class quality:
+                chat = ModelRegistry.get("vertexai", "thinking", "quality", "chat")
+
+            class balance:
+                chat = ModelRegistry.get("vertexai", "thinking", "balance", "chat")
+
+            class speed:
+                chat = ModelRegistry.get("vertexai", "thinking", "speed", "chat")
+
+        default = ModelRegistry.alias("vertexai_default")

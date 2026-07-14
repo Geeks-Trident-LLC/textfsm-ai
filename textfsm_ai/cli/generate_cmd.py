@@ -19,7 +19,12 @@ from textfsm_ai.providers.config import load_config_from_env, load_config_from_f
 @click.option("--model", required=False)
 @click.option("--endpoint", required=False)
 @click.option("--api-version", required=False)
-@click.option("--region", required=False, help="AWS region (Bedrock only)")
+@click.option(
+    "--region",
+    required=False,
+    help="AWS region (Bedrock) or GCP location (Vertex AI)",
+)
+@click.option("--project", required=False, help="GCP project (Vertex AI only)")
 @click.option("--max-retries", default=1, show_default=True)
 @click.option("--raw", is_flag=True, help="Show raw LLM output")
 @click.option("--json", "json_output", is_flag=True, help="Show full pipeline JSON")
@@ -41,6 +46,7 @@ def generate(
     endpoint,
     api_version,
     region,
+    project,
     max_retries,
     raw,
     json_output,
@@ -83,6 +89,7 @@ def generate(
     params["endpoint"] = resolve_endpoint(provider, endpoint, pconf)
     params["api_version"] = resolve_api_version(provider, api_version, pconf)
     params["region"] = resolve_region(provider, region, pconf)
+    params["project"] = resolve_project(provider, project, pconf)
 
     # -----------------------------
     # 3. Debug output
@@ -95,11 +102,16 @@ def generate(
         click.echo(f"model:          {params.get('model')}")
         click.echo(f"max_retries:    {max_retries}")
 
-        # API key masking (Bedrock has no project-level api_key - boto3
-        # resolves AWS credentials on its own)
+        # API key masking (Bedrock/Vertex AI have no project-level
+        # api_key - boto3/google-genai resolve cloud credentials on
+        # their own)
         key = params.get("api_key")
         if provider == "bedrock":
             click.echo("api_key:        <not used, resolved via AWS credential chain>")
+        elif provider == "vertexai":
+            click.echo(
+                "api_key:        <not used, resolved via GCP ADC credential chain>"
+            )
         else:
             masked = key[:4] + "..." + key[-4:] if key else "<missing>"
             click.echo(f"api_key:        {masked}")
@@ -109,9 +121,13 @@ def generate(
             click.echo(f"endpoint:       {params.get('endpoint')}")
             click.echo(f"api_version:    {params.get('api_version')}")
 
-        # Bedrock-only field
+        # Bedrock/Vertex AI-only field
         if params.get("region"):
             click.echo(f"region:         {params.get('region')}")
+
+        # Vertex AI-only field
+        if params.get("project"):
+            click.echo(f"project:        {params.get('project')}")
         click.echo("")
 
     # -----------------------------
@@ -124,6 +140,7 @@ def generate(
         endpoint=params.get("endpoint"),
         api_version=params.get("api_version"),
         region=params.get("region"),
+        project=params.get("project"),
         max_retries=max_retries,
     )
 
@@ -247,6 +264,13 @@ def resolve_api_key(provider, api_key, pconf):
         # an IAM role).
         return None
 
+    if provider == "vertexai":
+        # Vertex AI doesn't use a project-level API key either - the
+        # google-genai SDK resolves Google Cloud credentials on its own
+        # (a service account key file via GOOGLE_APPLICATION_CREDENTIALS,
+        # `gcloud auth application-default login`, or workload identity).
+        return None
+
     if api_key:
         return api_key
 
@@ -349,20 +373,51 @@ def resolve_api_version(provider, api_version, pconf):
 
 
 def resolve_region(provider, region, pconf):
-    if provider != "bedrock":
+    if provider not in ("bedrock", "vertexai"):
         return None
 
     if region:
         return region
 
-    env = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION")
+    if provider == "bedrock":
+        env = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION")
+    else:
+        # Vertex AI calls this "location" in GCP terminology, but reuses
+        # this app's generic "region" concept/field for consistency.
+        env = os.getenv("GOOGLE_CLOUD_LOCATION")
+
     if env:
         return env
 
     if pconf and "region" in pconf.params:
         return pconf.params["region"]
 
+    if provider == "bedrock":
+        raise click.ClickException(
+            "Bedrock requires an AWS region. Use --region or set AWS_REGION/"
+            "AWS_DEFAULT_REGION."
+        )
     raise click.ClickException(
-        "Bedrock requires an AWS region. Use --region or set AWS_REGION/"
-        "AWS_DEFAULT_REGION."
+        "Vertex AI requires a GCP location. Use --region or set "
+        "GOOGLE_CLOUD_LOCATION."
+    )
+
+
+def resolve_project(provider, project, pconf):
+    if provider != "vertexai":
+        return None
+
+    if project:
+        return project
+
+    env = os.getenv("GOOGLE_CLOUD_PROJECT")
+    if env:
+        return env
+
+    if pconf and "project" in pconf.params:
+        return pconf.params["project"]
+
+    raise click.ClickException(
+        "Vertex AI requires a GCP project. Use --project or set "
+        "GOOGLE_CLOUD_PROJECT."
     )

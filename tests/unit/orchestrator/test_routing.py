@@ -200,3 +200,14 @@ def test_cohere_prefix_does_not_collide_with_bedrock_cohere_namespace():
     table = create_default_routing_table()
     assert table.route("command-r-plus") == "cohere"
     assert table.route("cohere.command-r-plus-v1:0") == "bedrock"
+
+
+def test_vertexai_is_not_auto_routed_and_falls_to_native_gemini():
+    # Vertex AI has NO routing rule at all - it serves identical model ID
+    # strings to native Gemini (e.g. "gemini-2.5-pro" means the same thing
+    # to both), a genuine unresolvable collision. A bare model string
+    # always routes to native "gemini"; Vertex AI must be selected
+    # explicitly via --provider vertexai instead.
+    table = create_default_routing_table()
+    assert table.route("gemini-2.5-pro") == "gemini"
+    assert table.route("gemini-2.5-flash") == "gemini"

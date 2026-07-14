@@ -160,6 +160,21 @@ def load_config_from_env() -> OrchestratorConfig:
             params={"api_key": os.getenv("COHERE_API_KEY")},
         )
 
+    gcp_project = os.getenv("GOOGLE_CLOUD_PROJECT")
+    gcp_location = os.getenv("GOOGLE_CLOUD_LOCATION")
+    if gcp_project and gcp_location:
+        providers_cfg["vertexai"] = ProviderConfig(
+            name="vertexai",
+            type="vertexai",
+            # No api_key here - the google-genai SDK resolves Google Cloud
+            # credentials on its own (a service account key file via
+            # GOOGLE_APPLICATION_CREDENTIALS, `gcloud auth
+            # application-default login`, or workload identity on GCP
+            # infra), so project/location are the only Vertex AI-specific
+            # params this app needs to track.
+            params={"project": gcp_project, "region": gcp_location},
+        )
+
     if os.getenv("AZURE_OPENAI_ENDPOINT") and os.getenv("AZURE_OPENAI_API_KEY"):
         providers_cfg["azure"] = ProviderConfig(
             name="azure",

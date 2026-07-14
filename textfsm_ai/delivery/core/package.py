@@ -41,6 +41,7 @@ class LLMInfo(Serializable):
     endpoint: str = ""
     api_version: str = ""
     region: str = ""
+    project: str = ""
 
     def to_string(self) -> str:
         """Return a clean, readable summary of LLM configuration."""
@@ -55,6 +56,18 @@ class LLMInfo(Serializable):
                     f"Provider    : {self.provider_name}",
                     f"Model       : {self.model}",
                     f"Region      : {self.region}",
+                ]
+            )
+        elif self.provider_name == "vertexai":
+            # Vertex AI has no project-level api_key either - the
+            # google-genai SDK resolves GCP credentials (ADC) on its own.
+            parts.extend(
+                [
+                    "API Key     : <not used, resolved via GCP ADC credential chain>",
+                    f"Provider    : {self.provider_name}",
+                    f"Model       : {self.model}",
+                    f"Region      : {self.region}",
+                    f"Project     : {self.project}",
                 ]
             )
         else:
