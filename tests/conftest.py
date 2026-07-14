@@ -107,7 +107,7 @@ def bedrock_region(require_real_tests):
     # No API key fixture for Bedrock - boto3 resolves AWS credentials on
     # its own (AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY/AWS_SESSION_TOKEN,
     # ~/.aws/credentials, or an IAM role); only the region is app-specific.
-    return os.getenv("AWS_REGION") or _require_env("AWS_DEFAULT_REGION")
+    return os.getenv("BEDROCK_REGION") or _require_env("BEDROCK_DEFAULT_REGION")
 
 
 @pytest.fixture(scope="session")
@@ -120,27 +120,27 @@ def vertexai_project(require_real_tests):
     # No API key fixture for Vertex AI - the google-genai SDK resolves
     # Google Cloud credentials on its own (ADC); only project/location are
     # app-specific.
-    return _require_env("GOOGLE_CLOUD_PROJECT")
+    return _require_env("VERTEXAI_PROJECT")
 
 
 @pytest.fixture(scope="session")
 def vertexai_location(require_real_tests):
-    return _require_env("GOOGLE_CLOUD_LOCATION")
+    return _require_env("VERTEXAI_REGION")
 
 
 @pytest.fixture(scope="session")
 def azure_key(require_real_tests):
-    return _require_env("AZURE_OPENAI_API_KEY")
+    return _require_env("AZURE_API_KEY")
 
 
 @pytest.fixture(scope="session")
 def azure_endpoint(require_real_tests):
-    return _require_env("AZURE_OPENAI_ENDPOINT")
+    return _require_env("AZURE_ENDPOINT")
 
 
 @pytest.fixture(scope="session")
 def azure_api_version(require_real_tests):
-    return os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-15-preview")
+    return os.getenv("AZURE_API_VERSION", "2024-02-15-preview")
 
 
 @pytest.fixture(scope="session")

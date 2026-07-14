@@ -122,37 +122,37 @@ def test_fetch_latest_models_returns_deployment_only():
 
 
 def test_from_env_missing_api_key_raises(monkeypatch):
-    monkeypatch.delenv("AZURE_OPENAI_API_KEY", raising=False)
-    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
-    monkeypatch.setenv("AZURE_OPENAI_DEPLOYMENT", "dep")
+    monkeypatch.delenv("AZURE_API_KEY", raising=False)
+    monkeypatch.setenv("AZURE_ENDPOINT", "https://example.azure.com")
+    monkeypatch.setenv("AZURE_DEPLOYMENT", "dep")
 
-    with pytest.raises(ValueError, match="AZURE_OPENAI_API_KEY"):
+    with pytest.raises(ValueError, match="AZURE_API_KEY"):
         AzureOpenAIProvider.from_env()
 
 
 def test_from_env_missing_endpoint_raises(monkeypatch):
-    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "sk-test")
-    monkeypatch.delenv("AZURE_OPENAI_ENDPOINT", raising=False)
-    monkeypatch.setenv("AZURE_OPENAI_DEPLOYMENT", "dep")
+    monkeypatch.setenv("AZURE_API_KEY", "sk-test")
+    monkeypatch.delenv("AZURE_ENDPOINT", raising=False)
+    monkeypatch.setenv("AZURE_DEPLOYMENT", "dep")
 
-    with pytest.raises(ValueError, match="AZURE_OPENAI_ENDPOINT"):
+    with pytest.raises(ValueError, match="AZURE_ENDPOINT"):
         AzureOpenAIProvider.from_env()
 
 
 def test_from_env_missing_deployment_raises(monkeypatch):
-    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "sk-test")
-    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
-    monkeypatch.delenv("AZURE_OPENAI_DEPLOYMENT", raising=False)
+    monkeypatch.setenv("AZURE_API_KEY", "sk-test")
+    monkeypatch.setenv("AZURE_ENDPOINT", "https://example.azure.com")
+    monkeypatch.delenv("AZURE_DEPLOYMENT", raising=False)
 
-    with pytest.raises(ValueError, match="AZURE_OPENAI_DEPLOYMENT"):
+    with pytest.raises(ValueError, match="AZURE_DEPLOYMENT"):
         AzureOpenAIProvider.from_env()
 
 
 def test_from_env_success(monkeypatch):
-    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "sk-test")
-    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
-    monkeypatch.setenv("AZURE_OPENAI_DEPLOYMENT", "dep")
-    monkeypatch.delenv("AZURE_OPENAI_API_VERSION", raising=False)
+    monkeypatch.setenv("AZURE_API_KEY", "sk-test")
+    monkeypatch.setenv("AZURE_ENDPOINT", "https://example.azure.com")
+    monkeypatch.setenv("AZURE_DEPLOYMENT", "dep")
+    monkeypatch.delenv("AZURE_API_VERSION", raising=False)
 
     p = AzureOpenAIProvider.from_env()
 
@@ -162,10 +162,10 @@ def test_from_env_success(monkeypatch):
 
 
 def test_from_env_custom_api_version(monkeypatch):
-    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "sk-test")
-    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
-    monkeypatch.setenv("AZURE_OPENAI_DEPLOYMENT", "dep")
-    monkeypatch.setenv("AZURE_OPENAI_API_VERSION", "2024-06-01")
+    monkeypatch.setenv("AZURE_API_KEY", "sk-test")
+    monkeypatch.setenv("AZURE_ENDPOINT", "https://example.azure.com")
+    monkeypatch.setenv("AZURE_DEPLOYMENT", "dep")
+    monkeypatch.setenv("AZURE_API_VERSION", "2024-06-01")
 
     p = AzureOpenAIProvider.from_env()
 

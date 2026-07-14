@@ -20,22 +20,22 @@ def _fake_response(text="hello", input_tokens=10, output_tokens=20, total_tokens
 
 
 def test_init_missing_region_raises(monkeypatch):
-    monkeypatch.delenv("AWS_REGION", raising=False)
-    monkeypatch.delenv("AWS_DEFAULT_REGION", raising=False)
+    monkeypatch.delenv("BEDROCK_REGION", raising=False)
+    monkeypatch.delenv("BEDROCK_DEFAULT_REGION", raising=False)
     with pytest.raises(ValueError, match="AWS region"):
         BedrockProvider(region=None, default_model=MODEL_ID)
 
 
 def test_init_uses_aws_region_env_var(monkeypatch):
-    monkeypatch.setenv("AWS_REGION", "us-east-1")
-    monkeypatch.delenv("AWS_DEFAULT_REGION", raising=False)
+    monkeypatch.setenv("BEDROCK_REGION", "us-east-1")
+    monkeypatch.delenv("BEDROCK_DEFAULT_REGION", raising=False)
     p = BedrockProvider(default_model=MODEL_ID)
     assert p.region == "us-east-1"
 
 
 def test_init_uses_aws_default_region_env_var(monkeypatch):
-    monkeypatch.delenv("AWS_REGION", raising=False)
-    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-central-1")
+    monkeypatch.delenv("BEDROCK_REGION", raising=False)
+    monkeypatch.setenv("BEDROCK_DEFAULT_REGION", "eu-central-1")
     p = BedrockProvider(default_model=MODEL_ID)
     assert p.region == "eu-central-1"
 
@@ -133,14 +133,14 @@ def test_generate_sync_joins_multiple_content_blocks():
 
 
 def test_from_env_missing_region_raises(monkeypatch):
-    monkeypatch.delenv("AWS_REGION", raising=False)
-    monkeypatch.delenv("AWS_DEFAULT_REGION", raising=False)
-    with pytest.raises(RuntimeError, match="AWS_REGION"):
+    monkeypatch.delenv("BEDROCK_REGION", raising=False)
+    monkeypatch.delenv("BEDROCK_DEFAULT_REGION", raising=False)
+    with pytest.raises(RuntimeError, match="BEDROCK_REGION"):
         BedrockProvider.from_env()
 
 
 def test_from_env_success(monkeypatch):
-    monkeypatch.setenv("AWS_REGION", "us-east-1")
+    monkeypatch.setenv("BEDROCK_REGION", "us-east-1")
     p = BedrockProvider.from_env()
     assert isinstance(p, BedrockProvider)
 

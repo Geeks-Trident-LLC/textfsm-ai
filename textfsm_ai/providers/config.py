@@ -141,7 +141,7 @@ def load_config_from_env() -> OrchestratorConfig:
             params={"api_key": os.getenv("MISTRAL_API_KEY")},
         )
 
-    aws_region = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION")
+    aws_region = os.getenv("BEDROCK_REGION") or os.getenv("BEDROCK_DEFAULT_REGION")
     if aws_region:
         providers_cfg["bedrock"] = ProviderConfig(
             name="bedrock",
@@ -160,8 +160,8 @@ def load_config_from_env() -> OrchestratorConfig:
             params={"api_key": os.getenv("COHERE_API_KEY")},
         )
 
-    gcp_project = os.getenv("GOOGLE_CLOUD_PROJECT")
-    gcp_location = os.getenv("GOOGLE_CLOUD_LOCATION")
+    gcp_project = os.getenv("VERTEXAI_PROJECT")
+    gcp_location = os.getenv("VERTEXAI_REGION")
     if gcp_project and gcp_location:
         providers_cfg["vertexai"] = ProviderConfig(
             name="vertexai",
@@ -191,16 +191,14 @@ def load_config_from_env() -> OrchestratorConfig:
             params=oci_params,
         )
 
-    if os.getenv("AZURE_OPENAI_ENDPOINT") and os.getenv("AZURE_OPENAI_API_KEY"):
+    if os.getenv("AZURE_ENDPOINT") and os.getenv("AZURE_API_KEY"):
         providers_cfg["azure"] = ProviderConfig(
             name="azure",
             type="azure",
             params={
-                "endpoint": os.getenv("AZURE_OPENAI_ENDPOINT"),
-                "api_key": os.getenv("AZURE_OPENAI_API_KEY"),
-                "api_version": os.getenv(
-                    "AZURE_OPENAI_API_VERSION", "2024-02-15-preview"
-                ),
+                "endpoint": os.getenv("AZURE_ENDPOINT"),
+                "api_key": os.getenv("AZURE_API_KEY"),
+                "api_version": os.getenv("AZURE_API_VERSION", "2024-02-15-preview"),
             },
         )
 

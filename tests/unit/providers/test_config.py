@@ -16,14 +16,14 @@ _ENV_VARS = [
     "OPENROUTER_API_KEY",
     "MOONSHOT_API_KEY",
     "MISTRAL_API_KEY",
-    "AWS_REGION",
-    "AWS_DEFAULT_REGION",
+    "BEDROCK_REGION",
+    "BEDROCK_DEFAULT_REGION",
     "COHERE_API_KEY",
-    "GOOGLE_CLOUD_PROJECT",
-    "GOOGLE_CLOUD_LOCATION",
-    "AZURE_OPENAI_ENDPOINT",
-    "AZURE_OPENAI_API_KEY",
-    "AZURE_OPENAI_API_VERSION",
+    "VERTEXAI_PROJECT",
+    "VERTEXAI_REGION",
+    "AZURE_ENDPOINT",
+    "AZURE_API_KEY",
+    "AZURE_API_VERSION",
     "OCI_COMPARTMENT_ID",
     "OCI_REGION",
 ]
@@ -212,7 +212,7 @@ def test_load_config_from_env_mistral(monkeypatch):
 
 
 def test_load_config_from_env_bedrock_aws_region(monkeypatch):
-    monkeypatch.setenv("AWS_REGION", "us-east-1")
+    monkeypatch.setenv("BEDROCK_REGION", "us-east-1")
     cfg = load_config_from_env()
 
     assert set(cfg.providers.keys()) == {"bedrock"}
@@ -220,7 +220,7 @@ def test_load_config_from_env_bedrock_aws_region(monkeypatch):
 
 
 def test_load_config_from_env_bedrock_aws_default_region(monkeypatch):
-    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-central-1")
+    monkeypatch.setenv("BEDROCK_DEFAULT_REGION", "eu-central-1")
     cfg = load_config_from_env()
 
     assert set(cfg.providers.keys()) == {"bedrock"}
@@ -236,15 +236,15 @@ def test_load_config_from_env_cohere(monkeypatch):
 
 
 def test_load_config_from_env_vertexai_requires_both_project_and_location(monkeypatch):
-    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "my-project")
+    monkeypatch.setenv("VERTEXAI_PROJECT", "my-project")
     # location missing -> vertexai should NOT appear
     cfg = load_config_from_env()
     assert "vertexai" not in cfg.providers
 
 
 def test_load_config_from_env_vertexai_with_both_vars(monkeypatch):
-    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "my-project")
-    monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+    monkeypatch.setenv("VERTEXAI_PROJECT", "my-project")
+    monkeypatch.setenv("VERTEXAI_REGION", "us-central1")
     cfg = load_config_from_env()
 
     assert set(cfg.providers.keys()) == {"vertexai"}
@@ -284,15 +284,15 @@ def test_load_config_from_env_oci_with_region(monkeypatch):
 
 
 def test_load_config_from_env_azure_requires_both_endpoint_and_key(monkeypatch):
-    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
+    monkeypatch.setenv("AZURE_ENDPOINT", "https://example.azure.com")
     # api key missing -> azure should NOT appear
     cfg = load_config_from_env()
     assert "azure" not in cfg.providers
 
 
 def test_load_config_from_env_azure_with_both_vars(monkeypatch):
-    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
-    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "sk-azure")
+    monkeypatch.setenv("AZURE_ENDPOINT", "https://example.azure.com")
+    monkeypatch.setenv("AZURE_API_KEY", "sk-azure")
     cfg = load_config_from_env()
 
     assert set(cfg.providers.keys()) == {"azure"}
@@ -304,9 +304,9 @@ def test_load_config_from_env_azure_with_both_vars(monkeypatch):
 
 
 def test_load_config_from_env_azure_custom_api_version(monkeypatch):
-    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
-    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "sk-azure")
-    monkeypatch.setenv("AZURE_OPENAI_API_VERSION", "2024-06-01")
+    monkeypatch.setenv("AZURE_ENDPOINT", "https://example.azure.com")
+    monkeypatch.setenv("AZURE_API_KEY", "sk-azure")
+    monkeypatch.setenv("AZURE_API_VERSION", "2024-06-01")
     cfg = load_config_from_env()
 
     assert cfg.providers["azure"].params["api_version"] == "2024-06-01"
@@ -326,12 +326,12 @@ def test_load_config_from_env_all_providers_at_once(monkeypatch):
     monkeypatch.setenv("OPENROUTER_API_KEY", "k12")
     monkeypatch.setenv("MOONSHOT_API_KEY", "k13")
     monkeypatch.setenv("MISTRAL_API_KEY", "k14")
-    monkeypatch.setenv("AWS_REGION", "us-east-1")
+    monkeypatch.setenv("BEDROCK_REGION", "us-east-1")
     monkeypatch.setenv("COHERE_API_KEY", "k15")
-    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "my-project")
-    monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "us-central1")
-    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
-    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "k5")
+    monkeypatch.setenv("VERTEXAI_PROJECT", "my-project")
+    monkeypatch.setenv("VERTEXAI_REGION", "us-central1")
+    monkeypatch.setenv("AZURE_ENDPOINT", "https://example.azure.com")
+    monkeypatch.setenv("AZURE_API_KEY", "k5")
     monkeypatch.setenv("OCI_COMPARTMENT_ID", "ocid1.compartment.oc1..fake")
 
     cfg = load_config_from_env()
