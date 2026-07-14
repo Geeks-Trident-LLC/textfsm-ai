@@ -61,6 +61,30 @@ async def test_retry_on_rate_limit(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_reraises_last_exception_after_all_retries_exhausted():
+    # Unlike test_retry_on_rate_limit (fails once, then succeeds), this
+    # provider ALWAYS rate-limits - retries must exhaust across every
+    # candidate provider and the orchestrator must re-raise the last
+    # exception it saw, rather than swallowing it or hanging.
+    p = MockProvider("openai", behavior="rate_limit")
+
+    routing = RoutingTable(
+        rules=[RoutingRule(model_prefix="gpt-", provider_name="openai")]
+    )
+
+    orch = create_orchestrator([p])
+    orch._routing_table = routing
+    orch._max_retries = 1
+
+    req = OrchestratorRequest(model="gpt-4o", prompt="hi")
+
+    with pytest.raises(ProviderRateLimitError, match="rate limited"):
+        await orch.run(req)
+
+    assert p.calls == 2  # initial attempt + 1 retry, both exhausted
+
+
+@pytest.mark.asyncio
 async def test_async_orchestrator_basic():
     p = MockProvider("openai")
     orch = create_orchestrator([p])
