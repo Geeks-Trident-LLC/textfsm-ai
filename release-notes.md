@@ -1,46 +1,54 @@
-# v0.4.2 — Public API Facade, New Docs, ~99% Test Coverage
+# v0.5.0 — Oracle OCI Provider, Env Var Standardization, Faster Tests
 
-## 🐍 Standardized Public Python API
-`textfsm_ai` now has a small, consistent top-level API instead of requiring
-callers to know the internal package layout:
+## 🔮 New Provider: Oracle Cloud Infrastructure (OCI)
+`textfsm_ai` now supports Oracle Cloud's Generative AI service
+(`provider="oci"`):
+- Meta Llama and xAI Grok models via OCI's Generic chat format
+- No project-level API key — authenticates via `~/.oci/config` (the same
+  file the OCI CLI itself uses), matching the credential-chain shape
+  already used for Bedrock and Vertex AI
+- New `compartment_id` parameter / `--compartment-id` CLI flag
+- Always selected explicitly via `--provider oci` — its model-ID vendor
+  prefixes collide with Bedrock's re-hosted namespace, so it's
+  intentionally left out of automatic routing
 
-- `generate()` / `compile_dsl()` / `run_pipeline()` — always return a full
-  result object (`LLMResult`, `DSLResult`, `DeliveryOutput`), never raise for
-  expected failures (rate limits, retry exhaustion, invalid templates);
-  check `.ready`/`.reason` instead
-- `to_llm_result` / `to_llm_template` / `to_llm_records` / `to_llm_variables` /
-  `to_llm_handling` and `to_dsl_result` / `to_ast` / `to_canonical` /
-  `to_readable` / `to_recognizers` — shortcuts with identical parameters,
-  for when you only need one piece of the result
-- `LLMResult`, `DSLResult`, `TemplateAST`, `DeliveryOutput`, and
-  `ValidationResult` all importable directly from `textfsm_ai`
-- Removed `ask_ai()`, the old raw single-provider-call primitive, superseded
-  by `generate()`/`run_pipeline()`
+## ⚠️ Breaking Change: Environment Variable Standardization
+Every provider's environment variables now follow one uniform
+`<PROVIDER>_<FIELD>` naming pattern:
 
-## 📚 New Documentation
-- **Quickstart** — the full API, function by function, with runnable examples
-- **API Reference** — auto-generated from docstrings, every public
-  function/type
-- **CLI Guide** — every command, verified against the live CLI
-- **Human-in-the-Loop Review** — a new guide for reviewing a generated
-  template without reading or writing regex: interpret the plain-English
-  "readable" DSL form, then verify it against reality by actually running
-  the template and diffing the result against both the LLM's own claim and
-  your own expectation
-- Removed broken/stale doc pages, including one describing a golden-test
-  framework that was never actually built
+| Old | New |
+|---|---|
+| `AZURE_OPENAI_API_KEY` | `AZURE_API_KEY` |
+| `AZURE_OPENAI_ENDPOINT` | `AZURE_ENDPOINT` |
+| `AZURE_OPENAI_API_VERSION` | `AZURE_API_VERSION` |
+| `AZURE_OPENAI_DEPLOYMENT` | `AZURE_DEPLOYMENT` |
+| `AWS_REGION` / `AWS_DEFAULT_REGION` | `BEDROCK_REGION` / `BEDROCK_DEFAULT_REGION` |
+| `GOOGLE_CLOUD_PROJECT` / `GOOGLE_CLOUD_LOCATION` | `VERTEXAI_PROJECT` / `VERTEXAI_REGION` |
 
-## 🐛 Bug Fix
-Fixed `generate()` sourcing its `.ready`/`.reason` status from the wrong
-place — it now reflects the authoritative pipeline-level outcome (retries,
-template-syntax validation included) rather than a shallower internal
-signal that could report success for a pipeline that had actually failed.
+**If you have any of the old env var names set, update them before
+upgrading** — the old names are no longer read.
 
-## 🧪 Test Coverage
-Raised to ~99% across nearly the entire codebase — every file with a
-genuinely testable gap is now closed, with the remaining handful of missed
-lines confirmed as structurally unreachable dead code (unknown-enum-value
-guards, abstract-method stubs).
+## 📚 New Providers Overview Page
+A single new doc page, **Providers**, lists all 18 supported providers
+side by side: credentials, extra parameters, example models, and notes on
+the internal Shape A/B split and routing collisions.
+
+## 🏠 Refreshed Docs Homepage
+The docs homepage now correctly leads with what `textfsm_ai` actually
+is — an AI-powered template generator across 18 LLM providers — instead
+of reading like a generic TextFSM parsing library. Also fixed a stale
+"Zero external dependencies" claim (the package depends on `openai`,
+`anthropic`, `google-genai`, `boto3`, `oci`, and more).
+
+## 🧪 ~4x Faster Test Suite
+- Removed two test files fully superseded by the per-provider test
+  directory, with zero coverage loss
+- Traced the bulk of the provider test suite's runtime to
+  `ssl.create_default_context()` re-parsing the full CA certificate
+  bundle on every real SDK client construction; caching it for the test
+  session cuts the full suite from 60+ seconds to ~15-20 seconds
+- Closed `orchestrator.py`'s one remaining coverage gap (the
+  retry-exhaustion re-raise path) — now 100% covered
 
 ## 📦 Version
-`0.4.1 → 0.4.2`
+`0.4.2 → 0.5.0`
