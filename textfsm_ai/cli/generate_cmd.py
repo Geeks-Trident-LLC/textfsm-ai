@@ -266,6 +266,7 @@ def resolve_api_key(provider, api_key, pconf):
         "openrouter": "OPENROUTER_API_KEY",
         "moonshot": "MOONSHOT_API_KEY",
         "mistral": "MISTRAL_API_KEY",
+        "cohere": "COHERE_API_KEY",
     }
 
     env_var = env_map.get(provider)

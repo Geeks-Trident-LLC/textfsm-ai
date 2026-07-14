@@ -68,6 +68,7 @@ def orchestrator_route(model: str) -> None:
         "moonshot": DummyProvider("moonshot"),
         "mistral": DummyProvider("mistral"),
         "bedrock": DummyProvider("bedrock"),
+        "cohere": DummyProvider("cohere"),
     }
 
     req = OrchestratorRequest(model=model, prompt="")

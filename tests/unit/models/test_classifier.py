@@ -275,6 +275,7 @@ def test_bedrock_classification():
         "meta.llama4-maverick-v1:0",  # MoE codename -> quality
         "meta.llama4-scout-v1:0",  # MoE codename -> balance
         "meta.llama3-1-70b-instruct-v1:0",  # dense 70B -> quality
+        "meta.llama3-1-33b-instruct-v1:0",  # dense 33B -> balance
         "meta.llama3-1-8b-instruct-v1:0",  # dense 8B -> speed
         "meta.llama-guard-v1:0",  # no size token -> other
         "mistral.mistral-large-2-v1:0",  # large -> quality
@@ -304,6 +305,7 @@ def test_bedrock_classification():
 
     assert "anthropic.claude-sonnet-4-6-v1:0" in groups[Tier.BALANCE_CHAT]
     assert "meta.llama4-scout-v1:0" in groups[Tier.BALANCE_CHAT]
+    assert "meta.llama3-1-33b-instruct-v1:0" in groups[Tier.BALANCE_CHAT]
     assert "mistral.mistral-medium-v1:0" in groups[Tier.BALANCE_CHAT]
     assert "cohere.command-r-v1:0" in groups[Tier.BALANCE_CHAT]
     assert "amazon.titan-text-express-v1:0" in groups[Tier.BALANCE_CHAT]
@@ -332,6 +334,34 @@ def test_bedrock_classification_preserves_vendor_prefix():
 
     assert "anthropic.claude-haiku-4-5-v1:0" in groups[Tier.SPEED_CHAT]
     assert "claude-haiku-4-5-v1:0" not in groups[Tier.SPEED_CHAT]
+
+
+def test_cohere_classification():
+    raw = [
+        "command-a",  # premium keyword -> quality
+        "command-a-03-2025",  # dated premium variant -> quality
+        "command-r-plus",  # premium keyword -> quality
+        "command-r",  # bare -> balance
+        "command-r-08-2024",  # dated bare variant -> balance
+        "command-light",  # cheapest keyword -> speed
+        "command",  # bare legacy model -> other
+        "command-r7b",  # unhandled suffix -> other
+        "some-unknown-model",  # no match -> other
+    ]
+    groups = classify_models("cohere", raw)
+
+    assert "command-a" in groups[Tier.QUALITY_CHAT]
+    assert "command-a-03-2025" in groups[Tier.QUALITY_CHAT]
+    assert "command-r-plus" in groups[Tier.QUALITY_CHAT]
+
+    assert "command-r" in groups[Tier.BALANCE_CHAT]
+    assert "command-r-08-2024" in groups[Tier.BALANCE_CHAT]
+
+    assert "command-light" in groups[Tier.SPEED_CHAT]
+
+    assert "command" in groups[Tier.OTHER]
+    assert "command-r7b" in groups[Tier.OTHER]
+    assert "some-unknown-model" in groups[Tier.OTHER]
 
 
 # ---------------------------------------------------------

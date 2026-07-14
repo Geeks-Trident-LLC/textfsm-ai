@@ -40,6 +40,7 @@ def test_pricing_table_loaded_from_yaml_has_expected_providers():
         "moonshot",
         "mistral",
         "bedrock",
+        "cohere",
     ):
         assert provider in PRICING_TABLE
         assert isinstance(PRICING_TABLE[provider], dict)
@@ -192,6 +193,16 @@ def test_extract_base_model_bedrock():
         ("anthropic.claude-opus-4-8-v1:0", "anthropic.claude-opus-4-8-v1:0"),
         ("meta.llama4-maverick-v1:0", "meta.llama4-maverick-v1:0"),
         ("cohere.command-r-plus-v1:0", "cohere.command-r-plus-v1:0"),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_cohere():
+    provider = "cohere"
+    for model, based_model in (
+        ("command-a", "command-a"),
+        ("command-r-plus", "command-r-plus"),
+        ("command-light", "command-light"),
     ):
         assert extract_base_model(provider, model) == based_model
 
@@ -420,6 +431,25 @@ def test_estimate_cost_bedrock():
     assert (
         result.output_per_million
         == PRICING_TABLE["bedrock"]["anthropic.claude-haiku-4-5-v1:0"]["output"]
+    )
+    assert result.warning is None
+
+
+def test_estimate_cost_cohere():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="cohere",
+        model="command-light",
+    )
+
+    assert result.provider == "cohere"
+    assert result.based_model == "command-light"
+    assert result.input_per_million == PRICING_TABLE["cohere"]["command-light"]["input"]
+    assert (
+        result.output_per_million == PRICING_TABLE["cohere"]["command-light"]["output"]
     )
     assert result.warning is None
 

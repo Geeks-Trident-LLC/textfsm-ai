@@ -331,3 +331,25 @@ class model:
                 chat = ModelRegistry.get("bedrock", "thinking", "speed", "chat")
 
         default = ModelRegistry.alias("bedrock_default")
+
+    class cohere:
+        class quality:
+            chat = ModelRegistry.get("cohere", "quality", "chat")
+
+        class balance:
+            chat = ModelRegistry.get("cohere", "balance", "chat")
+
+        class speed:
+            chat = ModelRegistry.get("cohere", "speed", "chat")
+
+        class thinking:
+            class quality:
+                chat = ModelRegistry.get("cohere", "thinking", "quality", "chat")
+
+            class balance:
+                chat = ModelRegistry.get("cohere", "thinking", "balance", "chat")
+
+            class speed:
+                chat = ModelRegistry.get("cohere", "thinking", "speed", "chat")
+
+        default = ModelRegistry.alias("cohere_default")

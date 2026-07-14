@@ -25,6 +25,7 @@ environment variable:
 | Moonshot AI (Kimi) | `"moonshot"` | `MOONSHOT_API_KEY`     |
 | Mistral AI  | `"mistral"`       | `MISTRAL_API_KEY`         |
 | Amazon Bedrock | `"bedrock"`    | `AWS_REGION` (or `AWS_DEFAULT_REGION`) + AWS credential chain |
+| Cohere      | `"cohere"`        | `COHERE_API_KEY`          |
 | Azure OpenAI| `"azure"`         | `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_VERSION` |
 
 ```bash

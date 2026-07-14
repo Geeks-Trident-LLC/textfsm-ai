@@ -3,6 +3,7 @@ import pytest
 from textfsm_ai.providers.anthropic_provider import AnthropicProvider
 from textfsm_ai.providers.bedrock_provider import BedrockProvider
 from textfsm_ai.providers.cerebras_provider import CerebrasProvider
+from textfsm_ai.providers.cohere_provider import CohereProvider
 from textfsm_ai.providers.fireworks_provider import FireworksProvider
 from textfsm_ai.providers.groq_provider import GroqProvider
 from textfsm_ai.providers.mistral_provider import MistralProvider
@@ -32,6 +33,7 @@ def test_registry_get_returns_registered_class():
     assert registry.get("moonshot") is MoonshotProvider
     assert registry.get("mistral") is MistralProvider
     assert registry.get("bedrock") is BedrockProvider
+    assert registry.get("cohere") is CohereProvider
 
 
 def test_registry_get_unknown_raises_keyerror():

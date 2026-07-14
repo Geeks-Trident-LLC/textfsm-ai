@@ -264,3 +264,29 @@ BEDROCK_PATTERN = re.compile(
     r"^(?:anthropic|meta|mistral|amazon|cohere|ai21)\.[\w.\-:]+$",
     re.IGNORECASE,
 )
+
+
+# ---------------------------------------------------------
+# Cohere. Bare, un-namespaced model IDs sharing a single "command"
+# prefix, tiered by suffix rather than parameter size (Cohere doesn't
+# publish parameter counts). "command-a"/"command-r-plus" are the
+# premium tier, bare "command-r" is the efficient/balanced tier,
+# "command-light" is the fastest/cheapest tier, and bare "command" (the
+# original, undifferentiated legacy model) falls to OTHER rather than
+# guessing a tier for it. Dated variants (e.g. "command-r-08-2024",
+# real Cohere naming) are covered by the optional trailing group.
+# Examples:
+#   command-a
+#   command-a-03-2025
+#   command-r-plus
+#   command-r-plus-04-2024
+#   command-r
+#   command-light
+#   command
+# Capture group 1 = suffix (a, r-plus, r, light, or None for bare
+# "command").
+# ---------------------------------------------------------
+COHERE_PATTERN = re.compile(
+    r"^command(?:-(a|r-plus|r|light))?(?:-[0-9]{2}-[0-9]{4})?$",
+    re.IGNORECASE,
+)

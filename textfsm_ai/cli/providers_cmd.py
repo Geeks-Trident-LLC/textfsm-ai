@@ -30,6 +30,7 @@ PROVIDER_DESCRIPTIONS = {
     "moonshot": "Moonshot AI / Kimi models (OpenAI-compatible API)",
     "mistral": "Mistral AI (native SDK)",
     "bedrock": "Amazon Bedrock (native SDK, AWS credential chain)",
+    "cohere": "Cohere Command models (native SDK)",
 }
 
 

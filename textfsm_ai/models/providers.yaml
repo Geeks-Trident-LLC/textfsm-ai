@@ -290,6 +290,24 @@ bedrock:
       chat:
         - anthropic.claude-haiku-4-5-v1:0
 
+cohere:
+  quality:
+    chat:
+      - command-a
+  balance:
+    chat:
+      - command-r
+  speed:
+    chat:
+      - command-light
+  thinking:
+    quality:
+      chat: []
+    balance:
+      chat: []
+    speed:
+      chat: []
+
 aliases:
   openai_default: gpt-4o-mini
   anthropic_default: claude-haiku-4-5-20251001
@@ -305,3 +323,4 @@ aliases:
   moonshot_default: moonshot-v1-8k
   mistral_default: mistral-small-latest
   bedrock_default: anthropic.claude-haiku-4-5-v1:0
+  cohere_default: command-light
