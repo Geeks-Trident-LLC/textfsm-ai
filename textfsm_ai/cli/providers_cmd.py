@@ -32,6 +32,7 @@ PROVIDER_DESCRIPTIONS = {
     "bedrock": "Amazon Bedrock (native SDK, AWS credential chain)",
     "cohere": "Cohere Command models (native SDK)",
     "vertexai": "Google Vertex AI (Gemini via GCP, ADC credential chain)",
+    "oci": "Oracle Cloud Infrastructure Generative AI (Llama/Grok, config-file auth)",
 }
 
 

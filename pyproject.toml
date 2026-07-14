@@ -40,6 +40,15 @@ dependencies = [
     # release supporting Python 3.9 (6.x/7.x require Python >=3.10);
     # verified via `pip download --python-version 3.9` resolution.
     "cohere==5.21.1",
+    # Pinned exactly for reproducibility (the latest release already
+    # supports Python 3.9, verified via `pip download --python-version
+    # 3.9` resolution, unlike mistralai/boto3/cohere above). Note: this
+    # is a much heavier dependency than every other provider SDK here -
+    # ~36MB, since it's Oracle's single all-services SDK (compute,
+    # storage, IAM, ...), not a Generative-AI-only package (no such
+    # package exists on PyPI) - plus crypto libs (cryptography,
+    # pyOpenSSL) needed for its request-signing auth model.
+    "oci==2.182.0",
     "tomli; python_version < '3.11'",
 ]
 
@@ -92,6 +101,8 @@ keywords = [
     "cohere",
     "vertex ai",
     "gcp",
+    "oracle cloud infrastructure",
+    "oci",
     "device output parsing",
     "log extraction",
     "structured data extraction",

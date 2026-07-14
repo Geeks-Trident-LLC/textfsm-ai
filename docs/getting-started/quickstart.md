@@ -27,6 +27,7 @@ environment variable:
 | Amazon Bedrock | `"bedrock"`    | `AWS_REGION` (or `AWS_DEFAULT_REGION`) + AWS credential chain |
 | Cohere      | `"cohere"`        | `COHERE_API_KEY`          |
 | Google Vertex AI | `"vertexai"` | `GOOGLE_CLOUD_PROJECT` + `GOOGLE_CLOUD_LOCATION` + GCP ADC credential chain |
+| Oracle OCI  | `"oci"`           | `OCI_COMPARTMENT_ID` + `~/.oci/config` credential file (`OCI_REGION` optional) |
 | Azure OpenAI| `"azure"`         | `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_VERSION` |
 
 ```bash
@@ -181,6 +182,34 @@ identical model IDs, so it must always be selected explicitly via
 `provider="vertexai"` — there's no automatic way to tell "call this model
 via Vertex" apart from "call it via the Gemini Developer API" from the
 model name alone.
+
+## Using Oracle OCI
+
+OCI also takes no `api_key` — pass `compartment_id` instead (an OCID
+identifying which OCI compartment to bill and scope the request to), and
+credentials are resolved automatically from `~/.oci/config` (the DEFAULT
+profile, same file the OCI CLI itself uses). `region` is optional here:
+if omitted, whatever region is already set in `~/.oci/config` is used.
+
+```python
+result = textfsm_ai.generate(
+    sample,
+    provider="oci",
+    api_key="",
+    model="meta.llama-3.3-70b-instruct",
+    compartment_id=os.environ["OCI_COMPARTMENT_ID"],
+    region=os.environ.get("OCI_REGION"),
+)
+```
+
+`run_pipeline()` accepts the same `compartment_id`/`region` keywords. OCI's
+"vendor.model-name" model IDs (`meta.llama-3.3-70b-instruct`,
+`xai.grok-4-fast-reasoning`) share vendor prefixes with Amazon Bedrock's
+own re-hosted namespace, so OCI must always be selected explicitly via
+`provider="oci"`. Only Meta Llama and xAI Grok models are supported —
+Cohere models on OCI use a different, incompatible request/response shape
+and are reachable through this package's native `"cohere"` or `"bedrock"`
+providers instead.
 
 ## Next steps
 

@@ -375,3 +375,25 @@ class model:
                 chat = ModelRegistry.get("vertexai", "thinking", "speed", "chat")
 
         default = ModelRegistry.alias("vertexai_default")
+
+    class oci:
+        class quality:
+            chat = ModelRegistry.get("oci", "quality", "chat")
+
+        class balance:
+            chat = ModelRegistry.get("oci", "balance", "chat")
+
+        class speed:
+            chat = ModelRegistry.get("oci", "speed", "chat")
+
+        class thinking:
+            class quality:
+                chat = ModelRegistry.get("oci", "thinking", "quality", "chat")
+
+            class balance:
+                chat = ModelRegistry.get("oci", "thinking", "balance", "chat")
+
+            class speed:
+                chat = ModelRegistry.get("oci", "thinking", "speed", "chat")
+
+        default = ModelRegistry.alias("oci_default")

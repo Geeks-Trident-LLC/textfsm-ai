@@ -32,6 +32,7 @@ def test_providers_list_runs():
     assert "bedrock" in result.output
     assert "cohere" in result.output
     assert "vertexai" in result.output
+    assert "oci" in result.output
 
 
 def test_providers_info_no_config(monkeypatch):

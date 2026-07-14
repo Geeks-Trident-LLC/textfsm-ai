@@ -12,6 +12,7 @@ from textfsm_ai.cli.generate_cmd import (
     generate,
     resolve_api_key,
     resolve_api_version,
+    resolve_compartment_id,
     resolve_endpoint,
     resolve_model,
     resolve_project,
@@ -35,6 +36,8 @@ _PROVIDER_ENV_VARS = [
     "AWS_DEFAULT_REGION",
     "GOOGLE_CLOUD_PROJECT",
     "GOOGLE_CLOUD_LOCATION",
+    "OCI_COMPARTMENT_ID",
+    "OCI_REGION",
 ]
 
 
@@ -244,6 +247,43 @@ def test_generate_vertexai_debug_output(tmp_path):
     assert "<not used, resolved via GCP ADC credential chain>" in result.output
     assert "region:         us-central1" in result.output
     assert "project:        my-project" in result.output
+
+
+def test_generate_oci_missing_compartment_id_raises(tmp_path):
+    with _mocked_generate(
+        tmp_path,
+        provider="oci",
+        provider_params={"model": "meta.llama-3.3-70b-instruct"},
+    ) as (runner, _instance, input_file):
+        result = runner.invoke(generate, [str(input_file), "--provider", "oci"])
+
+    assert result.exit_code != 0
+    assert "OCI requires a compartment ID" in result.output
+
+
+def test_generate_oci_debug_output(tmp_path):
+    with _mocked_generate(
+        tmp_path,
+        provider="oci",
+        provider_params={
+            "model": "meta.llama-3.3-70b-instruct",
+            "region": "us-chicago-1",
+            "compartment_id": "ocid1.compartment.oc1..fake",
+        },
+    ) as (runner, instance, input_file):
+        instance.run.return_value.ready = True
+        instance.run.return_value.last_stage.template = "tmpl"
+
+        result = runner.invoke(
+            generate, [str(input_file), "--provider", "oci", "--debug"]
+        )
+
+    assert result.exit_code == 0
+    assert "=== Debug Info ===" in result.output
+    # OCI has no project-level api_key - never printed/masked like others
+    assert "<not used, resolved via ~/.oci/config credential file>" in result.output
+    assert "region:         us-chicago-1" in result.output
+    assert "compartment_id: ocid1.compartment.oc1..fake" in result.output
 
 
 def test_generate_debug_output(tmp_path):
@@ -536,6 +576,12 @@ def test_resolve_api_key_vertexai_returns_none_even_if_explicit_flag_given():
     assert resolve_api_key("vertexai", "ignored-explicit-key", pconf=None) is None
 
 
+def test_resolve_api_key_oci_returns_none_even_if_explicit_flag_given():
+    # OCI has no project-level api_key concept either - OCIProvider reads
+    # ~/.oci/config (DEFAULT profile) for credentials on its own.
+    assert resolve_api_key("oci", "ignored-explicit-key", pconf=None) is None
+
+
 # ============================================================
 # resolve_model
 # ============================================================
@@ -697,6 +743,28 @@ def test_resolve_region_vertexai_raises_when_missing():
         resolve_region("vertexai", None, pconf)
 
 
+def test_resolve_region_oci_explicit_flag_wins():
+    assert resolve_region("oci", "eu-frankfurt-1", pconf=None) == "eu-frankfurt-1"
+
+
+def test_resolve_region_oci_from_env(monkeypatch):
+    monkeypatch.setenv("OCI_REGION", "us-chicago-1")
+    assert resolve_region("oci", None, pconf=None) == "us-chicago-1"
+
+
+def test_resolve_region_oci_from_pconf():
+    pconf = ProviderConfig(name="oci", type="oci", params={"region": "ap-tokyo-1"})
+    assert resolve_region("oci", None, pconf) == "ap-tokyo-1"
+
+
+def test_resolve_region_oci_returns_none_when_missing_instead_of_raising():
+    # OCI is the one exception among region-using providers: region is
+    # optional here, since OCIProvider falls back to whatever's already in
+    # ~/.oci/config if nothing is resolved at this layer.
+    pconf = ProviderConfig(name="oci", type="oci", params={})
+    assert resolve_region("oci", None, pconf) is None
+
+
 # ============================================================
 # resolve_project
 # ============================================================
@@ -728,3 +796,36 @@ def test_resolve_project_vertexai_raises_when_missing():
     pconf = ProviderConfig(name="vertexai", type="vertexai", params={})
     with pytest.raises(Exception, match="Vertex AI requires a GCP project"):
         resolve_project("vertexai", None, pconf)
+
+
+# ============================================================
+# resolve_compartment_id
+# ============================================================
+
+
+def test_resolve_compartment_id_non_oci_returns_none():
+    assert resolve_compartment_id("openai", "ignored-compartment", pconf=None) is None
+
+
+def test_resolve_compartment_id_oci_explicit_flag_wins():
+    assert resolve_compartment_id("oci", "explicit-compartment", pconf=None) == (
+        "explicit-compartment"
+    )
+
+
+def test_resolve_compartment_id_oci_from_env(monkeypatch):
+    monkeypatch.setenv("OCI_COMPARTMENT_ID", "env-compartment")
+    assert resolve_compartment_id("oci", None, pconf=None) == "env-compartment"
+
+
+def test_resolve_compartment_id_oci_from_pconf():
+    pconf = ProviderConfig(
+        name="oci", type="oci", params={"compartment_id": "yaml-compartment"}
+    )
+    assert resolve_compartment_id("oci", None, pconf) == "yaml-compartment"
+
+
+def test_resolve_compartment_id_oci_raises_when_missing():
+    pconf = ProviderConfig(name="oci", type="oci", params={})
+    with pytest.raises(Exception, match="OCI requires a compartment ID"):
+        resolve_compartment_id("oci", None, pconf)

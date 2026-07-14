@@ -211,3 +211,15 @@ def test_vertexai_is_not_auto_routed_and_falls_to_native_gemini():
     table = create_default_routing_table()
     assert table.route("gemini-2.5-pro") == "gemini"
     assert table.route("gemini-2.5-flash") == "gemini"
+
+
+def test_oci_is_not_auto_routed_and_falls_to_bedrock_meta_namespace():
+    # OCI has NO routing rule at all - its "meta."/"xai." vendor-prefixed
+    # model IDs share the same vendor prefix as Bedrock's own re-hosted
+    # namespace (e.g. "meta.llama-3.3-70b-instruct" could plausibly be
+    # either), a genuine unresolvable collision. A bare "meta."-prefixed
+    # model string always routes to Bedrock; OCI must be selected
+    # explicitly via --provider oci instead.
+    table = create_default_routing_table()
+    assert table.route("meta.llama4-maverick-v1:0") == "bedrock"
+    assert table.route("meta.llama-3.3-70b-instruct") == "bedrock"

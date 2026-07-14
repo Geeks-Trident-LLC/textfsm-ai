@@ -141,3 +141,16 @@ def azure_endpoint(require_real_tests):
 @pytest.fixture(scope="session")
 def azure_api_version(require_real_tests):
     return os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-15-preview")
+
+
+@pytest.fixture(scope="session")
+def oci_compartment_id(require_real_tests):
+    # No API key fixture for OCI - OCIProvider reads ~/.oci/config
+    # (DEFAULT profile) for credentials on its own; only compartment_id is
+    # app-specific (region is optional, falls back to the config file).
+    return _require_env("OCI_COMPARTMENT_ID")
+
+
+@pytest.fixture(scope="session")
+def oci_region(require_real_tests):
+    return os.getenv("OCI_REGION", "")

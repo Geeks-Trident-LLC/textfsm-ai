@@ -16,6 +16,7 @@ from textfsm_ai.providers.gemini_provider import GeminiProvider
 from textfsm_ai.providers.groq_provider import GroqProvider
 from textfsm_ai.providers.mistral_provider import MistralProvider
 from textfsm_ai.providers.moonshot_provider import MoonshotProvider
+from textfsm_ai.providers.oci_provider import OCIProvider
 from textfsm_ai.providers.openai_compat_provider import OpenAICompatProvider
 from textfsm_ai.providers.openai_provider import OpenAIProvider
 from textfsm_ai.providers.openrouter_provider import OpenRouterProvider
@@ -58,6 +59,7 @@ registry.register(MistralProvider)
 registry.register(BedrockProvider)
 registry.register(CohereProvider)
 registry.register(VertexAIProvider)
+registry.register(OCIProvider)
 
 
 def get_provider_by_name(provider_name: str) -> Type[Provider]:

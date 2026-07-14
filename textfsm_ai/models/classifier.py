@@ -15,6 +15,7 @@ from .patterns import (
     GROQ_PATTERN,
     MISTRAL_PATTERN,
     MOONSHOT_PATTERN,
+    OCI_PATTERN,
     OPENAI_PATTERN,
     OPENROUTER_PATTERN,
     PERPLEXITY_PATTERN,
@@ -660,6 +661,70 @@ def classify_cohere_models(raw: List[str]):
 
 
 # ---------------------------------------------------------
+# Oracle OCI (Generative AI, Generic-format models only - see
+# OCI_PATTERN's comment for scope). Deliberately does NOT use
+# _normalize(): the "vendor." prefix is required to actually call the
+# model via OnDemandServingMode(model_id=...), same reasoning as
+# Together/Fireworks/OpenRouter/Bedrock. Per-vendor tiering:
+#   - meta.*: scout/maverick codenames first (mirrors
+#     classify_bedrock_models()'s Meta branch exactly, same MoE-naming
+#     caveat), then a parameter-size search fallback for dense models
+#     (e.g. "llama-3.3-70b-instruct")
+#   - xai.*: reasoning-flagged -> thinking (checked first, since a name
+#     like "grok-4-fast-reasoning" contains BOTH "fast" and "reasoning"
+#     keywords - reasoning is the more specific/important signal), mini
+#     -> speed, fast -> balance, else (bare "grok-N") -> quality, mirrors
+#     classify_xai_models()'s native suffix-based tiering
+# ---------------------------------------------------------
+def classify_oci_models(raw: List[str]):
+    groups = empty_tier_groups()
+
+    for name in map(str.strip, raw):
+        lname = name.lower()
+
+        if not OCI_PATTERN.match(lname):
+            groups[Tier.OTHER].append(name)
+            continue
+
+        vendor = lname.split(".", 1)[0]
+
+        if vendor == "meta":
+            if "maverick" in lname:
+                groups[Tier.QUALITY_CHAT].append(name)
+            elif "scout" in lname:
+                groups[Tier.BALANCE_CHAT].append(name)
+            else:
+                m = re.search(r"([0-9]+)b", lname)
+                if not m:
+                    groups[Tier.OTHER].append(name)
+                else:
+                    size_num = int(m.group(1))
+                    if size_num >= 70:
+                        groups[Tier.QUALITY_CHAT].append(name)
+                    elif size_num >= 30:
+                        groups[Tier.BALANCE_CHAT].append(name)
+                    else:
+                        groups[Tier.SPEED_CHAT].append(name)
+
+        elif vendor == "xai":
+            if "reasoning" in lname:
+                groups[Tier.THINKING_CHAT].append(name)
+            elif "mini" in lname:
+                groups[Tier.SPEED_CHAT].append(name)
+            elif "fast" in lname:
+                groups[Tier.BALANCE_CHAT].append(name)
+            else:
+                groups[Tier.QUALITY_CHAT].append(name)
+
+        else:
+            groups[Tier.OTHER].append(name)
+
+    for g in groups.values():
+        g.sort(reverse=True)
+    return groups
+
+
+# ---------------------------------------------------------
 # Unified entry point
 # ---------------------------------------------------------
 def classify_models(provider: str, raw: List[str]):
@@ -702,6 +767,8 @@ def classify_models(provider: str, raw: List[str]):
         # IDs as the native Gemini Developer API - reuse that classifier
         # directly, same precedent as azure reusing classify_openai_models().
         return classify_gemini_models(raw)
+    if provider == "oci":
+        return classify_oci_models(raw)
 
     # Unknown provider → everything goes to OTHER
     groups = empty_tier_groups()

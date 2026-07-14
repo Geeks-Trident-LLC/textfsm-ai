@@ -290,3 +290,26 @@ COHERE_PATTERN = re.compile(
     r"^command(?:-(a|r-plus|r|light))?(?:-[0-9]{2}-[0-9]{4})?$",
     re.IGNORECASE,
 )
+
+
+# ---------------------------------------------------------
+# Oracle OCI (Generative AI, Generic-format models only - Meta Llama and
+# xAI Grok; Cohere models on OCI use a different, unsupported request
+# format, see oci_provider.py's docstring). Same "vendor.model-name"
+# ID shape as Bedrock (dot after vendor), but a DIFFERENT, disjoint
+# vendor set - OCI hosts "meta."/"xai.", Bedrock hosts "anthropic."/
+# "meta."/"mistral."/"amazon."/"cohere."/"ai21." - the two providers'
+# "meta." namespaces are a genuine collision risk, which is exactly why
+# OCI gets no routing-table entry (see routing.py). This is a full-name
+# anchor purely to validate "is this a known OCI vendor namespace" -
+# actual tier assignment is done via per-vendor keyword checks in
+# classify_oci_models(), mirroring classify_bedrock_models()'s approach.
+# Examples:
+#   meta.llama-3.3-70b-instruct
+#   xai.grok-4-fast-reasoning
+#   xai.grok-3
+# ---------------------------------------------------------
+OCI_PATTERN = re.compile(
+    r"^(?:meta|xai)\.[\w.\-]+$",
+    re.IGNORECASE,
+)

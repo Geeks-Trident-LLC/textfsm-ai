@@ -172,6 +172,19 @@ def create_default_routing_table() -> RoutingTable:
     # flag never consults this routing table), the same treatment
     # already given to OpenRouter's unclaimed meta-llama/ and
     # mistralai/ vendor slugs above.
+    #
+    # Oracle OCI is ALSO given no routing rule, for a related but
+    # distinct reason: OCI's "vendor.model-name" scheme (e.g.
+    # "meta.llama-3.3-70b-instruct", "xai.grok-3") uses the SAME "meta."
+    # separator/vendor-prefix shape Bedrock already claims for its own
+    # re-hosted Meta namespace. Unlike Vertex AI's case (identical
+    # strings), OCI's actual model ID strings likely differ from
+    # Bedrock's (OCI has no "-vN:M" version suffix), but the shared
+    # "meta." PREFIX is still a genuine ambiguity for prefix-based
+    # routing - whichever rule is listed first would silently claim
+    # every "meta."-prefixed model, right or wrong, for both providers'
+    # entire Meta catalogs. OCI must always be selected explicitly via
+    # --provider oci.
     return RoutingTable(
         rules=[
             RoutingRule("gpt-oss-", "cerebras"),  # must precede "gpt-" (OpenAI)

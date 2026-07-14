@@ -42,6 +42,7 @@ def test_pricing_table_loaded_from_yaml_has_expected_providers():
         "bedrock",
         "cohere",
         "vertexai",
+        "oci",
     ):
         assert provider in PRICING_TABLE
         assert isinstance(PRICING_TABLE[provider], dict)
@@ -213,6 +214,15 @@ def test_extract_base_model_vertexai():
     for model, based_model in (
         ("gemini-2.5-pro", "gemini-2.5-pro"),
         ("gemini-2.5-flash", "gemini-2.5-flash"),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_oci():
+    provider = "oci"
+    for model, based_model in (
+        ("meta.llama-3.3-70b-instruct", "meta.llama-3.3-70b-instruct"),
+        ("xai.grok-4-fast-reasoning", "xai.grok-4-fast-reasoning"),
     ):
         assert extract_base_model(provider, model) == based_model
 
@@ -464,6 +474,29 @@ def test_estimate_cost_vertexai():
     assert (
         result.output_per_million
         == PRICING_TABLE["vertexai"]["gemini-2.5-flash"]["output"]
+    )
+    assert result.warning is None
+
+
+def test_estimate_cost_oci():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="oci",
+        model="meta.llama-3.3-70b-instruct",
+    )
+
+    assert result.provider == "oci"
+    assert result.based_model == "meta.llama-3.3-70b-instruct"
+    assert (
+        result.input_per_million
+        == PRICING_TABLE["oci"]["meta.llama-3.3-70b-instruct"]["input"]
+    )
+    assert (
+        result.output_per_million
+        == PRICING_TABLE["oci"]["meta.llama-3.3-70b-instruct"]["output"]
     )
     assert result.warning is None
 

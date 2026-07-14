@@ -329,6 +329,29 @@ vertexai:
       chat:
         - gemini-2.5-flash-lite
 
+# Deliberately minimal: unlike every other provider's catalog, OCI model
+# IDs aren't easily fabricated as plausible-future-names (they're closer
+# to identifiers than product names), so only the two model IDs directly
+# confirmed against Oracle's own docs are listed here. balance/speed are
+# deliberately empty rather than guessing - use `list-models oci
+# --latest` (requires real OCI credentials) for the live catalog.
+oci:
+  quality:
+    chat:
+      - meta.llama-3.3-70b-instruct
+  balance:
+    chat: []
+  speed:
+    chat: []
+  thinking:
+    quality:
+      chat:
+        - xai.grok-4-fast-reasoning
+    balance:
+      chat: []
+    speed:
+      chat: []
+
 aliases:
   openai_default: gpt-4o-mini
   anthropic_default: claude-haiku-4-5-20251001
@@ -346,3 +369,7 @@ aliases:
   bedrock_default: anthropic.claude-haiku-4-5-v1:0
   cohere_default: command-light
   vertexai_default: gemini-2.5-flash
+  # Not a "cheap/fast" pick like every other provider's default - it's
+  # the only OCI model ID confirmed against Oracle's own docs (see the
+  # comment on the oci: block above).
+  oci_default: meta.llama-3.3-70b-instruct
