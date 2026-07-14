@@ -132,6 +132,20 @@ def create_default_routing_table() -> RoutingTable:
     # every rule above - most notably, "mistral-" is a different string
     # from Together's "mistralai/" (diverges at the 8th character) and
     # from Groq's "mixtral-" (unrelated string, not a Mistral product).
+    #
+    # Amazon Bedrock is a model AGGREGATOR like OpenRouter, but uses
+    # "vendor.model-vN:M" IDs (dot after the vendor name) instead of
+    # OpenRouter's "vendor/model" (slash). This means Bedrock's
+    # "anthropic.", "meta.", "mistral.", "amazon.", "cohere." prefixes
+    # are all textually distinct from every existing rule above, even
+    # ones that look similar at a glance: OpenRouter's "anthropic/"
+    # (slash) vs Bedrock's "anthropic." (dot) are different strings, and
+    # native Mistral's "mistral-" (hyphen) vs Bedrock's "mistral."
+    # (dot) likewise never collide - a model string can only start with
+    # one of the two separator characters, never both. Cross-region
+    # inference profile IDs (e.g. "us.anthropic.claude-...") are NOT
+    # covered by these rules - see the matching gap noted in
+    # BEDROCK_PATTERN's comment in models/patterns.py.
     return RoutingTable(
         rules=[
             RoutingRule("gpt-oss-", "cerebras"),  # must precede "gpt-" (OpenAI)
@@ -171,5 +185,11 @@ def create_default_routing_table() -> RoutingTable:
             RoutingRule("open-mistral-", "mistral"),
             RoutingRule("codestral", "mistral"),
             RoutingRule("pixtral-", "mistral"),
+            RoutingRule("anthropic.", "bedrock"),
+            RoutingRule("meta.", "bedrock"),
+            RoutingRule("mistral.", "bedrock"),
+            RoutingRule("amazon.", "bedrock"),
+            RoutingRule("cohere.", "bedrock"),
+            RoutingRule("ai21.", "bedrock"),
         ]
     )

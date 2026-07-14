@@ -16,6 +16,8 @@ _ENV_VARS = [
     "OPENROUTER_API_KEY",
     "MOONSHOT_API_KEY",
     "MISTRAL_API_KEY",
+    "AWS_REGION",
+    "AWS_DEFAULT_REGION",
     "AZURE_OPENAI_ENDPOINT",
     "AZURE_OPENAI_API_KEY",
     "AZURE_OPENAI_API_VERSION",
@@ -204,6 +206,22 @@ def test_load_config_from_env_mistral(monkeypatch):
     assert cfg.providers["mistral"].params == {"api_key": "sk-mistral"}
 
 
+def test_load_config_from_env_bedrock_aws_region(monkeypatch):
+    monkeypatch.setenv("AWS_REGION", "us-east-1")
+    cfg = load_config_from_env()
+
+    assert set(cfg.providers.keys()) == {"bedrock"}
+    assert cfg.providers["bedrock"].params == {"region": "us-east-1"}
+
+
+def test_load_config_from_env_bedrock_aws_default_region(monkeypatch):
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-central-1")
+    cfg = load_config_from_env()
+
+    assert set(cfg.providers.keys()) == {"bedrock"}
+    assert cfg.providers["bedrock"].params == {"region": "eu-central-1"}
+
+
 def test_load_config_from_env_azure_requires_both_endpoint_and_key(monkeypatch):
     monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
     # api key missing -> azure should NOT appear
@@ -247,6 +265,7 @@ def test_load_config_from_env_all_providers_at_once(monkeypatch):
     monkeypatch.setenv("OPENROUTER_API_KEY", "k12")
     monkeypatch.setenv("MOONSHOT_API_KEY", "k13")
     monkeypatch.setenv("MISTRAL_API_KEY", "k14")
+    monkeypatch.setenv("AWS_REGION", "us-east-1")
     monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
     monkeypatch.setenv("AZURE_OPENAI_API_KEY", "k5")
 
@@ -266,5 +285,6 @@ def test_load_config_from_env_all_providers_at_once(monkeypatch):
         "openrouter",
         "moonshot",
         "mistral",
+        "bedrock",
         "azure",
     }

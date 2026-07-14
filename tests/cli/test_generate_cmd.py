@@ -14,6 +14,7 @@ from textfsm_ai.cli.generate_cmd import (
     resolve_api_version,
     resolve_endpoint,
     resolve_model,
+    resolve_region,
 )
 from textfsm_ai.providers.config import OrchestratorConfig, ProviderConfig
 
@@ -29,6 +30,8 @@ _PROVIDER_ENV_VARS = [
     "AZURE_OPENAI_DEPLOYMENT",
     "AZURE_OPENAI_ENDPOINT",
     "AZURE_OPENAI_API_VERSION",
+    "AWS_REGION",
+    "AWS_DEFAULT_REGION",
 ]
 
 
@@ -154,6 +157,41 @@ def test_generate_azure_missing_model_raises(tmp_path):
 
     assert result.exit_code != 0
     assert "Azure requires a deployment name" in result.output
+
+
+def test_generate_bedrock_missing_region_raises(tmp_path):
+    with _mocked_generate(
+        tmp_path,
+        provider="bedrock",
+        provider_params={"model": "anthropic.claude-haiku-4-5-v1:0"},
+    ) as (runner, _instance, input_file):
+        result = runner.invoke(generate, [str(input_file), "--provider", "bedrock"])
+
+    assert result.exit_code != 0
+    assert "Bedrock requires an AWS region" in result.output
+
+
+def test_generate_bedrock_debug_output(tmp_path):
+    with _mocked_generate(
+        tmp_path,
+        provider="bedrock",
+        provider_params={
+            "model": "anthropic.claude-haiku-4-5-v1:0",
+            "region": "us-east-1",
+        },
+    ) as (runner, instance, input_file):
+        instance.run.return_value.ready = True
+        instance.run.return_value.last_stage.template = "tmpl"
+
+        result = runner.invoke(
+            generate, [str(input_file), "--provider", "bedrock", "--debug"]
+        )
+
+    assert result.exit_code == 0
+    assert "=== Debug Info ===" in result.output
+    # Bedrock has no project-level api_key - never printed/masked like others
+    assert "<not used, resolved via AWS credential chain>" in result.output
+    assert "region:         us-east-1" in result.output
 
 
 def test_generate_debug_output(tmp_path):
@@ -434,6 +472,12 @@ def test_resolve_api_key_raises_when_missing():
         resolve_api_key("openai", None, pconf)
 
 
+def test_resolve_api_key_bedrock_returns_none_even_if_explicit_flag_given():
+    # Bedrock has no project-level api_key concept - boto3 resolves AWS
+    # credentials on its own, so this always short-circuits to None.
+    assert resolve_api_key("bedrock", "ignored-explicit-key", pconf=None) is None
+
+
 # ============================================================
 # resolve_model
 # ============================================================
@@ -535,3 +579,39 @@ def test_resolve_api_version_azure_from_pconf():
 def test_resolve_api_version_azure_defaults_when_missing():
     pconf = ProviderConfig(name="azure", type="azure", params={})
     assert resolve_api_version("azure", None, pconf) == "2024-02-15-preview"
+
+
+# ============================================================
+# resolve_region
+# ============================================================
+
+
+def test_resolve_region_non_bedrock_returns_none():
+    assert resolve_region("openai", "us-east-1", pconf=None) is None
+
+
+def test_resolve_region_bedrock_explicit_flag_wins():
+    assert resolve_region("bedrock", "eu-central-1", pconf=None) == "eu-central-1"
+
+
+def test_resolve_region_bedrock_from_aws_region_env(monkeypatch):
+    monkeypatch.setenv("AWS_REGION", "us-east-1")
+    assert resolve_region("bedrock", None, pconf=None) == "us-east-1"
+
+
+def test_resolve_region_bedrock_from_aws_default_region_env(monkeypatch):
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-west-1")
+    assert resolve_region("bedrock", None, pconf=None) == "eu-west-1"
+
+
+def test_resolve_region_bedrock_from_pconf():
+    pconf = ProviderConfig(
+        name="bedrock", type="bedrock", params={"region": "ap-south-1"}
+    )
+    assert resolve_region("bedrock", None, pconf) == "ap-south-1"
+
+
+def test_resolve_region_bedrock_raises_when_missing():
+    pconf = ProviderConfig(name="bedrock", type="bedrock", params={})
+    with pytest.raises(Exception, match="Bedrock requires an AWS region"):
+        resolve_region("bedrock", None, pconf)

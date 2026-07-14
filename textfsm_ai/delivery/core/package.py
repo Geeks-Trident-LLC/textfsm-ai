@@ -40,27 +40,42 @@ class LLMInfo(Serializable):
     api_key: str = ""
     endpoint: str = ""
     api_version: str = ""
+    region: str = ""
 
     def to_string(self) -> str:
         """Return a clean, readable summary of LLM configuration."""
-        masked_key = mask_middle(self.api_key)
+        parts = [format_block_title("LLM Info")]
 
-        parts = [
-            format_block_title("LLM Info"),
-            f"API Key     : {masked_key}",
-            f"Provider    : {self.provider_name}",
-        ]
-
-        if self.endpoint:
+        if self.provider_name == "bedrock":
+            # Bedrock has no project-level api_key - boto3 resolves AWS
+            # credentials on its own, so there's nothing to mask here.
             parts.extend(
                 [
-                    f"Deployment  : {self.model}",
-                    f"Endpoint    : {self.endpoint}",
-                    f"API Version : {self.api_version}",
+                    "API Key     : <not used, resolved via AWS credential chain>",
+                    f"Provider    : {self.provider_name}",
+                    f"Model       : {self.model}",
+                    f"Region      : {self.region}",
                 ]
             )
         else:
-            parts.append(f"Model       : {self.model}")
+            masked_key = mask_middle(self.api_key)
+            parts.extend(
+                [
+                    f"API Key     : {masked_key}",
+                    f"Provider    : {self.provider_name}",
+                ]
+            )
+
+            if self.endpoint:
+                parts.extend(
+                    [
+                        f"Deployment  : {self.model}",
+                        f"Endpoint    : {self.endpoint}",
+                        f"API Version : {self.api_version}",
+                    ]
+                )
+            else:
+                parts.append(f"Model       : {self.model}")
 
         parts.append(format_block_title("LLM Info", ended=True))
 

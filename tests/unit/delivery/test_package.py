@@ -71,6 +71,22 @@ def test_llm_info_to_string_with_endpoint_shows_deployment_fields():
     assert "Model       :" not in text
 
 
+def test_llm_info_to_string_bedrock_shows_region_not_api_key():
+    info = LLMInfo(
+        provider_name="bedrock",
+        model="anthropic.claude-haiku-4-5-v1:0",
+        region="us-east-1",
+    )
+    text = info.to_string()
+
+    assert "Provider    : bedrock" in text
+    assert "Model       : anthropic.claude-haiku-4-5-v1:0" in text
+    assert "Region      : us-east-1" in text
+    assert "API Key     : <not used, resolved via AWS credential chain>" in text
+    assert "Deployment" not in text
+    assert "Endpoint" not in text
+
+
 # ============================================================
 # LLMResponse
 # ============================================================

@@ -269,6 +269,27 @@ mistral:
       chat:
         - magistral-medium-latest
 
+bedrock:
+  quality:
+    chat:
+      - anthropic.claude-opus-4-8-v1:0
+  balance:
+    chat:
+      - anthropic.claude-sonnet-4-6-v1:0
+  speed:
+    chat:
+      - anthropic.claude-haiku-4-5-v1:0
+  thinking:
+    quality:
+      chat:
+        - anthropic.claude-opus-4-8-v1:0
+    balance:
+      chat:
+        - anthropic.claude-sonnet-4-6-v1:0
+    speed:
+      chat:
+        - anthropic.claude-haiku-4-5-v1:0
+
 aliases:
   openai_default: gpt-4o-mini
   anthropic_default: claude-haiku-4-5-20251001
@@ -283,3 +304,4 @@ aliases:
   openrouter_default: google/gemini-2.5-flash-lite
   moonshot_default: moonshot-v1-8k
   mistral_default: mistral-small-latest
+  bedrock_default: anthropic.claude-haiku-4-5-v1:0

@@ -141,6 +141,18 @@ def load_config_from_env() -> OrchestratorConfig:
             params={"api_key": os.getenv("MISTRAL_API_KEY")},
         )
 
+    aws_region = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION")
+    if aws_region:
+        providers_cfg["bedrock"] = ProviderConfig(
+            name="bedrock",
+            type="bedrock",
+            # No api_key here - boto3 resolves AWS credentials on its own
+            # (AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY/AWS_SESSION_TOKEN,
+            # ~/.aws/credentials, or an IAM role), so region is the only
+            # Bedrock-specific param this app needs to track.
+            params={"region": aws_region},
+        )
+
     if os.getenv("AZURE_OPENAI_ENDPOINT") and os.getenv("AZURE_OPENAI_API_KEY"):
         providers_cfg["azure"] = ProviderConfig(
             name="azure",

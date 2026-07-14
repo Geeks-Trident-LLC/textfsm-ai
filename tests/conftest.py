@@ -103,6 +103,14 @@ def mistral_key(require_real_tests):
 
 
 @pytest.fixture(scope="session")
+def bedrock_region(require_real_tests):
+    # No API key fixture for Bedrock - boto3 resolves AWS credentials on
+    # its own (AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY/AWS_SESSION_TOKEN,
+    # ~/.aws/credentials, or an IAM role); only the region is app-specific.
+    return os.getenv("AWS_REGION") or _require_env("AWS_DEFAULT_REGION")
+
+
+@pytest.fixture(scope="session")
 def azure_key(require_real_tests):
     return _require_env("AZURE_OPENAI_API_KEY")
 

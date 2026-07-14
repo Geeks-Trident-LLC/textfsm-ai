@@ -126,6 +126,12 @@ def test_create_default_routing_table_routes_known_prefixes():
     assert table.route("open-mistral-nemo") == "mistral"
     assert table.route("codestral-latest") == "mistral"
     assert table.route("pixtral-large-latest") == "mistral"
+    assert table.route("anthropic.claude-opus-4-8-v1:0") == "bedrock"
+    assert table.route("meta.llama4-maverick-v1:0") == "bedrock"
+    assert table.route("mistral.mistral-large-2-v1:0") == "bedrock"
+    assert table.route("amazon.titan-text-premier-v1:0") == "bedrock"
+    assert table.route("cohere.command-r-plus-v1:0") == "bedrock"
+    assert table.route("ai21.jamba-1-5-large-v1:0") == "bedrock"
 
 
 def test_deepseek_ai_prefix_does_not_collide_with_native_deepseek_rule():
@@ -171,3 +177,14 @@ def test_mistral_prefixes_do_not_collide_with_together_or_groq():
     assert table.route("mistralai/Mixtral-8x7B-Instruct-v0.1") == "together"
     assert table.route("mixtral-8x7b-32768") == "groq"
     assert table.route("mistral-large-latest") == "mistral"
+
+
+def test_bedrock_prefixes_do_not_collide_with_openrouter_or_native_mistral():
+    # Bedrock uses "vendor.model" (dot) IDs, distinct from OpenRouter's
+    # "vendor/model" (slash) and native Mistral's "mistral-" (hyphen) -
+    # confirm all three coexist without any route being disturbed.
+    table = create_default_routing_table()
+    assert table.route("anthropic/claude-3.5-sonnet") == "openrouter"
+    assert table.route("anthropic.claude-opus-4-8-v1:0") == "bedrock"
+    assert table.route("mistral-large-latest") == "mistral"
+    assert table.route("mistral.mistral-large-2-v1:0") == "bedrock"

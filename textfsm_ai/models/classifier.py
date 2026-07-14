@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import re
 from typing import List
 
 from .patterns import (
     ANTHROPIC_PATTERN,
+    BEDROCK_PATTERN,
     CEREBRAS_PATTERN,
     DEEPSEEK_NATIVE_PATTERN,
     DEEPSEEK_PATTERN_V4,
@@ -526,6 +528,106 @@ def classify_mistral_models(raw: List[str]):
 
 
 # ---------------------------------------------------------
+# Amazon Bedrock. A model AGGREGATOR like OpenRouter, but re-hosting
+# vendors under "vendor.model-vN:M" IDs. Deliberately does NOT use
+# _normalize(): the "vendor." prefix is required to actually call the
+# model via converse(modelId=...), same reasoning as Together/Fireworks/
+# OpenRouter. Each hosted vendor has its own naming scheme, so tiering
+# is a per-vendor dispatch rather than one shared rule:
+#   - anthropic.*: opus/sonnet/haiku keywords (mirrors
+#     classify_anthropic_models())
+#   - meta.*: scout/maverick codenames first (Llama 4 MoE, active-param
+#     count in the name would misclassify them, same reasoning as
+#     Cerebras), then falls back to a parameter-size search for dense
+#     Llama models (e.g. "llama3-1-8b-instruct")
+#   - mistral.*: large/medium/small keywords (mirrors
+#     classify_mistral_models())
+#   - cohere.*: plus/light keywords
+#   - amazon.*: Titan's premier/express/lite keywords
+#   - ai21.* and anything else matching the vendor namespace but no
+#     known keyword: OTHER, rather than guessing
+# ---------------------------------------------------------
+def classify_bedrock_models(raw: List[str]):
+    groups = empty_tier_groups()
+
+    for name in map(str.strip, raw):
+        lname = name.lower()
+
+        if not BEDROCK_PATTERN.match(lname):
+            groups[Tier.OTHER].append(name)
+            continue
+
+        vendor = lname.split(".", 1)[0]
+
+        if vendor == "anthropic":
+            if "opus" in lname:
+                groups[Tier.QUALITY_CHAT].append(name)
+            elif "sonnet" in lname:
+                groups[Tier.BALANCE_CHAT].append(name)
+            elif "haiku" in lname:
+                groups[Tier.SPEED_CHAT].append(name)
+            else:
+                groups[Tier.OTHER].append(name)
+
+        elif vendor == "meta":
+            if "maverick" in lname:
+                groups[Tier.QUALITY_CHAT].append(name)
+            elif "scout" in lname:
+                groups[Tier.BALANCE_CHAT].append(name)
+            else:
+                m = re.search(r"([0-9]+)b", lname)
+                if not m:
+                    groups[Tier.OTHER].append(name)
+                else:
+                    size_num = int(m.group(1))
+                    if size_num >= 70:
+                        groups[Tier.QUALITY_CHAT].append(name)
+                    elif size_num >= 30:
+                        groups[Tier.BALANCE_CHAT].append(name)
+                    else:
+                        groups[Tier.SPEED_CHAT].append(name)
+
+        elif vendor == "mistral":
+            if "large" in lname:
+                groups[Tier.QUALITY_CHAT].append(name)
+            elif "medium" in lname:
+                groups[Tier.BALANCE_CHAT].append(name)
+            elif "small" in lname:
+                groups[Tier.SPEED_CHAT].append(name)
+            else:
+                groups[Tier.OTHER].append(name)
+
+        elif vendor == "cohere":
+            if "plus" in lname:
+                groups[Tier.QUALITY_CHAT].append(name)
+            elif "light" in lname:
+                groups[Tier.SPEED_CHAT].append(name)
+            elif "command-r" in lname:
+                groups[Tier.BALANCE_CHAT].append(name)
+            else:
+                groups[Tier.OTHER].append(name)
+
+        elif vendor == "amazon":
+            if "premier" in lname:
+                groups[Tier.QUALITY_CHAT].append(name)
+            elif "express" in lname:
+                groups[Tier.BALANCE_CHAT].append(name)
+            elif "lite" in lname:
+                groups[Tier.SPEED_CHAT].append(name)
+            else:
+                groups[Tier.OTHER].append(name)
+
+        else:
+            # ai21 and any other Bedrock vendor namespace without a
+            # known keyword scheme yet.
+            groups[Tier.OTHER].append(name)
+
+    for g in groups.values():
+        g.sort(reverse=True)
+    return groups
+
+
+# ---------------------------------------------------------
 # Unified entry point
 # ---------------------------------------------------------
 def classify_models(provider: str, raw: List[str]):
@@ -557,6 +659,8 @@ def classify_models(provider: str, raw: List[str]):
         return classify_moonshot_models(raw)
     if provider == "mistral":
         return classify_mistral_models(raw)
+    if provider == "bedrock":
+        return classify_bedrock_models(raw)
     if provider in ("azure", "azure-openai"):
         return classify_openai_models(raw)
 

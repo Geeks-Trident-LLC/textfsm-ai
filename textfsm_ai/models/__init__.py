@@ -309,3 +309,25 @@ class model:
                 chat = ModelRegistry.get("mistral", "thinking", "speed", "chat")
 
         default = ModelRegistry.alias("mistral_default")
+
+    class bedrock:
+        class quality:
+            chat = ModelRegistry.get("bedrock", "quality", "chat")
+
+        class balance:
+            chat = ModelRegistry.get("bedrock", "balance", "chat")
+
+        class speed:
+            chat = ModelRegistry.get("bedrock", "speed", "chat")
+
+        class thinking:
+            class quality:
+                chat = ModelRegistry.get("bedrock", "thinking", "quality", "chat")
+
+            class balance:
+                chat = ModelRegistry.get("bedrock", "thinking", "balance", "chat")
+
+            class speed:
+                chat = ModelRegistry.get("bedrock", "thinking", "speed", "chat")
+
+        default = ModelRegistry.alias("bedrock_default")

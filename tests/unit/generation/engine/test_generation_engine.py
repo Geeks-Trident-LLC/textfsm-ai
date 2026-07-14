@@ -107,6 +107,61 @@ def test_run_success(patch_provider, patch_prompt_builder, monkeypatch):
     assert result.records == [1]
 
 
+def test_run_bedrock_passes_region_instead_of_api_key(
+    patch_prompt_builder, monkeypatch
+):
+    # Bedrock has no project-level api_key - the provider is constructed
+    # as provider_type(region, model), not provider_type(api_key, model).
+    captured = {}
+
+    class MockBedrockProvider:
+        name = "bedrock"
+
+        def __init__(self, region, model):
+            self.region = region
+            self.model = model
+
+    monkeypatch.setattr(
+        generation_engine, "get_provider_by_name", lambda name: MockBedrockProvider
+    )
+
+    raw_resp = LLMResponse(
+        content='{"template":"T","records":[1],"variables":{},"handling":[]}',
+        prompt="p",
+        provider="bedrock",
+        model="m",
+        ready=True,
+    )
+
+    def fake_extract(provider, model, prompt):
+        captured["provider"] = provider
+        return raw_resp
+
+    monkeypatch.setattr(generation_engine.extractor, "extract", fake_extract)
+
+    structured = StructuredResponse(
+        template="T",
+        records=[1],
+        variables={},
+        handling=[],
+        response=raw_resp,
+        ready=True,
+    )
+    monkeypatch.setattr(
+        generation_engine.structured_extractor, "extract", lambda resp: structured
+    )
+
+    final = GenerationStage(template="T", records=[1], metadata=structured, ready=True)
+    monkeypatch.setattr(generation_engine.generator, "generate", lambda s: final)
+
+    generation_engine.run(
+        "bedrock", "unused-api-key", "m", "sample", region="us-east-1"
+    )
+
+    assert captured["provider"].region == "us-east-1"
+    assert captured["provider"].model == "m"
+
+
 # ---------------------------------------------------------
 # Tests for run_correction_prompt()
 # ---------------------------------------------------------
@@ -197,3 +252,83 @@ def test_run_correction_prompt_success(
     assert result.ready is True
     assert result.template == "NEW"
     assert result.records == [2]
+
+
+def test_run_correction_prompt_bedrock_passes_region_instead_of_api_key(
+    patch_prompt_builder, monkeypatch
+):
+    captured = {}
+
+    class MockBedrockProvider:
+        name = "bedrock"
+
+        def __init__(self, region, model):
+            self.region = region
+            self.model = model
+
+    monkeypatch.setattr(
+        generation_engine, "get_provider_by_name", lambda name: MockBedrockProvider
+    )
+
+    prev_raw = LLMResponse(
+        content="PREV_JSON", prompt="p", provider="bedrock", model="m", ready=True
+    )
+    prev_structured = StructuredResponse(
+        template="OLD",
+        records=[1],
+        variables={},
+        handling=[],
+        response=prev_raw,
+        ready=True,
+    )
+    prev_result = GenerationStage(
+        template="OLD", records=[1], metadata=prev_structured, ready=False
+    )
+
+    class DummyFinding:
+        findings = ["err1"]
+        ready = False
+
+    monkeypatch.setattr(
+        generation_engine.validator,
+        "find_template_issues",
+        lambda t, r, s: DummyFinding(),
+    )
+
+    new_raw = LLMResponse(
+        content='{"template":"NEW","records":[2],"variables":{},"handling":[]}',
+        prompt="p",
+        provider="bedrock",
+        model="m",
+        ready=True,
+    )
+
+    def fake_extract(provider, model, prompt):
+        captured["provider"] = provider
+        return new_raw
+
+    monkeypatch.setattr(generation_engine.extractor, "extract", fake_extract)
+
+    new_structured = StructuredResponse(
+        template="NEW",
+        records=[2],
+        variables={},
+        handling=[],
+        response=new_raw,
+        ready=True,
+    )
+    monkeypatch.setattr(
+        generation_engine.structured_extractor, "extract", lambda resp: new_structured
+    )
+
+    final = GenerationStage(
+        template="NEW", records=[2], metadata=new_structured, ready=True
+    )
+    monkeypatch.setattr(generation_engine.generator, "generate", lambda s: final)
+
+    generation_engine.run_correction_prompt(
+        "bedrock", "unused-api-key", "m", "sample", prev_result, region="eu-central-1"
+    )
+
+    assert captured["provider"].region == "eu-central-1"
+    assert captured["provider"].model == "m"

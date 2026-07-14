@@ -24,6 +24,7 @@ environment variable:
 | OpenRouter  | `"openrouter"`    | `OPENROUTER_API_KEY`      |
 | Moonshot AI (Kimi) | `"moonshot"` | `MOONSHOT_API_KEY`     |
 | Mistral AI  | `"mistral"`       | `MISTRAL_API_KEY`         |
+| Amazon Bedrock | `"bedrock"`    | `AWS_REGION` (or `AWS_DEFAULT_REGION`) + AWS credential chain |
 | Azure OpenAI| `"azure"`         | `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_VERSION` |
 
 ```bash
@@ -133,6 +134,25 @@ result = textfsm_ai.generate(
     api_version=os.environ["AZURE_OPENAI_API_VERSION"],
 )
 ```
+
+## Using Amazon Bedrock
+
+Bedrock takes no `api_key` at all — pass `region` instead, and AWS
+credentials are resolved automatically via boto3's own credential chain
+(`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`/`AWS_SESSION_TOKEN`,
+`~/.aws/credentials`, or an IAM role):
+
+```python
+result = textfsm_ai.generate(
+    sample,
+    provider="bedrock",
+    api_key="",
+    model="anthropic.claude-haiku-4-5-v1:0",
+    region=os.environ["AWS_REGION"],
+)
+```
+
+`run_pipeline()` accepts the same `region` keyword.
 
 ## Next steps
 
