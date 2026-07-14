@@ -116,6 +116,19 @@ def cohere_key(require_real_tests):
 
 
 @pytest.fixture(scope="session")
+def vertexai_project(require_real_tests):
+    # No API key fixture for Vertex AI - the google-genai SDK resolves
+    # Google Cloud credentials on its own (ADC); only project/location are
+    # app-specific.
+    return _require_env("GOOGLE_CLOUD_PROJECT")
+
+
+@pytest.fixture(scope="session")
+def vertexai_location(require_real_tests):
+    return _require_env("GOOGLE_CLOUD_LOCATION")
+
+
+@pytest.fixture(scope="session")
 def azure_key(require_real_tests):
     return _require_env("AZURE_OPENAI_API_KEY")
 

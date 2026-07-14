@@ -26,6 +26,7 @@ environment variable:
 | Mistral AI  | `"mistral"`       | `MISTRAL_API_KEY`         |
 | Amazon Bedrock | `"bedrock"`    | `AWS_REGION` (or `AWS_DEFAULT_REGION`) + AWS credential chain |
 | Cohere      | `"cohere"`        | `COHERE_API_KEY`          |
+| Google Vertex AI | `"vertexai"` | `GOOGLE_CLOUD_PROJECT` + `GOOGLE_CLOUD_LOCATION` + GCP ADC credential chain |
 | Azure OpenAI| `"azure"`         | `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_VERSION` |
 
 ```bash
@@ -154,6 +155,32 @@ result = textfsm_ai.generate(
 ```
 
 `run_pipeline()` accepts the same `region` keyword.
+
+## Using Google Vertex AI
+
+Vertex AI also takes no `api_key` — pass `project` and `region` (GCP
+"location") instead, and credentials are resolved automatically via
+Google Cloud's Application Default Credentials (a service account key
+file via `GOOGLE_APPLICATION_CREDENTIALS`, `gcloud auth
+application-default login`, or workload identity):
+
+```python
+result = textfsm_ai.generate(
+    sample,
+    provider="vertexai",
+    api_key="",
+    model="gemini-2.5-flash",
+    project=os.environ["GOOGLE_CLOUD_PROJECT"],
+    region=os.environ["GOOGLE_CLOUD_LOCATION"],
+)
+```
+
+`run_pipeline()` accepts the same `project`/`region` keywords. Vertex AI
+serves the same Gemini models as the native `"gemini"` provider under
+identical model IDs, so it must always be selected explicitly via
+`provider="vertexai"` — there's no automatic way to tell "call this model
+via Vertex" apart from "call it via the Gemini Developer API" from the
+model name alone.
 
 ## Next steps
 

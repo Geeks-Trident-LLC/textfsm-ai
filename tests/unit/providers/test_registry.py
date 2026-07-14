@@ -17,6 +17,7 @@ from textfsm_ai.providers.registry import (
     registry,
 )
 from textfsm_ai.providers.together_provider import TogetherProvider
+from textfsm_ai.providers.vertexai_provider import VertexAIProvider
 from textfsm_ai.providers.xai_provider import XAIProvider
 
 
@@ -34,6 +35,7 @@ def test_registry_get_returns_registered_class():
     assert registry.get("mistral") is MistralProvider
     assert registry.get("bedrock") is BedrockProvider
     assert registry.get("cohere") is CohereProvider
+    assert registry.get("vertexai") is VertexAIProvider
 
 
 def test_registry_get_unknown_raises_keyerror():

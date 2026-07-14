@@ -193,3 +193,14 @@ cohere:
   command-r-plus: {input: 2.50, output: 10.00}
   command-r: {input: 0.15, output: 0.60}
   command-light: {input: 0.075, output: 0.30}
+
+# Approximate rates - verify against https://cloud.google.com/vertex-ai/pricing
+# before relying on these for real cost estimates. Vertex AI serves the
+# SAME Gemini models as the native Gemini Developer API (see the
+# "gemini:" block above) but through GCP's separate enterprise billing -
+# mirrored here rather than shared, matching how Bedrock's re-hosted
+# models got their own independent pricing block too.
+vertexai:
+  gemini-2.5-pro: {input: 1.25, output: 10.00}
+  gemini-2.5-flash: {input: 0.30, output: 2.50}
+  gemini-2.5-flash-lite: {input: 0.10, output: 0.40}

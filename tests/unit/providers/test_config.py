@@ -19,6 +19,8 @@ _ENV_VARS = [
     "AWS_REGION",
     "AWS_DEFAULT_REGION",
     "COHERE_API_KEY",
+    "GOOGLE_CLOUD_PROJECT",
+    "GOOGLE_CLOUD_LOCATION",
     "AZURE_OPENAI_ENDPOINT",
     "AZURE_OPENAI_API_KEY",
     "AZURE_OPENAI_API_VERSION",
@@ -231,6 +233,25 @@ def test_load_config_from_env_cohere(monkeypatch):
     assert cfg.providers["cohere"].params == {"api_key": "sk-cohere"}
 
 
+def test_load_config_from_env_vertexai_requires_both_project_and_location(monkeypatch):
+    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "my-project")
+    # location missing -> vertexai should NOT appear
+    cfg = load_config_from_env()
+    assert "vertexai" not in cfg.providers
+
+
+def test_load_config_from_env_vertexai_with_both_vars(monkeypatch):
+    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "my-project")
+    monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+    cfg = load_config_from_env()
+
+    assert set(cfg.providers.keys()) == {"vertexai"}
+    assert cfg.providers["vertexai"].params == {
+        "project": "my-project",
+        "region": "us-central1",
+    }
+
+
 def test_load_config_from_env_azure_requires_both_endpoint_and_key(monkeypatch):
     monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
     # api key missing -> azure should NOT appear
@@ -276,6 +297,8 @@ def test_load_config_from_env_all_providers_at_once(monkeypatch):
     monkeypatch.setenv("MISTRAL_API_KEY", "k14")
     monkeypatch.setenv("AWS_REGION", "us-east-1")
     monkeypatch.setenv("COHERE_API_KEY", "k15")
+    monkeypatch.setenv("GOOGLE_CLOUD_PROJECT", "my-project")
+    monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "us-central1")
     monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
     monkeypatch.setenv("AZURE_OPENAI_API_KEY", "k5")
 
@@ -297,5 +320,6 @@ def test_load_config_from_env_all_providers_at_once(monkeypatch):
         "mistral",
         "bedrock",
         "cohere",
+        "vertexai",
         "azure",
     }

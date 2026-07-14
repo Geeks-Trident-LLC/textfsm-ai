@@ -21,6 +21,7 @@ from textfsm_ai.providers.openai_provider import OpenAIProvider
 from textfsm_ai.providers.openrouter_provider import OpenRouterProvider
 from textfsm_ai.providers.perplexity_provider import PerplexityProvider
 from textfsm_ai.providers.together_provider import TogetherProvider
+from textfsm_ai.providers.vertexai_provider import VertexAIProvider
 from textfsm_ai.providers.xai_provider import XAIProvider
 
 
@@ -56,6 +57,7 @@ registry.register(MoonshotProvider)
 registry.register(MistralProvider)
 registry.register(BedrockProvider)
 registry.register(CohereProvider)
+registry.register(VertexAIProvider)
 
 
 def get_provider_by_name(provider_name: str) -> Type[Provider]:

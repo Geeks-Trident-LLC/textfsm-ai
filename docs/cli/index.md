@@ -32,22 +32,35 @@ Azure additionally resolves `--model` (as the deployment name), `--endpoint`,
 and `--api-version` from `AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_ENDPOINT`,
 and `AZURE_OPENAI_API_VERSION` the same way.
 
-Bedrock is the exception to the credential rule above: it has no
-project-level API key at all. Instead it resolves `--region` from
-`AWS_REGION`/`AWS_DEFAULT_REGION` (or `providers.yaml`), and authenticates
-via boto3's own AWS credential chain (`AWS_ACCESS_KEY_ID`/
-`AWS_SECRET_ACCESS_KEY`/`AWS_SESSION_TOKEN`, `~/.aws/credentials`, or an IAM
-role) — nothing AWS-secret-shaped ever passes through this CLI.
+Bedrock and Vertex AI are the exceptions to the credential rule above:
+neither has a project-level API key at all.
+
+- Bedrock resolves `--region` from `AWS_REGION`/`AWS_DEFAULT_REGION` (or
+  `providers.yaml`), and authenticates via boto3's own AWS credential
+  chain (`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`/`AWS_SESSION_TOKEN`,
+  `~/.aws/credentials`, or an IAM role) — nothing AWS-secret-shaped ever
+  passes through this CLI.
+- Vertex AI resolves `--region` from `GOOGLE_CLOUD_LOCATION` and
+  `--project` from `GOOGLE_CLOUD_PROJECT` (or `providers.yaml`), and
+  authenticates via the `google-genai` SDK's own Application Default
+  Credentials chain (a service account key file via
+  `GOOGLE_APPLICATION_CREDENTIALS`, `gcloud auth application-default
+  login`, or workload identity) — same principle, nothing GCP-secret-shaped
+  passes through this CLI either. Vertex AI must always be selected with
+  `--provider vertexai` explicitly — it serves the same Gemini models as
+  the native `gemini` provider under identical model IDs, so there's no
+  automatic way to route between the two.
 
 Key options:
 
 | Option | Purpose |
 |---|---|
-| `--provider` (required) | Provider name: `openai`, `anthropic`, `gemini`, `deepseek`, `groq`, `xai`, `together`, `fireworks`, `cerebras`, `perplexity`, `openrouter`, `moonshot`, `mistral`, `bedrock`, `cohere`, `azure` |
-| `--api-key` | Override the resolved API key (ignored for `bedrock`) |
+| `--provider` (required) | Provider name: `openai`, `anthropic`, `gemini`, `deepseek`, `groq`, `xai`, `together`, `fireworks`, `cerebras`, `perplexity`, `openrouter`, `moonshot`, `mistral`, `bedrock`, `cohere`, `vertexai`, `azure` |
+| `--api-key` | Override the resolved API key (ignored for `bedrock`/`vertexai`) |
 | `--model` | Model name (or Azure deployment name) |
 | `--endpoint`, `--api-version` | Azure-only |
-| `--region` | Bedrock-only; AWS region |
+| `--region` | AWS region (Bedrock) or GCP location (Vertex AI) |
+| `--project` | GCP project (Vertex AI only) |
 | `--max-retries` | Retry attempts (default: 1) |
 | `--template-only` | Print only the final TextFSM template |
 | `--records` | Print parsed records |
@@ -100,6 +113,7 @@ openai_compat
 openrouter     OpenRouter (multi-provider model aggregator, OpenAI-compatible API)
 perplexity     Perplexity (search-grounded Sonar models, OpenAI-compatible API)
 together       Together AI (open-model hosting, OpenAI-compatible API)
+vertexai       Google Vertex AI (Gemini via GCP, ADC credential chain)
 xai            xAI Grok models (OpenAI-compatible API)
 ```
 

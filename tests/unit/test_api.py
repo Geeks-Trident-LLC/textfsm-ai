@@ -150,6 +150,33 @@ def test_generate_passes_region_through_to_generation_controller(monkeypatch):
     assert captured["region"] == "us-east-1"
 
 
+def test_generate_passes_project_through_to_generation_controller(monkeypatch):
+    metadata = StructuredResponse(
+        template="Value v1 (\\S+)",
+        records=[],
+        variables={},
+        handling=[],
+        response=None,
+        ready=True,
+    )
+    captured = {}
+    _patch_generation_controller_capturing_kwargs(
+        monkeypatch, _make_pipeline(metadata, ready=True), captured
+    )
+
+    generate(
+        "sample",
+        "vertexai",
+        "",
+        "gemini-2.5-flash",
+        region="us-central1",
+        project="my-project",
+    )
+
+    assert captured["region"] == "us-central1"
+    assert captured["project"] == "my-project"
+
+
 # ---------------------------------------------------------
 # to_llm_result() — alias of generate()
 # ---------------------------------------------------------
@@ -323,6 +350,32 @@ def test_run_pipeline_passes_region_through_to_delivery_controller(monkeypatch):
     )
 
     assert captured["region"] == "us-east-1"
+
+
+def test_run_pipeline_passes_project_through_to_delivery_controller(monkeypatch):
+    expected = DeliveryOutput(mode=1, output="", passed=True, error="")
+    captured = {}
+
+    class FakeDeliveryController:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+        def run(self, sample, mode, as_json):
+            return expected
+
+    monkeypatch.setattr("textfsm_ai.api.DeliveryController", FakeDeliveryController)
+
+    run_pipeline(
+        "sample",
+        "vertexai",
+        "",
+        "gemini-2.5-flash",
+        region="us-central1",
+        project="my-project",
+    )
+
+    assert captured["region"] == "us-central1"
+    assert captured["project"] == "my-project"
 
 
 def test_run_pipeline_does_not_raise_on_failure(monkeypatch):
