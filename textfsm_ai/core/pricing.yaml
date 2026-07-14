@@ -204,3 +204,11 @@ vertexai:
   gemini-2.5-pro: {input: 1.25, output: 10.00}
   gemini-2.5-flash: {input: 0.30, output: 2.50}
   gemini-2.5-flash-lite: {input: 0.10, output: 0.40}
+
+# Approximate rates - verify against https://www.oracle.com/cloud/price-list/
+# before relying on these for real cost estimates. Deliberately minimal:
+# only the two model IDs actually confirmed against Oracle's docs (see
+# models/providers.yaml's oci: block comment for why).
+oci:
+  meta.llama-3.3-70b-instruct: {input: 0.75, output: 0.75}
+  xai.grok-4-fast-reasoning: {input: 0.35, output: 1.50}

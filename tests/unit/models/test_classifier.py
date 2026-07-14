@@ -364,6 +364,50 @@ def test_cohere_classification():
     assert "some-unknown-model" in groups[Tier.OTHER]
 
 
+def test_oci_classification():
+    raw = [
+        "meta.llama-4-maverick",  # MoE codename -> quality
+        "meta.llama-4-scout",  # MoE codename -> balance
+        "meta.llama-3.3-70b-instruct",  # dense 70B -> quality
+        "meta.llama-3.1-33b-instruct",  # dense 33B -> balance
+        "meta.llama-3.1-8b-instruct",  # dense 8B -> speed
+        "meta.llama-guard-3",  # no size token -> other
+        "xai.grok-4-fast-reasoning",  # reasoning -> thinking
+        "xai.grok-3-mini",  # mini -> speed
+        "xai.grok-3-fast",  # fast -> balance
+        "xai.grok-4",  # bare -> quality
+        "cohere.command-r-plus",  # unhandled vendor -> other
+        "some-unknown-model",  # no match -> other
+    ]
+    groups = classify_models("oci", raw)
+
+    assert "meta.llama-4-maverick" in groups[Tier.QUALITY_CHAT]
+    assert "meta.llama-3.3-70b-instruct" in groups[Tier.QUALITY_CHAT]
+    assert "xai.grok-4" in groups[Tier.QUALITY_CHAT]
+
+    assert "meta.llama-4-scout" in groups[Tier.BALANCE_CHAT]
+    assert "meta.llama-3.1-33b-instruct" in groups[Tier.BALANCE_CHAT]
+    assert "xai.grok-3-fast" in groups[Tier.BALANCE_CHAT]
+
+    assert "meta.llama-3.1-8b-instruct" in groups[Tier.SPEED_CHAT]
+    assert "xai.grok-3-mini" in groups[Tier.SPEED_CHAT]
+
+    assert "xai.grok-4-fast-reasoning" in groups[Tier.THINKING_CHAT]
+
+    assert "meta.llama-guard-3" in groups[Tier.OTHER]
+    assert "cohere.command-r-plus" in groups[Tier.OTHER]
+    assert "some-unknown-model" in groups[Tier.OTHER]
+
+
+def test_oci_classification_preserves_vendor_prefix():
+    # Like Bedrock, OCI's classifier must NOT strip the "vendor." prefix -
+    # it's required to actually call the model via ChatDetails(model_id=...).
+    groups = classify_models("oci", ["meta.llama-3.3-70b-instruct"])
+
+    assert "meta.llama-3.3-70b-instruct" in groups[Tier.QUALITY_CHAT]
+    assert "llama-3.3-70b-instruct" not in groups[Tier.QUALITY_CHAT]
+
+
 # ---------------------------------------------------------
 # _normalize (via the "provider/model" prefix form)
 # ---------------------------------------------------------

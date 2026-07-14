@@ -105,6 +105,26 @@ def test_llm_info_to_string_vertexai_shows_region_and_project_not_api_key():
     assert "Endpoint" not in text
 
 
+def test_llm_info_to_string_oci_shows_region_and_compartment_not_api_key():
+    info = LLMInfo(
+        provider_name="oci",
+        model="meta.llama-3.3-70b-instruct",
+        region="us-chicago-1",
+        compartment_id="ocid1.compartment.oc1..fake",
+    )
+    text = info.to_string()
+
+    assert "Provider    : oci" in text
+    assert "Model       : meta.llama-3.3-70b-instruct" in text
+    assert "Region      : us-chicago-1" in text
+    assert "Compartment : ocid1.compartment.oc1..fake" in text
+    assert (
+        "API Key     : <not used, resolved via ~/.oci/config credential file>" in text
+    )
+    assert "Deployment" not in text
+    assert "Endpoint" not in text
+
+
 # ============================================================
 # LLMResponse
 # ============================================================

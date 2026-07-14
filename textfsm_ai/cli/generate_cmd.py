@@ -22,9 +22,15 @@ from textfsm_ai.providers.config import load_config_from_env, load_config_from_f
 @click.option(
     "--region",
     required=False,
-    help="AWS region (Bedrock) or GCP location (Vertex AI)",
+    help=(
+        "AWS region (Bedrock), GCP location (Vertex AI), or OCI region "
+        "(OCI, optional)"
+    ),
 )
 @click.option("--project", required=False, help="GCP project (Vertex AI only)")
+@click.option(
+    "--compartment-id", required=False, help="OCI compartment OCID (OCI only)"
+)
 @click.option("--max-retries", default=1, show_default=True)
 @click.option("--raw", is_flag=True, help="Show raw LLM output")
 @click.option("--json", "json_output", is_flag=True, help="Show full pipeline JSON")
@@ -47,6 +53,7 @@ def generate(
     api_version,
     region,
     project,
+    compartment_id,
     max_retries,
     raw,
     json_output,
@@ -90,6 +97,7 @@ def generate(
     params["api_version"] = resolve_api_version(provider, api_version, pconf)
     params["region"] = resolve_region(provider, region, pconf)
     params["project"] = resolve_project(provider, project, pconf)
+    params["compartment_id"] = resolve_compartment_id(provider, compartment_id, pconf)
 
     # -----------------------------
     # 3. Debug output
@@ -102,8 +110,8 @@ def generate(
         click.echo(f"model:          {params.get('model')}")
         click.echo(f"max_retries:    {max_retries}")
 
-        # API key masking (Bedrock/Vertex AI have no project-level
-        # api_key - boto3/google-genai resolve cloud credentials on
+        # API key masking (Bedrock/Vertex AI/OCI have no project-level
+        # api_key - boto3/google-genai/oci resolve cloud credentials on
         # their own)
         key = params.get("api_key")
         if provider == "bedrock":
@@ -111,6 +119,10 @@ def generate(
         elif provider == "vertexai":
             click.echo(
                 "api_key:        <not used, resolved via GCP ADC credential chain>"
+            )
+        elif provider == "oci":
+            click.echo(
+                "api_key:        <not used, resolved via ~/.oci/config credential file>"
             )
         else:
             masked = key[:4] + "..." + key[-4:] if key else "<missing>"
@@ -121,13 +133,17 @@ def generate(
             click.echo(f"endpoint:       {params.get('endpoint')}")
             click.echo(f"api_version:    {params.get('api_version')}")
 
-        # Bedrock/Vertex AI-only field
+        # Bedrock/Vertex AI/OCI field
         if params.get("region"):
             click.echo(f"region:         {params.get('region')}")
 
         # Vertex AI-only field
         if params.get("project"):
             click.echo(f"project:        {params.get('project')}")
+
+        # OCI-only field
+        if params.get("compartment_id"):
+            click.echo(f"compartment_id: {params.get('compartment_id')}")
         click.echo("")
 
     # -----------------------------
@@ -141,6 +157,7 @@ def generate(
         api_version=params.get("api_version"),
         region=params.get("region"),
         project=params.get("project"),
+        compartment_id=params.get("compartment_id"),
         max_retries=max_retries,
     )
 
@@ -271,6 +288,11 @@ def resolve_api_key(provider, api_key, pconf):
         # `gcloud auth application-default login`, or workload identity).
         return None
 
+    if provider == "oci":
+        # OCI doesn't use a project-level API key either - OCIProvider
+        # reads ~/.oci/config (DEFAULT profile) for credentials on its own.
+        return None
+
     if api_key:
         return api_key
 
@@ -373,7 +395,7 @@ def resolve_api_version(provider, api_version, pconf):
 
 
 def resolve_region(provider, region, pconf):
-    if provider not in ("bedrock", "vertexai"):
+    if provider not in ("bedrock", "vertexai", "oci"):
         return None
 
     if region:
@@ -381,10 +403,12 @@ def resolve_region(provider, region, pconf):
 
     if provider == "bedrock":
         env = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION")
-    else:
+    elif provider == "vertexai":
         # Vertex AI calls this "location" in GCP terminology, but reuses
         # this app's generic "region" concept/field for consistency.
         env = os.getenv("GOOGLE_CLOUD_LOCATION")
+    else:
+        env = os.getenv("OCI_REGION")
 
     if env:
         return env
@@ -397,10 +421,16 @@ def resolve_region(provider, region, pconf):
             "Bedrock requires an AWS region. Use --region or set AWS_REGION/"
             "AWS_DEFAULT_REGION."
         )
-    raise click.ClickException(
-        "Vertex AI requires a GCP location. Use --region or set "
-        "GOOGLE_CLOUD_LOCATION."
-    )
+    if provider == "vertexai":
+        raise click.ClickException(
+            "Vertex AI requires a GCP location. Use --region or set "
+            "GOOGLE_CLOUD_LOCATION."
+        )
+    # OCI is the one exception: region is OPTIONAL here, unlike Bedrock/
+    # Vertex AI - OCIProvider falls back to whatever's already in
+    # ~/.oci/config if nothing is resolved at this layer, so return None
+    # instead of raising.
+    return None
 
 
 def resolve_project(provider, project, pconf):
@@ -420,4 +450,24 @@ def resolve_project(provider, project, pconf):
     raise click.ClickException(
         "Vertex AI requires a GCP project. Use --project or set "
         "GOOGLE_CLOUD_PROJECT."
+    )
+
+
+def resolve_compartment_id(provider, compartment_id, pconf):
+    if provider != "oci":
+        return None
+
+    if compartment_id:
+        return compartment_id
+
+    env = os.getenv("OCI_COMPARTMENT_ID")
+    if env:
+        return env
+
+    if pconf and "compartment_id" in pconf.params:
+        return pconf.params["compartment_id"]
+
+    raise click.ClickException(
+        "OCI requires a compartment ID. Use --compartment-id or set "
+        "OCI_COMPARTMENT_ID."
     )

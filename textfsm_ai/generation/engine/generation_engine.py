@@ -21,6 +21,7 @@ def run(
     api_version: str = "",
     region: str = "",
     project: str = "",
+    compartment_id: str = "",
     **kwargs,
 ):
     provider_type = get_provider_by_name(provider_name)
@@ -31,6 +32,8 @@ def run(
         provider = provider_type(region, model)
     elif provider_type.name == "vertexai":
         provider = provider_type(project, region, model)
+    elif provider_type.name == "oci":
+        provider = provider_type(compartment_id, region, model)
     else:
         provider = provider_type(api_key, model)
 
@@ -56,6 +59,7 @@ def run_correction_prompt(
     api_version: str = "",
     region: str = "",
     project: str = "",
+    compartment_id: str = "",
     **kwargs,
 ):
     provider_type = get_provider_by_name(provider_name)
@@ -65,6 +69,8 @@ def run_correction_prompt(
         provider = provider_type(region, model)
     elif provider_type.name == "vertexai":
         provider = provider_type(project, region, model)
+    elif provider_type.name == "oci":
+        provider = provider_type(compartment_id, region, model)
     else:
         provider = provider_type(api_key, model)
 

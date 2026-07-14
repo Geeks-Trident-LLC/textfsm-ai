@@ -175,6 +175,22 @@ def load_config_from_env() -> OrchestratorConfig:
             params={"project": gcp_project, "region": gcp_location},
         )
 
+    oci_compartment_id = os.getenv("OCI_COMPARTMENT_ID")
+    if oci_compartment_id:
+        oci_params: Dict[str, Any] = {"compartment_id": oci_compartment_id}
+        oci_region = os.getenv("OCI_REGION")
+        if oci_region:
+            oci_params["region"] = oci_region
+        providers_cfg["oci"] = ProviderConfig(
+            name="oci",
+            type="oci",
+            # No api_key here either - OCIProvider reads ~/.oci/config
+            # (DEFAULT profile) for credentials on its own. Region is
+            # optional (falls back to whatever's in that config file);
+            # compartment_id is the only param actually required here.
+            params=oci_params,
+        )
+
     if os.getenv("AZURE_OPENAI_ENDPOINT") and os.getenv("AZURE_OPENAI_API_KEY"):
         providers_cfg["azure"] = ProviderConfig(
             name="azure",

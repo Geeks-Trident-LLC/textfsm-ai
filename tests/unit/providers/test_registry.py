@@ -8,6 +8,7 @@ from textfsm_ai.providers.fireworks_provider import FireworksProvider
 from textfsm_ai.providers.groq_provider import GroqProvider
 from textfsm_ai.providers.mistral_provider import MistralProvider
 from textfsm_ai.providers.moonshot_provider import MoonshotProvider
+from textfsm_ai.providers.oci_provider import OCIProvider
 from textfsm_ai.providers.openai_provider import OpenAIProvider
 from textfsm_ai.providers.openrouter_provider import OpenRouterProvider
 from textfsm_ai.providers.perplexity_provider import PerplexityProvider
@@ -36,6 +37,7 @@ def test_registry_get_returns_registered_class():
     assert registry.get("bedrock") is BedrockProvider
     assert registry.get("cohere") is CohereProvider
     assert registry.get("vertexai") is VertexAIProvider
+    assert registry.get("oci") is OCIProvider
 
 
 def test_registry_get_unknown_raises_keyerror():

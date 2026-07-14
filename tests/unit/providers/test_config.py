@@ -24,6 +24,8 @@ _ENV_VARS = [
     "AZURE_OPENAI_ENDPOINT",
     "AZURE_OPENAI_API_KEY",
     "AZURE_OPENAI_API_VERSION",
+    "OCI_COMPARTMENT_ID",
+    "OCI_REGION",
 ]
 
 
@@ -252,6 +254,35 @@ def test_load_config_from_env_vertexai_with_both_vars(monkeypatch):
     }
 
 
+def test_load_config_from_env_oci_requires_compartment_id(monkeypatch):
+    monkeypatch.setenv("OCI_REGION", "us-chicago-1")
+    # compartment id missing -> oci should NOT appear
+    cfg = load_config_from_env()
+    assert "oci" not in cfg.providers
+
+
+def test_load_config_from_env_oci_compartment_id_only(monkeypatch):
+    monkeypatch.setenv("OCI_COMPARTMENT_ID", "ocid1.compartment.oc1..fake")
+    cfg = load_config_from_env()
+
+    assert set(cfg.providers.keys()) == {"oci"}
+    assert cfg.providers["oci"].params == {
+        "compartment_id": "ocid1.compartment.oc1..fake"
+    }
+
+
+def test_load_config_from_env_oci_with_region(monkeypatch):
+    monkeypatch.setenv("OCI_COMPARTMENT_ID", "ocid1.compartment.oc1..fake")
+    monkeypatch.setenv("OCI_REGION", "us-chicago-1")
+    cfg = load_config_from_env()
+
+    assert set(cfg.providers.keys()) == {"oci"}
+    assert cfg.providers["oci"].params == {
+        "compartment_id": "ocid1.compartment.oc1..fake",
+        "region": "us-chicago-1",
+    }
+
+
 def test_load_config_from_env_azure_requires_both_endpoint_and_key(monkeypatch):
     monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
     # api key missing -> azure should NOT appear
@@ -301,6 +332,7 @@ def test_load_config_from_env_all_providers_at_once(monkeypatch):
     monkeypatch.setenv("GOOGLE_CLOUD_LOCATION", "us-central1")
     monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://example.azure.com")
     monkeypatch.setenv("AZURE_OPENAI_API_KEY", "k5")
+    monkeypatch.setenv("OCI_COMPARTMENT_ID", "ocid1.compartment.oc1..fake")
 
     cfg = load_config_from_env()
 
@@ -322,4 +354,5 @@ def test_load_config_from_env_all_providers_at_once(monkeypatch):
         "cohere",
         "vertexai",
         "azure",
+        "oci",
     }

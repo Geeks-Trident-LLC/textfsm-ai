@@ -26,6 +26,7 @@ def _patched_controller(**init_kwargs):
             api_version=init_kwargs.get("api_version", ""),
             region=init_kwargs.get("region", ""),
             project=init_kwargs.get("project", ""),
+            compartment_id=init_kwargs.get("compartment_id", ""),
             max_tries=init_kwargs.get("max_tries", 1),
         )
     return controller, mock_gen_cls, mock_dsl_cls, mock_engine_cls
@@ -49,6 +50,7 @@ def test_init_builds_model_info_and_constructs_gen_controller():
         "api_version": "2024-01-01",
         "region": "",
         "project": "",
+        "compartment_id": "",
     }
 
     mock_gen_cls.assert_called_once_with(
@@ -59,6 +61,7 @@ def test_init_builds_model_info_and_constructs_gen_controller():
         api_version="2024-01-01",
         region="",
         project="",
+        compartment_id="",
         max_retries=3,
     )
     mock_dsl_cls.assert_called_once_with()
@@ -81,6 +84,7 @@ def test_init_builds_model_info_with_bedrock_region():
         "api_version": "",
         "region": "us-east-1",
         "project": "",
+        "compartment_id": "",
     }
 
     mock_gen_cls.assert_called_once_with(
@@ -91,6 +95,7 @@ def test_init_builds_model_info_with_bedrock_region():
         api_version="",
         region="us-east-1",
         project="",
+        compartment_id="",
         max_retries=1,
     )
 
@@ -112,6 +117,7 @@ def test_init_builds_model_info_with_vertexai_project_and_region():
         "api_version": "",
         "region": "us-central1",
         "project": "my-gcp-project",
+        "compartment_id": "",
     }
 
     mock_gen_cls.assert_called_once_with(
@@ -122,6 +128,40 @@ def test_init_builds_model_info_with_vertexai_project_and_region():
         api_version="",
         region="us-central1",
         project="my-gcp-project",
+        compartment_id="",
+        max_retries=1,
+    )
+
+
+def test_init_builds_model_info_with_oci_compartment_id_and_region():
+    controller, mock_gen_cls, _mock_dsl_cls, _mock_engine_cls = _patched_controller(
+        provider_name="oci",
+        api_key="",
+        model="meta.llama-3.3-70b-instruct",
+        region="us-chicago-1",
+        compartment_id="ocid1.compartment.oc1..fake",
+    )
+
+    assert controller._model_info == {
+        "provider_name": "oci",
+        "api_key": "",
+        "model": "meta.llama-3.3-70b-instruct",
+        "endpoint": "",
+        "api_version": "",
+        "region": "us-chicago-1",
+        "project": "",
+        "compartment_id": "ocid1.compartment.oc1..fake",
+    }
+
+    mock_gen_cls.assert_called_once_with(
+        provider_name="oci",
+        api_key="",
+        model="meta.llama-3.3-70b-instruct",
+        endpoint="",
+        api_version="",
+        region="us-chicago-1",
+        project="",
+        compartment_id="ocid1.compartment.oc1..fake",
         max_retries=1,
     )
 

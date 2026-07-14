@@ -225,6 +225,69 @@ def test_run_vertexai_passes_project_and_region_instead_of_api_key(
     assert captured["provider"].model == "m"
 
 
+def test_run_oci_passes_compartment_id_and_region_instead_of_api_key(
+    patch_prompt_builder, monkeypatch
+):
+    # OCI has no project-level api_key - the provider is constructed as
+    # provider_type(compartment_id, region, model), not provider_type(
+    # api_key, model).
+    captured = {}
+
+    class MockOCIProvider:
+        name = "oci"
+
+        def __init__(self, compartment_id, region, model):
+            self.compartment_id = compartment_id
+            self.region = region
+            self.model = model
+
+    monkeypatch.setattr(
+        generation_engine, "get_provider_by_name", lambda name: MockOCIProvider
+    )
+
+    raw_resp = LLMResponse(
+        content='{"template":"T","records":[1],"variables":{},"handling":[]}',
+        prompt="p",
+        provider="oci",
+        model="m",
+        ready=True,
+    )
+
+    def fake_extract(provider, model, prompt):
+        captured["provider"] = provider
+        return raw_resp
+
+    monkeypatch.setattr(generation_engine.extractor, "extract", fake_extract)
+
+    structured = StructuredResponse(
+        template="T",
+        records=[1],
+        variables={},
+        handling=[],
+        response=raw_resp,
+        ready=True,
+    )
+    monkeypatch.setattr(
+        generation_engine.structured_extractor, "extract", lambda resp: structured
+    )
+
+    final = GenerationStage(template="T", records=[1], metadata=structured, ready=True)
+    monkeypatch.setattr(generation_engine.generator, "generate", lambda s: final)
+
+    generation_engine.run(
+        "oci",
+        "unused-api-key",
+        "m",
+        "sample",
+        region="us-chicago-1",
+        compartment_id="ocid1.compartment.oc1..fake",
+    )
+
+    assert captured["provider"].compartment_id == "ocid1.compartment.oc1..fake"
+    assert captured["provider"].region == "us-chicago-1"
+    assert captured["provider"].model == "m"
+
+
 # ---------------------------------------------------------
 # Tests for run_correction_prompt()
 # ---------------------------------------------------------
@@ -482,4 +545,92 @@ def test_run_correction_prompt_vertexai_passes_project_and_region_instead_of_api
 
     assert captured["provider"].project == "my-project"
     assert captured["provider"].region == "asia-northeast1"
+    assert captured["provider"].model == "m"
+
+
+def test_run_correction_prompt_oci_passes_compartment_id_and_region_instead_of_api_key(
+    patch_prompt_builder, monkeypatch
+):
+    captured = {}
+
+    class MockOCIProvider:
+        name = "oci"
+
+        def __init__(self, compartment_id, region, model):
+            self.compartment_id = compartment_id
+            self.region = region
+            self.model = model
+
+    monkeypatch.setattr(
+        generation_engine, "get_provider_by_name", lambda name: MockOCIProvider
+    )
+
+    prev_raw = LLMResponse(
+        content="PREV_JSON", prompt="p", provider="oci", model="m", ready=True
+    )
+    prev_structured = StructuredResponse(
+        template="OLD",
+        records=[1],
+        variables={},
+        handling=[],
+        response=prev_raw,
+        ready=True,
+    )
+    prev_result = GenerationStage(
+        template="OLD", records=[1], metadata=prev_structured, ready=False
+    )
+
+    class DummyFinding:
+        findings = ["err1"]
+        ready = False
+
+    monkeypatch.setattr(
+        generation_engine.validator,
+        "find_template_issues",
+        lambda t, r, s: DummyFinding(),
+    )
+
+    new_raw = LLMResponse(
+        content='{"template":"NEW","records":[2],"variables":{},"handling":[]}',
+        prompt="p",
+        provider="oci",
+        model="m",
+        ready=True,
+    )
+
+    def fake_extract(provider, model, prompt):
+        captured["provider"] = provider
+        return new_raw
+
+    monkeypatch.setattr(generation_engine.extractor, "extract", fake_extract)
+
+    new_structured = StructuredResponse(
+        template="NEW",
+        records=[2],
+        variables={},
+        handling=[],
+        response=new_raw,
+        ready=True,
+    )
+    monkeypatch.setattr(
+        generation_engine.structured_extractor, "extract", lambda resp: new_structured
+    )
+
+    final = GenerationStage(
+        template="NEW", records=[2], metadata=new_structured, ready=True
+    )
+    monkeypatch.setattr(generation_engine.generator, "generate", lambda s: final)
+
+    generation_engine.run_correction_prompt(
+        "oci",
+        "unused-api-key",
+        "m",
+        "sample",
+        prev_result,
+        region="us-chicago-1",
+        compartment_id="ocid1.compartment.oc1..fake",
+    )
+
+    assert captured["provider"].compartment_id == "ocid1.compartment.oc1..fake"
+    assert captured["provider"].region == "us-chicago-1"
     assert captured["provider"].model == "m"

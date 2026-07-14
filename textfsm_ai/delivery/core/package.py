@@ -42,6 +42,7 @@ class LLMInfo(Serializable):
     api_version: str = ""
     region: str = ""
     project: str = ""
+    compartment_id: str = ""
 
     def to_string(self) -> str:
         """Return a clean, readable summary of LLM configuration."""
@@ -68,6 +69,19 @@ class LLMInfo(Serializable):
                     f"Model       : {self.model}",
                     f"Region      : {self.region}",
                     f"Project     : {self.project}",
+                ]
+            )
+        elif self.provider_name == "oci":
+            # OCI has no project-level api_key either - OCIProvider reads
+            # ~/.oci/config (DEFAULT profile) for credentials on its own.
+            parts.extend(
+                [
+                    "API Key     : <not used, resolved via ~/.oci/config "
+                    "credential file>",
+                    f"Provider    : {self.provider_name}",
+                    f"Model       : {self.model}",
+                    f"Region      : {self.region}",
+                    f"Compartment : {self.compartment_id}",
                 ]
             )
         else:

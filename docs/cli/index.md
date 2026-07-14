@@ -32,8 +32,8 @@ Azure additionally resolves `--model` (as the deployment name), `--endpoint`,
 and `--api-version` from `AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_ENDPOINT`,
 and `AZURE_OPENAI_API_VERSION` the same way.
 
-Bedrock and Vertex AI are the exceptions to the credential rule above:
-neither has a project-level API key at all.
+Bedrock, Vertex AI, and OCI are the exceptions to the credential rule
+above: none of them has a project-level API key at all.
 
 - Bedrock resolves `--region` from `AWS_REGION`/`AWS_DEFAULT_REGION` (or
   `providers.yaml`), and authenticates via boto3's own AWS credential
@@ -50,17 +50,27 @@ neither has a project-level API key at all.
   `--provider vertexai` explicitly — it serves the same Gemini models as
   the native `gemini` provider under identical model IDs, so there's no
   automatic way to route between the two.
+- OCI resolves `--compartment-id` from `OCI_COMPARTMENT_ID` (or
+  `providers.yaml`), and authenticates via the `oci` SDK's own config
+  file at `~/.oci/config` (DEFAULT profile) — the same file the OCI CLI
+  itself uses. `--region` is optional for OCI: unlike Bedrock/Vertex AI it
+  falls back to whatever region is already set in `~/.oci/config` if not
+  resolved from `--region`/`OCI_REGION`/`providers.yaml`. OCI must always
+  be selected with `--provider oci` explicitly — its `meta.`/`xai.`
+  model-ID vendor prefixes collide with Bedrock's own re-hosted namespace,
+  so there's no automatic way to route between the two.
 
 Key options:
 
 | Option | Purpose |
 |---|---|
-| `--provider` (required) | Provider name: `openai`, `anthropic`, `gemini`, `deepseek`, `groq`, `xai`, `together`, `fireworks`, `cerebras`, `perplexity`, `openrouter`, `moonshot`, `mistral`, `bedrock`, `cohere`, `vertexai`, `azure` |
-| `--api-key` | Override the resolved API key (ignored for `bedrock`/`vertexai`) |
+| `--provider` (required) | Provider name: `openai`, `anthropic`, `gemini`, `deepseek`, `groq`, `xai`, `together`, `fireworks`, `cerebras`, `perplexity`, `openrouter`, `moonshot`, `mistral`, `bedrock`, `cohere`, `vertexai`, `oci`, `azure` |
+| `--api-key` | Override the resolved API key (ignored for `bedrock`/`vertexai`/`oci`) |
 | `--model` | Model name (or Azure deployment name) |
 | `--endpoint`, `--api-version` | Azure-only |
-| `--region` | AWS region (Bedrock) or GCP location (Vertex AI) |
+| `--region` | AWS region (Bedrock), GCP location (Vertex AI), or OCI region (OCI, optional) |
 | `--project` | GCP project (Vertex AI only) |
+| `--compartment-id` | OCI compartment OCID (OCI only) |
 | `--max-retries` | Retry attempts (default: 1) |
 | `--template-only` | Print only the final TextFSM template |
 | `--records` | Print parsed records |
@@ -108,6 +118,7 @@ gemini         Google Gemini models
 groq           Groq (fast open-model inference, OpenAI-compatible API)
 mistral        Mistral AI (native SDK)
 moonshot       Moonshot AI / Kimi models (OpenAI-compatible API)
+oci            Oracle Cloud Infrastructure Generative AI (Llama/Grok, config-file auth)
 openai         Native OpenAI API
 openai_compat
 openrouter     OpenRouter (multi-provider model aggregator, OpenAI-compatible API)

@@ -124,6 +124,14 @@ moonshot:
   thinking-chat: []
   other:
   - moonshot-v1-auto
+oci:
+  quality-chat:
+  - meta.llama-3.3-70b-instruct
+  balance-chat: []
+  speed-chat: []
+  thinking-chat:
+  - xai.grok-4-fast-reasoning
+  other: []
 openai:
   quality-chat:
   - gpt-5.5
