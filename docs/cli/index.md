@@ -32,14 +32,22 @@ Azure additionally resolves `--model` (as the deployment name), `--endpoint`,
 and `--api-version` from `AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_ENDPOINT`,
 and `AZURE_OPENAI_API_VERSION` the same way.
 
+Bedrock is the exception to the credential rule above: it has no
+project-level API key at all. Instead it resolves `--region` from
+`AWS_REGION`/`AWS_DEFAULT_REGION` (or `providers.yaml`), and authenticates
+via boto3's own AWS credential chain (`AWS_ACCESS_KEY_ID`/
+`AWS_SECRET_ACCESS_KEY`/`AWS_SESSION_TOKEN`, `~/.aws/credentials`, or an IAM
+role) — nothing AWS-secret-shaped ever passes through this CLI.
+
 Key options:
 
 | Option | Purpose |
 |---|---|
-| `--provider` (required) | Provider name: `openai`, `anthropic`, `gemini`, `deepseek`, `groq`, `xai`, `together`, `fireworks`, `cerebras`, `perplexity`, `openrouter`, `moonshot`, `mistral`, `azure` |
-| `--api-key` | Override the resolved API key |
+| `--provider` (required) | Provider name: `openai`, `anthropic`, `gemini`, `deepseek`, `groq`, `xai`, `together`, `fireworks`, `cerebras`, `perplexity`, `openrouter`, `moonshot`, `mistral`, `bedrock`, `azure` |
+| `--api-key` | Override the resolved API key (ignored for `bedrock`) |
 | `--model` | Model name (or Azure deployment name) |
 | `--endpoint`, `--api-version` | Azure-only |
+| `--region` | Bedrock-only; AWS region |
 | `--max-retries` | Retry attempts (default: 1) |
 | `--template-only` | Print only the final TextFSM template |
 | `--records` | Print parsed records |
@@ -78,6 +86,7 @@ NAME           DESCRIPTION
 -------------  ----------------------------------------
 anthropic      Anthropic Claude models
 azure          Azure AI Inference / Azure OpenAI
+bedrock        Amazon Bedrock (native SDK, AWS credential chain)
 cerebras       Cerebras (fast open-model inference, OpenAI-compatible API)
 deepseek       DeepSeek (OpenAI-compatible API)
 fireworks      Fireworks AI (open-model hosting, OpenAI-compatible API)

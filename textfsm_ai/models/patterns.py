@@ -237,3 +237,30 @@ MISTRAL_PATTERN = re.compile(
     r"(?:-[a-z0-9.]+)*$",
     re.IGNORECASE,
 )
+
+
+# ---------------------------------------------------------
+# Amazon Bedrock. A model AGGREGATOR like OpenRouter, but re-hosting
+# each vendor's models under "vendor.model-name-vN:M" IDs (dot after the
+# vendor, colon before the version) rather than "vendor/model" - e.g.
+# "anthropic.claude-opus-4-8-v1:0", "meta.llama4-maverick-v1:0". This is
+# a full-name anchor purely to validate "is this a known Bedrock vendor
+# namespace" - actual tier assignment is done via per-vendor keyword/size
+# checks in classify_bedrock_models(), since each hosted vendor has its
+# own naming scheme (Anthropic's opus/sonnet/haiku, Meta's parameter
+# size, Mistral's large/medium/small, etc.). Cross-region inference
+# profile IDs (e.g. "us.anthropic.claude-...") are deliberately NOT
+# covered - they don't match this pattern and fall to OTHER, same as any
+# other unrecognized model shape.
+# Examples:
+#   anthropic.claude-opus-4-8-v1:0
+#   meta.llama4-maverick-v1:0
+#   meta.llama3-1-8b-instruct-v1:0
+#   mistral.mistral-large-2-v1:0
+#   amazon.titan-text-premier-v1:0
+#   cohere.command-r-plus-v1:0
+# ---------------------------------------------------------
+BEDROCK_PATTERN = re.compile(
+    r"^(?:anthropic|meta|mistral|amazon|cohere|ai21)\.[\w.\-:]+$",
+    re.IGNORECASE,
+)

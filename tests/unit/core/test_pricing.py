@@ -39,6 +39,7 @@ def test_pricing_table_loaded_from_yaml_has_expected_providers():
         "openrouter",
         "moonshot",
         "mistral",
+        "bedrock",
     ):
         assert provider in PRICING_TABLE
         assert isinstance(PRICING_TABLE[provider], dict)
@@ -181,6 +182,16 @@ def test_extract_base_model_mistral():
         ("mistral-large-latest", "mistral-large-latest"),
         ("magistral-medium-latest", "magistral-medium-latest"),
         ("codestral-latest", "codestral-latest"),
+    ):
+        assert extract_base_model(provider, model) == based_model
+
+
+def test_extract_base_model_bedrock():
+    provider = "bedrock"
+    for model, based_model in (
+        ("anthropic.claude-opus-4-8-v1:0", "anthropic.claude-opus-4-8-v1:0"),
+        ("meta.llama4-maverick-v1:0", "meta.llama4-maverick-v1:0"),
+        ("cohere.command-r-plus-v1:0", "cohere.command-r-plus-v1:0"),
     ):
         assert extract_base_model(provider, model) == based_model
 
@@ -388,6 +399,29 @@ def test_estimate_cost_openrouter_auto_falls_back_to_unknown():
     assert result.based_model == "unknown"
     assert result.estimated_cost == 0.0
     assert "fallback" in result.warning.lower()
+
+
+def test_estimate_cost_bedrock():
+    result = estimate_cost(
+        input_tokens=1000,
+        output_tokens=2000,
+        total_tokens=3000,
+        currency="USD",
+        provider="bedrock",
+        model="anthropic.claude-haiku-4-5-v1:0",
+    )
+
+    assert result.provider == "bedrock"
+    assert result.based_model == "anthropic.claude-haiku-4-5-v1:0"
+    assert (
+        result.input_per_million
+        == PRICING_TABLE["bedrock"]["anthropic.claude-haiku-4-5-v1:0"]["input"]
+    )
+    assert (
+        result.output_per_million
+        == PRICING_TABLE["bedrock"]["anthropic.claude-haiku-4-5-v1:0"]["output"]
+    )
+    assert result.warning is None
 
 
 def test_estimate_cost_mistral():

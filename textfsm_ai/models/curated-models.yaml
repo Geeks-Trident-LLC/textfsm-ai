@@ -22,6 +22,21 @@ azure:
   - gpt-4.1-nano
   thinking-chat: []
   other: []
+bedrock:
+  quality-chat:
+  - anthropic.claude-opus-4-8-v1:0
+  - meta.llama4-maverick-v1:0
+  balance-chat:
+  - anthropic.claude-sonnet-4-6-v1:0
+  - meta.llama4-scout-v1:0
+  speed-chat:
+  - anthropic.claude-haiku-4-5-v1:0
+  - meta.llama3-1-8b-instruct-v1:0
+  thinking-chat: []
+  other:
+  - mistral.mistral-large-2-v1:0
+  - amazon.titan-text-premier-v1:0
+  - cohere.command-r-plus-v1:0
 cerebras:
   quality-chat:
   - llama-4-maverick-17b-128e-instruct

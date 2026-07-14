@@ -16,6 +16,7 @@ class DeliveryController:
         model: str,
         endpoint: str = "",
         api_version: str = "",
+        region: str = "",
         max_tries: int = 1,
     ):
         self._model_info = dict(
@@ -24,6 +25,7 @@ class DeliveryController:
             model=model,
             endpoint=endpoint,
             api_version=api_version,
+            region=region,
         )
 
         self._gen = GenerationController(
@@ -32,6 +34,7 @@ class DeliveryController:
             model=model,
             endpoint=endpoint,
             api_version=api_version,
+            region=region,
             max_retries=max_tries,
         )
         self._dsl = DSLController()

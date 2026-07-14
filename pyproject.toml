@@ -31,6 +31,11 @@ dependencies = [
     # Python 3.9 (1.10.1+ and all 2.x require Python >=3.10, which would
     # break this package's >=3.9 support).
     "mistralai==1.10.0",
+    # Pinned exactly for the same reason: 1.42.97 is the newest boto3
+    # release with a Python 3.9-compatible botocore; verified via
+    # `pip download --python-version 3.9` resolution, since boto3 bumps
+    # its Python floor frequently across even small version bumps.
+    "boto3==1.42.97",
     "tomli; python_version < '3.11'",
 ]
 
@@ -78,6 +83,8 @@ keywords = [
     "moonshot",
     "kimi",
     "mistral",
+    "bedrock",
+    "aws",
     "device output parsing",
     "log extraction",
     "structured data extraction",

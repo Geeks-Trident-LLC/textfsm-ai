@@ -47,6 +47,17 @@ def _patch_generation_controller(monkeypatch, pipeline):
     monkeypatch.setattr("textfsm_ai.api.GenerationController", FakeController)
 
 
+def _patch_generation_controller_capturing_kwargs(monkeypatch, pipeline, captured):
+    class FakeController:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+        def run(self, sample, **kwargs):
+            return pipeline
+
+    monkeypatch.setattr("textfsm_ai.api.GenerationController", FakeController)
+
+
 # ---------------------------------------------------------
 # generate() — verb_target
 # ---------------------------------------------------------
@@ -112,6 +123,31 @@ def test_generate_uses_pipeline_status_not_nested_metadata_status(monkeypatch):
 
     assert result.ready is False
     assert result.reason == "template_syntax_error"
+
+
+def test_generate_passes_region_through_to_generation_controller(monkeypatch):
+    metadata = StructuredResponse(
+        template="Value v1 (\\S+)",
+        records=[],
+        variables={},
+        handling=[],
+        response=None,
+        ready=True,
+    )
+    captured = {}
+    _patch_generation_controller_capturing_kwargs(
+        monkeypatch, _make_pipeline(metadata, ready=True), captured
+    )
+
+    generate(
+        "sample",
+        "bedrock",
+        "",
+        "anthropic.claude-haiku-4-5-v1:0",
+        region="us-east-1",
+    )
+
+    assert captured["region"] == "us-east-1"
 
 
 # ---------------------------------------------------------
@@ -263,6 +299,30 @@ def test_run_pipeline_delegates_to_delivery_controller(monkeypatch):
 
     assert result is expected
     assert result.passed is True
+
+
+def test_run_pipeline_passes_region_through_to_delivery_controller(monkeypatch):
+    expected = DeliveryOutput(mode=1, output="", passed=True, error="")
+    captured = {}
+
+    class FakeDeliveryController:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+        def run(self, sample, mode, as_json):
+            return expected
+
+    monkeypatch.setattr("textfsm_ai.api.DeliveryController", FakeDeliveryController)
+
+    run_pipeline(
+        "sample",
+        "bedrock",
+        "",
+        "anthropic.claude-haiku-4-5-v1:0",
+        region="us-east-1",
+    )
+
+    assert captured["region"] == "us-east-1"
 
 
 def test_run_pipeline_does_not_raise_on_failure(monkeypatch):

@@ -266,6 +266,74 @@ def test_mistral_classification():
     assert "some-unknown-model" in groups[Tier.OTHER]
 
 
+def test_bedrock_classification():
+    raw = [
+        "anthropic.claude-opus-4-8-v1:0",  # opus -> quality
+        "anthropic.claude-sonnet-4-6-v1:0",  # sonnet -> balance
+        "anthropic.claude-haiku-4-5-v1:0",  # haiku -> speed
+        "anthropic.claude-instant-v1:0",  # no known keyword -> other
+        "meta.llama4-maverick-v1:0",  # MoE codename -> quality
+        "meta.llama4-scout-v1:0",  # MoE codename -> balance
+        "meta.llama3-1-70b-instruct-v1:0",  # dense 70B -> quality
+        "meta.llama3-1-8b-instruct-v1:0",  # dense 8B -> speed
+        "meta.llama-guard-v1:0",  # no size token -> other
+        "mistral.mistral-large-2-v1:0",  # large -> quality
+        "mistral.mistral-medium-v1:0",  # medium -> balance
+        "mistral.mistral-small-v1:0",  # small -> speed
+        "mistral.open-mixtral-v1:0",  # no known keyword -> other
+        "cohere.command-r-plus-v1:0",  # plus -> quality
+        "cohere.command-r-v1:0",  # bare command-r -> balance
+        "cohere.command-light-v1:0",  # light -> speed
+        "cohere.embed-english-v1:0",  # no known keyword -> other
+        "amazon.titan-text-premier-v1:0",  # premier -> quality
+        "amazon.titan-text-express-v1:0",  # express -> balance
+        "amazon.titan-text-lite-v1:0",  # lite -> speed
+        "amazon.titan-embed-v1:0",  # no known keyword -> other
+        "ai21.jamba-1-5-large-v1:0",  # unhandled vendor keyword -> other
+        "us.anthropic.claude-opus-4-8-v1:0",  # inference profile -> other
+        "some-unknown-model",  # no match -> other
+    ]
+    groups = classify_models("bedrock", raw)
+
+    assert "anthropic.claude-opus-4-8-v1:0" in groups[Tier.QUALITY_CHAT]
+    assert "meta.llama4-maverick-v1:0" in groups[Tier.QUALITY_CHAT]
+    assert "meta.llama3-1-70b-instruct-v1:0" in groups[Tier.QUALITY_CHAT]
+    assert "mistral.mistral-large-2-v1:0" in groups[Tier.QUALITY_CHAT]
+    assert "cohere.command-r-plus-v1:0" in groups[Tier.QUALITY_CHAT]
+    assert "amazon.titan-text-premier-v1:0" in groups[Tier.QUALITY_CHAT]
+
+    assert "anthropic.claude-sonnet-4-6-v1:0" in groups[Tier.BALANCE_CHAT]
+    assert "meta.llama4-scout-v1:0" in groups[Tier.BALANCE_CHAT]
+    assert "mistral.mistral-medium-v1:0" in groups[Tier.BALANCE_CHAT]
+    assert "cohere.command-r-v1:0" in groups[Tier.BALANCE_CHAT]
+    assert "amazon.titan-text-express-v1:0" in groups[Tier.BALANCE_CHAT]
+
+    assert "anthropic.claude-haiku-4-5-v1:0" in groups[Tier.SPEED_CHAT]
+    assert "meta.llama3-1-8b-instruct-v1:0" in groups[Tier.SPEED_CHAT]
+    assert "mistral.mistral-small-v1:0" in groups[Tier.SPEED_CHAT]
+    assert "cohere.command-light-v1:0" in groups[Tier.SPEED_CHAT]
+    assert "amazon.titan-text-lite-v1:0" in groups[Tier.SPEED_CHAT]
+
+    assert "anthropic.claude-instant-v1:0" in groups[Tier.OTHER]
+    assert "meta.llama-guard-v1:0" in groups[Tier.OTHER]
+    assert "mistral.open-mixtral-v1:0" in groups[Tier.OTHER]
+    assert "cohere.embed-english-v1:0" in groups[Tier.OTHER]
+    assert "amazon.titan-embed-v1:0" in groups[Tier.OTHER]
+    assert "ai21.jamba-1-5-large-v1:0" in groups[Tier.OTHER]
+    assert "us.anthropic.claude-opus-4-8-v1:0" in groups[Tier.OTHER]
+    assert "some-unknown-model" in groups[Tier.OTHER]
+
+
+def test_bedrock_classification_preserves_vendor_prefix():
+    # Like Together/Fireworks/OpenRouter, Bedrock's classifier must NOT
+    # strip the "vendor." prefix - it's required to actually call the
+    # model via converse(modelId=...).
+    groups = classify_models("bedrock", ["anthropic.claude-haiku-4-5-v1:0"])
+
+    assert "anthropic.claude-haiku-4-5-v1:0" in groups[Tier.SPEED_CHAT]
+    assert "claude-haiku-4-5-v1:0" not in groups[Tier.SPEED_CHAT]
+
+
 # ---------------------------------------------------------
 # _normalize (via the "provider/model" prefix form)
 # ---------------------------------------------------------

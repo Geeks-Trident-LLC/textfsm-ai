@@ -19,6 +19,7 @@ from textfsm_ai.providers.config import load_config_from_env, load_config_from_f
 @click.option("--model", required=False)
 @click.option("--endpoint", required=False)
 @click.option("--api-version", required=False)
+@click.option("--region", required=False, help="AWS region (Bedrock only)")
 @click.option("--max-retries", default=1, show_default=True)
 @click.option("--raw", is_flag=True, help="Show raw LLM output")
 @click.option("--json", "json_output", is_flag=True, help="Show full pipeline JSON")
@@ -39,6 +40,7 @@ def generate(
     model,
     endpoint,
     api_version,
+    region,
     max_retries,
     raw,
     json_output,
@@ -80,6 +82,7 @@ def generate(
     params["model"] = resolve_model(provider, model, pconf)
     params["endpoint"] = resolve_endpoint(provider, endpoint, pconf)
     params["api_version"] = resolve_api_version(provider, api_version, pconf)
+    params["region"] = resolve_region(provider, region, pconf)
 
     # -----------------------------
     # 3. Debug output
@@ -92,15 +95,23 @@ def generate(
         click.echo(f"model:          {params.get('model')}")
         click.echo(f"max_retries:    {max_retries}")
 
-        # API key masking
+        # API key masking (Bedrock has no project-level api_key - boto3
+        # resolves AWS credentials on its own)
         key = params.get("api_key")
-        masked = key[:4] + "..." + key[-4:] if key else "<missing>"
-        click.echo(f"api_key:        {masked}")
+        if provider == "bedrock":
+            click.echo("api_key:        <not used, resolved via AWS credential chain>")
+        else:
+            masked = key[:4] + "..." + key[-4:] if key else "<missing>"
+            click.echo(f"api_key:        {masked}")
 
         # Azure-only fields
         if params.get("endpoint"):
             click.echo(f"endpoint:       {params.get('endpoint')}")
             click.echo(f"api_version:    {params.get('api_version')}")
+
+        # Bedrock-only field
+        if params.get("region"):
+            click.echo(f"region:         {params.get('region')}")
         click.echo("")
 
     # -----------------------------
@@ -112,6 +123,7 @@ def generate(
         model=params.get("model"),
         endpoint=params.get("endpoint"),
         api_version=params.get("api_version"),
+        region=params.get("region"),
         max_retries=max_retries,
     )
 
@@ -228,6 +240,13 @@ def generate(
 
 
 def resolve_api_key(provider, api_key, pconf):
+    if provider == "bedrock":
+        # Bedrock doesn't use a project-level API key - boto3 resolves
+        # AWS credentials on its own (AWS_ACCESS_KEY_ID/
+        # AWS_SECRET_ACCESS_KEY/AWS_SESSION_TOKEN, ~/.aws/credentials, or
+        # an IAM role).
+        return None
+
     if api_key:
         return api_key
 
@@ -326,3 +345,23 @@ def resolve_api_version(provider, api_version, pconf):
         return pconf.params["api_version"]
 
     return "2024-02-15-preview"
+
+
+def resolve_region(provider, region, pconf):
+    if provider != "bedrock":
+        return None
+
+    if region:
+        return region
+
+    env = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION")
+    if env:
+        return env
+
+    if pconf and "region" in pconf.params:
+        return pconf.params["region"]
+
+    raise click.ClickException(
+        "Bedrock requires an AWS region. Use --region or set AWS_REGION/"
+        "AWS_DEFAULT_REGION."
+    )

@@ -29,6 +29,7 @@ PROVIDER_DESCRIPTIONS = {
     "openrouter": "OpenRouter (multi-provider model aggregator, OpenAI-compatible API)",
     "moonshot": "Moonshot AI / Kimi models (OpenAI-compatible API)",
     "mistral": "Mistral AI (native SDK)",
+    "bedrock": "Amazon Bedrock (native SDK, AWS credential chain)",
 }
 
 

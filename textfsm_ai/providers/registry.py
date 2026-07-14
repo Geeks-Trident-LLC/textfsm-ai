@@ -7,6 +7,7 @@ from typing import Dict, Type
 from textfsm_ai.orchestrator.provider import Provider
 from textfsm_ai.providers.anthropic_provider import AnthropicProvider
 from textfsm_ai.providers.azure_provider import AzureOpenAIProvider
+from textfsm_ai.providers.bedrock_provider import BedrockProvider
 from textfsm_ai.providers.cerebras_provider import CerebrasProvider
 from textfsm_ai.providers.deepseek_provider import DeepSeekProvider
 from textfsm_ai.providers.fireworks_provider import FireworksProvider
@@ -52,6 +53,7 @@ registry.register(PerplexityProvider)
 registry.register(OpenRouterProvider)
 registry.register(MoonshotProvider)
 registry.register(MistralProvider)
+registry.register(BedrockProvider)
 
 
 def get_provider_by_name(provider_name: str) -> Type[Provider]:

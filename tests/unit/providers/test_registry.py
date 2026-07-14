@@ -1,6 +1,7 @@
 import pytest
 
 from textfsm_ai.providers.anthropic_provider import AnthropicProvider
+from textfsm_ai.providers.bedrock_provider import BedrockProvider
 from textfsm_ai.providers.cerebras_provider import CerebrasProvider
 from textfsm_ai.providers.fireworks_provider import FireworksProvider
 from textfsm_ai.providers.groq_provider import GroqProvider
@@ -30,6 +31,7 @@ def test_registry_get_returns_registered_class():
     assert registry.get("openrouter") is OpenRouterProvider
     assert registry.get("moonshot") is MoonshotProvider
     assert registry.get("mistral") is MistralProvider
+    assert registry.get("bedrock") is BedrockProvider
 
 
 def test_registry_get_unknown_raises_keyerror():
