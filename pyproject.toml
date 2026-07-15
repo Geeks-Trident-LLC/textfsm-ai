@@ -160,6 +160,7 @@ markers = [
 ]
 filterwarnings = [
     "ignore::DeprecationWarning:google\\.genai\\.",
+    "ignore::DeprecationWarning:cohere\\.",
 ]
 
 [tool.coverage.report]
