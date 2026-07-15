@@ -1,65 +1,41 @@
 ## Summary
 
-This PR prepares the v0.5.0 release: a new Oracle OCI provider, a
-breaking standardization of every provider's environment variable naming,
-a new providers overview doc page, a refreshed docs homepage, and a ~4x
-test suite speedup, following v0.4.2.
+This PR prepares the v0.5.1 release: two new CLI commands (`dsl` and
+`pipeline`) exposing existing engine/pipeline functionality that previously
+only had a Python API, plus small docs and test-hygiene fixes, following
+v0.5.0.
 
 ## What's Included
 
-### New Provider
-- Oracle Cloud Infrastructure (OCI) Generative AI (`provider="oci"`) —
-  Meta Llama and xAI Grok models via OCI's Generic chat format
-- Authenticates via `~/.oci/config` (no project-level API key, same shape
-  as Bedrock/Vertex AI); new `compartment_id` parameter / `--compartment-id`
-  CLI flag threaded through the full plumbing chain
-- Deliberately excluded from auto-routing — its `meta.`/`xai.` model-ID
-  prefixes collide with Bedrock's re-hosted namespace, so `--provider oci`
-  must be explicit
-
-### Breaking Change: Environment Variable Standardization
-- Every provider's env vars now follow one uniform `<PROVIDER>_<FIELD>`
-  pattern, no exceptions:
-  - `AZURE_OPENAI_API_KEY`/`AZURE_OPENAI_ENDPOINT`/`AZURE_OPENAI_API_VERSION`/
-    `AZURE_OPENAI_DEPLOYMENT` → `AZURE_API_KEY`/`AZURE_ENDPOINT`/
-    `AZURE_API_VERSION`/`AZURE_DEPLOYMENT`
-  - `AWS_REGION`/`AWS_DEFAULT_REGION` → `BEDROCK_REGION`/`BEDROCK_DEFAULT_REGION`
-  - `GOOGLE_CLOUD_PROJECT`/`GOOGLE_CLOUD_LOCATION` → `VERTEXAI_PROJECT`/`VERTEXAI_REGION`
-- None of the renamed vars were read by the underlying SDKs themselves
-  (boto3/google-genai/azure-ai-inference always get explicit values passed
-  in), only by this app's own `os.getenv()` calls — no functional reason to
-  keep the old ecosystem-convention names once Azure/AWS/GCP naming is
-  already being broken from for consistency
-- **Anyone with the old env var names already set must update them.**
+### New CLI Commands
+- `textfsm-ai dsl TEMPLATE_FILE SAMPLE_FILE` — deterministic template →
+  canonical/readable/recognizer compilation, no LLM call. Same output-flag
+  shape as `generate` (`--canonical`/`--readable`/`--recognizers`/
+  `--sections`/`--json`)
+- `textfsm-ai pipeline SAMPLE_FILE --provider ... --model ...` — the full
+  sample → LLM-generated template → DSL-compiled output flow in one call,
+  packaged per `--mode {quiet,default,info,debug}`, with `--json`. Reuses
+  `generate`'s exact provider-resolution helpers (same credential
+  precedence, same Bedrock/Vertex AI/OCI handling)
+- Added missing `--help` text to `--provider`/`--api-key`/`--model`/
+  `--endpoint`/`--api-version` on both `generate` and `pipeline`
 
 ### Documentation
-- New `docs/providers/index.md` — single overview page listing all 18
-  providers, credentials, extra params, Shape A/B split, and
-  routing-collision notes
-- Refreshed `docs/index.md` — intro now leads with the AI-powered
-  generation angle (the actual headline feature) instead of reading like a
-  generic parsing library; removed the false "Zero external dependencies"
-  claim; replaced Documentation/Installation sections with a single
-  "Explore the Docs" links section
+- `docs/cli/index.md` — new `dsl` and `pipeline` sections
+- `docs/providers/index.md` — mentions `textfsm-ai pipeline` as a CLI
+  equivalent of `run_pipeline()`, alongside `textfsm-ai generate`
 
 ### Test Suite
-- Removed `tests/unit/test_providers.py` and
-  `tests/unit/test_providers_openai_compat.py` — fully redundant with
-  `tests/unit/providers/*.py`, zero coverage loss
-- Added session-scoped SSL-context caching (`tests/unit/conftest.py`) —
-  provider/orchestrator-factory tests were spending most of their runtime
-  re-parsing the CA certificate bundle on every real SDK client
-  construction; full suite runtime drops from 60+s to ~15-20s
-- Added a test covering `Orchestrator.run()`'s previously-untested
-  retry-exhaustion re-raise path — `orchestrator.py` moves from 91% to
-  100% coverage
+- Silenced `cohere`'s internal `asyncio.iscoroutinefunction`
+  `DeprecationWarning` (pinned dependency, not fixable at the source) —
+  full suite now runs with 0 warnings, down from 78
 
 ## Release Artifacts
-- CHANGELOG updated for v0.5.0
+- CHANGELOG updated for v0.5.1
 - Release notes generated
-- Version bumped from 0.4.2 → 0.5.0
+- Version bumped from 0.5.0 → 0.5.1
 
 ## Testing
-- Full unit and integration suite passing (901 passed, 44 skipped)
-- `tox -e format,lint,typecheck` clean
-- TestPyPI release validated (`v0.5.0-test`)
+- Full unit and integration suite passing (916 passed, 44 skipped, 0 warnings)
+- `tox -e lint` clean
+- TestPyPI release validated (`v0.5.1-test`)

@@ -1,3 +1,30 @@
+## v0.5.1 — 2026‑07‑15
+
+### Added
+- New `textfsm-ai dsl TEMPLATE_FILE SAMPLE_FILE` CLI command — deterministically
+  compiles a TextFSM template into its canonical form, readable DSL, and
+  recognizer patterns, with no LLM call made. Mirrors `generate`'s
+  output-flag conventions (`--canonical`/`--readable`/`--recognizers`/
+  `--sections`/`--json`)
+- New `textfsm-ai pipeline SAMPLE_FILE --provider ... --model ...` CLI
+  command — exposes the existing `DeliveryController`/`run_pipeline()`
+  end-to-end flow (LLM generation + DSL compile, one call) directly via the
+  CLI, with `--mode {quiet,default,info,debug}` and `--json` output; reuses
+  `generate`'s provider-resolution helpers for identical credential handling
+- `--help` text for `--provider`/`--api-key`/`--model`/`--endpoint`/
+  `--api-version` on both `generate` and `pipeline` (previously undocumented
+  on both)
+
+### Changed
+- `docs/providers/index.md` now mentions `textfsm-ai pipeline` alongside
+  `textfsm-ai generate` as a CLI equivalent of `run_pipeline()`
+
+### Fixed
+- Silenced `cohere` SDK's internal `DeprecationWarning`
+  (`asyncio.iscoroutinefunction`) in the test suite — third-party noise from
+  a version pinned exactly for Python 3.9 CI compatibility, not something
+  fixable at the source; eliminates all 78 warnings from a full suite run
+
 ## v0.5.0 — 2026‑07‑14
 
 ### Added
