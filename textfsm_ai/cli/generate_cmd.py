@@ -14,11 +14,21 @@ from textfsm_ai.providers.config import load_config_from_env, load_config_from_f
 
 @click.command("generate")
 @click.argument("input_file", type=click.Path(exists=True))
-@click.option("--provider", required=True)
-@click.option("--api-key", required=False)
-@click.option("--model", required=False)
-@click.option("--endpoint", required=False)
-@click.option("--api-version", required=False)
+@click.option(
+    "--provider",
+    required=True,
+    help="Provider name, e.g. openai, anthropic, azure (see `providers list`)",
+)
+@click.option(
+    "--api-key",
+    required=False,
+    help="Override the resolved API key (ignored for bedrock/vertexai/oci)",
+)
+@click.option(
+    "--model", required=False, help="Model name (or Azure deployment name for azure)"
+)
+@click.option("--endpoint", required=False, help="Azure endpoint URL (azure only)")
+@click.option("--api-version", required=False, help="Azure API version (azure only)")
 @click.option(
     "--region",
     required=False,

@@ -1,10 +1,11 @@
 # Providers
 
 textfsm-ai integrates 18 LLM providers behind one interface (`generate()`,
-`run_pipeline()`, and the `textfsm-ai generate` CLI command all take the
-same `provider="..."` value). Most providers just need an API key; a few
-cloud-gateway providers (Bedrock, Vertex AI, OCI) use their own ambient
-credential chains instead and take extra parameters in place of `api_key`.
+`run_pipeline()`, and the `textfsm-ai generate`/`textfsm-ai pipeline` CLI
+commands all take the same `provider="..."` value). Most providers just
+need an API key; a few cloud-gateway providers (Bedrock, Vertex AI, OCI)
+use their own ambient credential chains instead and take extra parameters
+in place of `api_key`.
 
 Run `textfsm-ai providers list` at any time for the live, code-derived
 version of this table.
