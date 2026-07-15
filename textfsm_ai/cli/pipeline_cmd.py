@@ -33,9 +33,7 @@ from textfsm_ai.providers.config import load_config_from_env, load_config_from_f
     "--model", required=False, help="Model name (or Azure deployment name for azure)"
 )
 @click.option("--endpoint", required=False, help="Azure endpoint URL (azure only)")
-@click.option(
-    "--api-version", required=False, help="Azure API version (azure only)"
-)
+@click.option("--api-version", required=False, help="Azure API version (azure only)")
 @click.option(
     "--region",
     required=False,
