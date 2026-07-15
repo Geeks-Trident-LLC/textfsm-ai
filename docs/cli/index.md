@@ -1,8 +1,9 @@
 # CLI Guide
 
 `textfsm-ai` installs a `textfsm-ai` command with subcommands for generating
-templates, compiling templates into readable DSL/recognizer form,
-listing/inspecting providers, and driving the orchestrator directly.
+templates, compiling templates into readable DSL/recognizer form, running
+the full sample-to-output pipeline in one shot, listing/inspecting
+providers, and driving the orchestrator directly.
 
 ## Version
 
@@ -110,6 +111,34 @@ Key options:
 | `--json` | Print the full DSL result (including the parsed AST) as JSON |
 
 With no output flag, `dsl` prints just the canonical template.
+
+## pipeline
+
+Run the full pipeline in one shot: sample -> LLM-generated template -> DSL
+compile (canonical template, readable DSL, recognizers) -> formatted
+output. This is the same end-to-end flow `generate` and `dsl` cover
+separately, chained together and packaged per `--mode` (equivalent to the
+Python API's `run_pipeline()`).
+
+```bash
+textfsm-ai pipeline sample.txt --provider openai --model gpt-4o-mini
+textfsm-ai pipeline sample.txt --provider openai --model gpt-4o-mini --mode debug --json
+```
+
+`--provider`/`--api-key`/`--model`/`--endpoint`/`--api-version`/`--region`/
+`--project`/`--compartment-id`/`--max-retries` all resolve exactly like
+`generate`'s (see above) — same credential precedence, same Bedrock/Vertex
+AI/OCI exceptions.
+
+Key options:
+
+| Option | Purpose |
+|---|---|
+| `--mode` | Output verbosity: `quiet` (template or error only), `default` (template + readable DSL + recognizers), `info` (adds version/LLM-config/usage/cost), `debug` (adds the full raw generation + DSL pipeline dump). Default: `default` |
+| `--json` | Emit the selected mode's output as JSON instead of formatted text |
+
+Exit code is `0` on success and `1` if generation or DSL compilation failed
+— check `--mode debug` output for the failure detail.
 
 ## list-models
 
