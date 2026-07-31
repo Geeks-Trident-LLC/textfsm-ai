@@ -1,3 +1,41 @@
+## v0.6.0 — 2026‑07‑31
+
+### Added
+- Provider SDKs are now optional pip extras: `pip install textfsm-ai[anthropic]`,
+  `[openai]` (also covers `deepseek`/`groq`/`xai`/`together`/`fireworks`/
+  `cerebras`/`perplexity`/`openrouter`/`moonshot` - all OpenAI-compatible,
+  share the `openai` package), `[gemini]`, `[vertexai]`, `[azure]`,
+  `[mistral]`, `[bedrock]`, `[cohere]`, `[oci]`, or `[all]` for every
+  provider SDK at once. `oci` alone (~36MB plus transitive crypto libs)
+  is now fully opt-in instead of bundled unconditionally.
+- Provider SDK imports are now lazy (`textfsm_ai/providers/registry.py`)
+  — a missing SDK raises a clear `ImportError` pointing at the right
+  extra (e.g. `pip install textfsm-ai[bedrock]`) only when that
+  provider is actually used, instead of failing at package-import time
+  regardless of which provider is needed.
+
+### Changed
+- **Breaking:** `pip install textfsm-ai` now installs only the core
+  CLI/API (`PyYAML`, `requests`, `click`, `textfsm`) — no provider SDK.
+  Previously every provider worked out of the box. Add the extra(s) you
+  need on upgrade, e.g. `pip install textfsm-ai[anthropic]`, or
+  `textfsm-ai[all]` for the old bundle-everything behavior.
+- **Breaking:** the `all` extra now means "every provider SDK" (matching
+  the new per-provider extras), not "dev + build tooling" as before —
+  `dev`/`build` are still their own separate extras. `pip install -e
+  ".[all,dev]"` is the new "everything for local development" command.
+- Retired `requirements.txt`/`requirements-dev.txt` (already drifted
+  from `pyproject.toml`, only ever consumed by one CI job) in favor of
+  `pyproject.toml` extras as the single source of truth.
+
+### Fixed
+- `providers/__init__.py` no longer re-exports the `registry` singleton,
+  which was silently shadowing the `registry` submodule at the package-
+  attribute level (`import textfsm_ai.providers.registry as x` — and any
+  other dotted-attribute resolution — would resolve to the singleton
+  instance instead of the module). Latent bug, present before this
+  release; never triggered until lazy-loading tests exercised it.
+
 ## v0.5.2 — 2026‑07‑31
 
 ### Added

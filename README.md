@@ -21,6 +21,13 @@ It helps you automatically generate templates, validate patterns, explain parsin
 pip install textfsm-ai
 ```
 
+This installs the core CLI/API only. Add the provider(s) you actually use
+as an extra, e.g. `pip install textfsm-ai[openai]` or
+`pip install textfsm-ai[anthropic]` — or `textfsm-ai[all]` for every
+provider SDK at once. See
+[Installation](https://geeks-trident-llc.github.io/textfsm-ai/latest/getting-started/installation/)
+for the full list.
+
 ### Verify installation
 
 ```bash

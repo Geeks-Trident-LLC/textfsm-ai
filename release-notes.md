@@ -1,22 +1,31 @@
-# v0.5.2 — Smarter Template Validation & Consistent Date/Time Naming
+# v0.6.0 — Provider SDKs Are Now Optional
 
-## 🔍 Looser Pattern Boundaries, Automatically Suggested
-The template validator now catches an overly-strict pattern shape: a rule
-ending in `\s+` (or starting with `^\s+`) requires at least one whitespace
-character to actually be present in the line, silently rejecting samples
-where it's absent. `find_template_issues()` now flags this and suggests
-`\s*` instead — feeding straight into the existing LLM correction loop.
+## 📦 Slimmer Installs
+`pip install textfsm-ai` now installs only the core CLI/API — no LLM
+provider SDK bundled in. Add the provider(s) you actually use:
 
-## 🕐 Consistent Date/Time Variable Names
-Generated templates now follow one naming convention for date/time
-fields instead of inventing synonyms run to run:
-- Whole date+time in one field → `datetime`
-- Date only → `date`, time only → `time`
-- Split into parts → `weekday`, `month`, `day`, `year`, `hour`, `minute`,
-  `second`, `am_pm`, `timezone`
+```bash
+pip install textfsm-ai[anthropic]
+pip install textfsm-ai[openai]      # also covers deepseek/groq/xai/
+                                     # together/fireworks/cerebras/
+                                     # perplexity/openrouter/moonshot
+pip install textfsm-ai[all]         # every provider SDK
+```
 
-`timezone` covers any representation your sample throws at it — `PDT`,
-`UTC`, `+08:00`, `Z`, and so on all map to the same field name.
+The heaviest SDK, Oracle's `oci` (~36MB plus transitive crypto libs), is
+now fully opt-in instead of installed unconditionally — a meaningful
+win for container images that only ever call one or two providers.
+
+Skip a provider's extra and try to use it anyway? You get a clear error
+telling you exactly which extra to install, instead of a confusing
+import failure buried deep in an unrelated stack trace.
+
+## ⚠️ Breaking Changes
+- Bare `pip install textfsm-ai` no longer works for any provider out of
+  the box — add the extra(s) you need, or `[all]` for the old
+  bundle-everything behavior.
+- The `all` extra now means "every provider SDK," not "dev + build
+  tooling." Local development is now `pip install -e ".[all,dev]"`.
 
 ## 📦 Version
-`0.5.1 → 0.5.2`
+`0.5.2 → 0.6.0`
