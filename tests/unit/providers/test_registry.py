@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 
 from textfsm_ai.providers.anthropic_provider import AnthropicProvider
@@ -74,3 +76,73 @@ def test_get_provider_by_name_lowercases_input():
 def test_get_provider_by_name_unknown_raises_valueerror():
     with pytest.raises(ValueError, match="Unknown provider name"):
         get_provider_by_name("not-a-real-provider")
+
+
+# ---------------------------------------------------------
+# Lazy loading
+# ---------------------------------------------------------
+def test_get_does_not_import_other_provider_modules():
+    """Resolving one provider must not import every other provider's SDK."""
+    import sys
+
+    for mod in [
+        "textfsm_ai.providers.bedrock_provider",
+        "textfsm_ai.providers.cohere_provider",
+        "textfsm_ai.providers.oci_provider",
+    ]:
+        sys.modules.pop(mod, None)
+
+    r = ProviderRegistry()
+    r.get("anthropic")
+
+    assert "textfsm_ai.providers.bedrock_provider" not in sys.modules
+    assert "textfsm_ai.providers.cohere_provider" not in sys.modules
+    assert "textfsm_ai.providers.oci_provider" not in sys.modules
+
+
+def test_get_caches_resolved_class():
+    r = ProviderRegistry()
+    first = r.get("anthropic")
+
+    with patch("textfsm_ai.providers.registry.import_module") as mock_import:
+        second = r.get("anthropic")
+
+    assert second is first
+    mock_import.assert_not_called()
+
+
+def test_get_openai_compat_resolves():
+    from textfsm_ai.providers.openai_compat_provider import OpenAICompatProvider
+
+    r = ProviderRegistry()
+    assert r.get("openai_compat") is OpenAICompatProvider
+
+
+def test_get_missing_dependency_raises_importerror_with_extra_hint():
+    r = ProviderRegistry()
+
+    with patch(
+        "textfsm_ai.providers.registry.import_module",
+        side_effect=ImportError("No module named 'boto3'"),
+    ):
+        with pytest.raises(ImportError, match=r"pip install textfsm-ai\[bedrock\]"):
+            r.get("bedrock")
+
+
+def test_all_does_not_import_unloaded_providers():
+    r = ProviderRegistry()
+
+    with patch("textfsm_ai.providers.registry.import_module") as mock_import:
+        all_providers = r.all()
+
+    mock_import.assert_not_called()
+    assert all_providers["bedrock"] is None
+    assert "anthropic" in all_providers
+
+
+def test_all_reflects_already_loaded_providers():
+    r = ProviderRegistry()
+    r.get("anthropic")
+
+    all_providers = r.all()
+    assert all_providers["anthropic"] is AnthropicProvider
