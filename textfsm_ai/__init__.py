@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-__version__ = "0.5.1"
+__version__ = "0.5.2"
 version = __version__
 
 BASE_DIR: Path = Path(__file__).resolve().parent
