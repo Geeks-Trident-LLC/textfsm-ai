@@ -1,5 +1,8 @@
+from unittest.mock import patch
+
 import pytest
 
+import textfsm_ai.providers.registry as registry_module
 from textfsm_ai.providers.anthropic_provider import AnthropicProvider
 from textfsm_ai.providers.bedrock_provider import BedrockProvider
 from textfsm_ai.providers.cerebras_provider import CerebrasProvider
@@ -74,3 +77,89 @@ def test_get_provider_by_name_lowercases_input():
 def test_get_provider_by_name_unknown_raises_valueerror():
     with pytest.raises(ValueError, match="Unknown provider name"):
         get_provider_by_name("not-a-real-provider")
+
+
+# ---------------------------------------------------------
+# Lazy loading
+# ---------------------------------------------------------
+def test_get_does_not_import_other_provider_modules():
+    """Resolving one provider must not import every other provider's SDK."""
+    import sys
+
+    for mod in [
+        "textfsm_ai.providers.bedrock_provider",
+        "textfsm_ai.providers.cohere_provider",
+        "textfsm_ai.providers.oci_provider",
+    ]:
+        sys.modules.pop(mod, None)
+
+    r = ProviderRegistry()
+    r.get("anthropic")
+
+    assert "textfsm_ai.providers.bedrock_provider" not in sys.modules
+    assert "textfsm_ai.providers.cohere_provider" not in sys.modules
+    assert "textfsm_ai.providers.oci_provider" not in sys.modules
+
+
+def test_get_caches_resolved_class():
+    r = ProviderRegistry()
+    first = r.get("anthropic")
+
+    with patch.object(registry_module, "import_module") as mock_import:
+        second = r.get("anthropic")
+
+    assert second is first
+    mock_import.assert_not_called()
+
+
+def test_get_openai_compat_resolves():
+    from textfsm_ai.providers.openai_compat_provider import OpenAICompatProvider
+
+    r = ProviderRegistry()
+    assert r.get("openai_compat") is OpenAICompatProvider
+
+
+def test_get_missing_dependency_raises_importerror_with_extra_hint():
+    r = ProviderRegistry()
+
+    with patch.object(
+        registry_module,
+        "import_module",
+        side_effect=ImportError("No module named 'boto3'"),
+    ):
+        with pytest.raises(ImportError, match=r"pip install textfsm-ai\[bedrock\]"):
+            r.get("bedrock")
+
+
+def test_all_does_not_import_unloaded_providers():
+    r = ProviderRegistry()
+
+    with patch.object(registry_module, "import_module") as mock_import:
+        all_providers = r.all()
+
+    mock_import.assert_not_called()
+    assert all_providers["bedrock"] is None
+    assert "anthropic" in all_providers
+
+
+def test_all_reflects_already_loaded_providers():
+    r = ProviderRegistry()
+    r.get("anthropic")
+
+    all_providers = r.all()
+    assert all_providers["anthropic"] is AnthropicProvider
+
+
+def test_registry_module_attribute_is_not_shadowed_by_singleton():
+    """
+    Regression test: providers/__init__.py must not re-export the `registry`
+    singleton (e.g. `from .registry import registry`), since that rebinds
+    the `registry` attribute on the `textfsm_ai.providers` package to the
+    ProviderRegistry instance - shadowing the `registry` *submodule*
+    Python would otherwise expose there. `import textfsm_ai.providers.
+    registry as x` (and any other dotted-attribute resolution, including
+    unittest.mock.patch's string-based targets) would then silently
+    resolve to the singleton instance instead of the module.
+    """
+    assert type(registry_module).__name__ == "module"
+    assert registry_module.__name__ == "textfsm_ai.providers.registry"
