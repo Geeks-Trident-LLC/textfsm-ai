@@ -21,11 +21,15 @@ python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 ```
 
-Install development dependencies:
+Install development dependencies (every provider SDK, plus test/lint/type
+tooling):
 
 ```bash
-pip install -e ".[all]"
+pip install -e ".[all,dev]"
 ```
+
+Working on a single provider? Install just that one instead, e.g.
+`pip install -e ".[anthropic,dev]"`.
 
 ---
 
