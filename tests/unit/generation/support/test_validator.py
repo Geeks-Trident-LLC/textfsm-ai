@@ -5,6 +5,7 @@ from textfsm_ai.generation.core.models import (
     TemplateValidationResult,
 )
 from textfsm_ai.generation.support.validator import (
+    check_pattern_boundary_whitespace,
     check_rule_actions,
     check_rule_spacers,
     check_start_state,
@@ -266,6 +267,49 @@ def test_check_rule_spacers_inconsistent():
     lines = ["  ^foo -> Record", "    ^bar -> Continue"]
     findings = check_rule_spacers(lines)
     assert any("inconsistent_rule_definition_spacers" in f for f in findings)
+
+
+# ---------------------------------------------------------
+# check_pattern_boundary_whitespace
+# ---------------------------------------------------------
+def test_check_pattern_boundary_whitespace_valid():
+    lines = ["  ^foo\\s* -> Record", "  ^${x}\\s*$$ -> Record"]
+    findings = check_pattern_boundary_whitespace(lines)
+    assert findings == []
+
+
+def test_check_pattern_boundary_whitespace_trailing_plus():
+    lines = ["  ^foo\\s+ -> Record"]
+    findings = check_pattern_boundary_whitespace(lines)
+    assert any("pattern_trailing_whitespace_plus" in f for f in findings)
+    assert any('use "\\s*" instead' in f for f in findings)
+
+
+def test_check_pattern_boundary_whitespace_trailing_plus_anchored():
+    lines = ["  ^foo\\s+$$ -> Record"]
+    findings = check_pattern_boundary_whitespace(lines)
+    assert any("pattern_trailing_whitespace_plus" in f for f in findings)
+    assert any('use "\\s*$$" instead' in f for f in findings)
+
+
+def test_check_pattern_boundary_whitespace_leading_plus():
+    lines = ["  ^\\s+foo -> Record"]
+    findings = check_pattern_boundary_whitespace(lines)
+    assert any("pattern_leading_whitespace_plus" in f for f in findings)
+
+
+def test_check_pattern_boundary_whitespace_both_ends():
+    lines = ["  ^\\s+foo\\s+$$ -> Record"]
+    findings = check_pattern_boundary_whitespace(lines)
+    assert any("pattern_leading_whitespace_plus" in f for f in findings)
+    assert any("pattern_trailing_whitespace_plus" in f for f in findings)
+    assert len(findings) == 2
+
+
+def test_check_pattern_boundary_whitespace_ignores_non_rule_lines():
+    lines = ["Value iface (\\S+)", "Start"]
+    findings = check_pattern_boundary_whitespace(lines)
+    assert findings == []
 
 
 # ---------------------------------------------------------

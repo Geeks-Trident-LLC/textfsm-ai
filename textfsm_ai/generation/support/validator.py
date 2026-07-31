@@ -332,6 +332,37 @@ def check_rule_spacers(lines: list[str]):
     return findings
 
 
+def check_pattern_boundary_whitespace(lines: list[str]) -> list[str]:
+    findings = []
+    pat = r"(\s{2,})(.+?)(?:\s+->\s+(.*))?$"
+
+    for line in lines:
+        m = re.fullmatch(pat, line)
+        if not m:
+            continue
+
+        pattern = m.group(2)
+
+        if pattern.endswith(r"\s+$$"):
+            findings.append(
+                f'pattern_trailing_whitespace_plus: pattern ends with "\\s+$$" - '
+                f'use "\\s*$$" instead for a looser match. Line: {line}'
+            )
+        elif pattern.endswith(r"\s+"):
+            findings.append(
+                f'pattern_trailing_whitespace_plus: pattern ends with "\\s+" - '
+                f'use "\\s*" instead for a looser match. Line: {line}'
+            )
+
+        if pattern.startswith(r"^\s+"):
+            findings.append(
+                f'pattern_leading_whitespace_plus: pattern starts with "^\\s+" - '
+                f'use "^\\s*" instead for a looser match. Line: {line}'
+            )
+
+    return findings
+
+
 def check_illegal_dollar(lines: list[str]) -> list[str]:
     issues = []
 
@@ -381,6 +412,7 @@ def find_template_issues(
     findings.extend(check_illegal_dollar(lines))
     findings.extend(check_rule_actions(lines))
     findings.extend(check_rule_spacers(lines))
+    findings.extend(check_pattern_boundary_whitespace(lines))
 
     return TemplateFindingResult(
         template=template,
