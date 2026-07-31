@@ -7,8 +7,15 @@ base: |
     explain variables, and describe how you handled the sample.
 
   TextFSM Rules
-    Value Rules: 
+    Value Rules:
       - Variable names: lowercase ASCII only
+      - Date/time variable names: use consistent names across templates
+          One field for date and time -> datetime
+          One field for date only -> date
+          One field for time only -> time
+          Separate fields -> weekday, month, day, year, hour, minute, second, am_pm, timezone
+          (use only the fields actually present in the sample; timezone covers
+          any representation - PDT, PST, UTC, GMT, +08:00, -05:00, Z, etc.)
       - Value options: Fillup, Filldown, Required, Key, List (comma-separated, no spaces)
       - Forms:
           Value <var> (<regex>)

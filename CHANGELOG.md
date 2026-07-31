@@ -1,3 +1,19 @@
+## v0.5.2 — 2026‑07‑31
+
+### Added
+- New `check_pattern_boundary_whitespace()` validator check, wired into
+  `find_template_issues()` — flags a rule pattern ending in `\s+`/`\s+$$`
+  (suggesting `\s*`/`\s*$$` instead) or starting with `^\s+` (suggesting
+  `^\s*` instead), since `\s+` at a pattern boundary rejects lines where
+  the whitespace happens to be absent
+- New **Date/time variable names** rule in the LLM generation prompt
+  (`prompts.yaml`) establishing a canonical vocabulary: `datetime`/`date`/
+  `time` for single-field captures, `weekday`/`month`/`day`/`year`/`hour`/
+  `minute`/`second`/`am_pm`/`timezone` for separate-field captures
+  (`timezone` covers any representation — `PDT`, `+08:00`, `Z`, etc.) —
+  so generated templates use consistent field names instead of ad hoc
+  synonyms (`dow` vs `weekday`, `tz` vs `timezone`)
+
 ## v0.5.1 — 2026‑07‑15
 
 ### Added

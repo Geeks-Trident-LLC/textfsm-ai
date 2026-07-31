@@ -1,41 +1,45 @@
 ## Summary
 
-This PR prepares the v0.5.1 release: two new CLI commands (`dsl` and
-`pipeline`) exposing existing engine/pipeline functionality that previously
-only had a Python API, plus small docs and test-hygiene fixes, following
-v0.5.0.
+This PR prepares the v0.5.2 release: a new template-validator check for
+overly-strict `\s+` pattern boundaries, and a consistent date/time
+variable-naming rule added to the LLM generation prompt, following v0.5.1.
 
 ## What's Included
 
-### New CLI Commands
-- `textfsm-ai dsl TEMPLATE_FILE SAMPLE_FILE` — deterministic template →
-  canonical/readable/recognizer compilation, no LLM call. Same output-flag
-  shape as `generate` (`--canonical`/`--readable`/`--recognizers`/
-  `--sections`/`--json`)
-- `textfsm-ai pipeline SAMPLE_FILE --provider ... --model ...` — the full
-  sample → LLM-generated template → DSL-compiled output flow in one call,
-  packaged per `--mode {quiet,default,info,debug}`, with `--json`. Reuses
-  `generate`'s exact provider-resolution helpers (same credential
-  precedence, same Bedrock/Vertex AI/OCI handling)
-- Added missing `--help` text to `--provider`/`--api-key`/`--model`/
-  `--endpoint`/`--api-version` on both `generate` and `pipeline`
+### Validator: Pattern Boundary Whitespace
+- New `check_pattern_boundary_whitespace()`, wired into
+  `find_template_issues()`
+- A rule pattern ending in `\s+` (or `\s+$$`) is flagged as
+  `pattern_trailing_whitespace_plus`, suggesting `\s*` (or `\s*$$`)
+- A rule pattern starting with `^\s+` is flagged as
+  `pattern_leading_whitespace_plus`, suggesting `^\s*`
+- `\s+` at a boundary requires at least one whitespace character to be
+  present in the sample line; `\s*` matches just as well when it's there,
+  without rejecting lines where it's absent
+- Findings flow through the existing correction-prompt loop
+  (`prompts.yaml`'s `{finding}` placeholder) like every other check
 
-### Documentation
-- `docs/cli/index.md` — new `dsl` and `pipeline` sections
-- `docs/providers/index.md` — mentions `textfsm-ai pipeline` as a CLI
-  equivalent of `run_pipeline()`, alongside `textfsm-ai generate`
-
-### Test Suite
-- Silenced `cohere`'s internal `asyncio.iscoroutinefunction`
-  `DeprecationWarning` (pinned dependency, not fixable at the source) —
-  full suite now runs with 0 warnings, down from 78
+### Prompt: Consistent Date/Time Variable Names
+- New rule in `prompts.yaml`'s `Value Rules` section:
+  - Whole date+time as one field -> `datetime`
+  - Date only, one field -> `date`
+  - Time only, one field -> `time`
+  - Separate fields -> `weekday`, `month`, `day`, `year`, `hour`, `minute`,
+    `second`, `am_pm`, `timezone`
+- `timezone` explicitly covers any representation (`PDT`, `PST`, `UTC`,
+  `GMT`, `+08:00`, `-05:00`, `Z`, etc.)
+- Separate-fields granularity deliberately includes `hour`/`minute`/
+  `second` individually — the idiomatic TextFSM pattern for
+  colon-separated timestamps
+- Reaches both the initial generation prompt and every correction-retry
+  prompt, since `correction_prompt()` builds itself from `{base}`
 
 ## Release Artifacts
-- CHANGELOG updated for v0.5.1
+- CHANGELOG updated for v0.5.2
 - Release notes generated
-- Version bumped from 0.5.0 → 0.5.1
+- Version bumped from 0.5.1 → 0.5.2
 
 ## Testing
-- Full unit and integration suite passing (916 passed, 44 skipped, 0 warnings)
+- Full unit and integration suite passing (922 passed, 44 skipped)
 - `tox -e lint` clean
-- TestPyPI release validated (`v0.5.1-test`)
+- TestPyPI release validated (`v0.5.2-test`)
