@@ -30,25 +30,26 @@ automatic model-name routing.
 ## 2. Layered architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  CLI (textfsm_ai/cli/)          Public API (textfsm_ai/api.py) │
-├─────────────────────────────────────────────────────────────┤
-│  Delivery (textfsm_ai/delivery/)                              │
-│    — chains generation + dsl, packages output per verbosity   │
-├──────────────────────────┬──────────────────────────────────┤
-│  Generation                │  DSL                             │
-│  (textfsm_ai/generation/)  │  (textfsm_ai/dsl/)                │
-│    sample → LLM → template │    template → AST → canonical/   │
-│    + records + validation  │    readable/recognizers           │
-├──────────────────────────┴──────────────────────────────────┤
-│  Orchestrator (textfsm_ai/orchestrator/)                      │
-│    — auto-routes a model name to a provider, retries/fallback │
-├─────────────────────────────────────────────────────────────┤
-│  Providers (textfsm_ai/providers/) + Model Catalog             │
-│  (textfsm_ai/model_catalog/)                                   │
-│    — one class per LLM provider, lazily imported;              │
-│      curated model lists, tier classification                 │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ CLI (textfsm_ai/cli/)          Public API (textfsm_ai/api.py)   │
+├─────────────────────────────────────────────────────────────────┤
+│ Delivery (textfsm_ai/delivery/)                                 │
+│   chains generation + dsl, packages output per verbosity        │
+├────────────────────────────────┬────────────────────────────────┤
+│ Generation                     │ DSL                            │
+│ (textfsm_ai/generation/)       │ (textfsm_ai/dsl/)              │
+│   sample -> LLM -> template    │   template -> AST ->           │
+│   + records + validation       │   canonical/readable/          │
+│                                │   recognizers                  │
+├────────────────────────────────┴────────────────────────────────┤
+│ Orchestrator (textfsm_ai/orchestrator/)                         │
+│   auto-routes a model name to a provider, retries/fallback      │
+├─────────────────────────────────────────────────────────────────┤
+│ Providers (textfsm_ai/providers/)                               │
+│ Model Catalog (textfsm_ai/model_catalog/)                       │
+│   one class per LLM provider, lazily imported;                  │
+│   curated model lists, tier classification                      │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 Each layer only depends on the ones below it. `generation/` and `dsl/`
