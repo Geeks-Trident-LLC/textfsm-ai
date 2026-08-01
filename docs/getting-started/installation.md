@@ -39,6 +39,9 @@ Provider SDK imports are lazy - if you skip a provider's extra and try to
 use it anyway, you get a clear error telling you which extra to install,
 rather than a confusing import failure.
 
+See the [Dependency Footprint](../guides/dependency-footprint.md) guide
+for exactly how many packages each extra installs.
+
 ## Verify installation
 
 ```bash
