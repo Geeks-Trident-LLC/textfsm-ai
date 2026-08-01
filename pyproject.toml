@@ -208,6 +208,9 @@ filterwarnings = [
 [tool.coverage.report]
 fail_under = 70
 
+[tool.mypy]
+ignore_missing_imports = true
+
 [tool.black]
 line-length = 88
 target-version = ["py39"]
