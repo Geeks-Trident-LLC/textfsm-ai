@@ -5,8 +5,8 @@ from typing import Dict, List
 import yaml
 
 from textfsm_ai import BASE_DIR
-from textfsm_ai.models.classifier import classify_models
-from textfsm_ai.models.tiers import TierGroups
+from textfsm_ai.model_catalog.classifier import classify_models
+from textfsm_ai.model_catalog.tiers import TierGroups
 
 
 class ModelListingMixin:
@@ -19,7 +19,7 @@ class ModelListingMixin:
       global classifier.
     """
 
-    CURATED_PATH = BASE_DIR / "models" / "curated-models.yaml"
+    CURATED_PATH = BASE_DIR / "model_catalog" / "curated-models.yaml"
 
     # ---------------------------------------------
     # Curated model listing

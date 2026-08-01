@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "textfsm_ai"
-version = "0.6.0"
+version = "0.6.1"
 description = "AI-powered TextFSM template generator with multi-provider routing"
 readme = "README.md"
 license = { text = "MIT" }
@@ -207,6 +207,9 @@ filterwarnings = [
 
 [tool.coverage.report]
 fail_under = 70
+
+[tool.mypy]
+ignore_missing_imports = true
 
 [tool.black]
 line-length = 88

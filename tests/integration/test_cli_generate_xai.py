@@ -6,7 +6,7 @@ import pytest
 from click.testing import CliRunner
 
 from textfsm_ai.cli.generate_cmd import generate
-from textfsm_ai.models import model as MODEL
+from textfsm_ai.model_catalog import model as MODEL
 
 
 @pytest.mark.integration

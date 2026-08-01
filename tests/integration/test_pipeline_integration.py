@@ -8,7 +8,7 @@ import pytest
 from textfsm_ai.core.dotdict import DotDict
 from textfsm_ai.delivery.controller.controller import DeliveryController
 from textfsm_ai.delivery.core.modes import DeliveryMode
-from textfsm_ai.models import model as MODEL
+from textfsm_ai.model_catalog import model as MODEL
 
 SAMPLE = """
 Interface  Status  Protocol

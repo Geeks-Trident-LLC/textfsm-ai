@@ -1,3 +1,31 @@
+## v0.6.1 — 2026‑08‑01
+
+### Added
+- `docs/guides/dependency-footprint.md` — a verified, per-provider
+  breakdown of exactly how many packages `pip install
+  textfsm-ai[<provider>]` installs (14-34 depending on the provider),
+  based on real clean-venv installs rather than reading
+  `pyproject.toml` alone
+- `SPEC.md` — a repo-root technical architecture reference covering the
+  layered architecture, provider system, generation/DSL/delivery
+  pipelines, data-model conventions, public API contract, CLI surface,
+  configuration, packaging, and testing conventions
+
+### Changed
+- Renamed `textfsm_ai/models/` to `textfsm_ai/model_catalog/` (and its
+  test directory to match) — the old name collided with the
+  conventional data-model meaning already used by `core/models.py`,
+  `generation/core/models.py`, and `dsl/core/models.py` (all dataclass
+  files), when this package is actually about LLM model
+  catalog/classification. Purely internal; not part of the public API
+- Consolidated `mypy.ini` into `pyproject.toml`'s `[tool.mypy]`,
+  matching the precedent already set for `pytest.ini`
+
+### Removed
+- `textfsm_ai/quota_manager.py` and its test — dead code for an "APC
+  architecture" that no longer exists anywhere else in the codebase;
+  nothing wired it into the orchestrator, providers, or CLI
+
 ## v0.6.0 — 2026‑07‑31
 
 ### Added
