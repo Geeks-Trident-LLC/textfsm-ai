@@ -3,7 +3,7 @@
 from textfsm_ai.core.utils.template import parse_to_lists
 from textfsm_ai.dsl.controller.dsl_controller import DSLController
 from textfsm_ai.generation.controller.generation_controller import GenerationController
-from textfsm_ai.models import model as MODEL
+from textfsm_ai.model_catalog import model as MODEL
 
 
 def test_real(xai_key):

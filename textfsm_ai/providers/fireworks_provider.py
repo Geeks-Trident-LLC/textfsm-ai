@@ -3,7 +3,7 @@
 import os
 from typing import List, Optional
 
-from textfsm_ai.models import model as MODEL
+from textfsm_ai.model_catalog import model as MODEL
 from textfsm_ai.providers.model_listing_mixin import ModelListingMixin
 
 from .openai_compat_provider import OpenAICompatProvider
