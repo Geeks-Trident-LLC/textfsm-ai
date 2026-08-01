@@ -27,6 +27,7 @@ It is designed for:
 - [Quickstart](getting-started/quickstart.md)
 - [CLI Guide](cli/index.md)
 - [Human-in-the-Loop Review](guides/human-in-the-loop-review.md)
+- [Dependency Footprint](guides/dependency-footprint.md)
 - [Providers](providers/index.md)
 - [API Reference](reference/index.md)
 
