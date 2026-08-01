@@ -8,7 +8,7 @@ from typing import Any, List, Optional
 
 import oci
 
-from textfsm_ai.models import model as MODEL
+from textfsm_ai.model_catalog import model as MODEL
 from textfsm_ai.orchestrator.errors import ProviderError
 from textfsm_ai.orchestrator.provider import Provider
 from textfsm_ai.providers.model_listing_mixin import ModelListingMixin

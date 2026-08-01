@@ -1,7 +1,7 @@
 # tests/unit/models/test_classifier.py
 
-from textfsm_ai.models.classifier import classify_models
-from textfsm_ai.models.tiers import Tier
+from textfsm_ai.model_catalog.classifier import classify_models
+from textfsm_ai.model_catalog.tiers import Tier
 
 
 def test_openai_classification():
