@@ -1,0 +1,4 @@
+# One-command local dev setup for mistral. See requirements/README.md
+# for how this differs from requirements-mistral.txt.
+-e .[dev]
+mistralai==1.10.0

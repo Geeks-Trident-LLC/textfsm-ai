@@ -1,0 +1,4 @@
+# One-command local dev setup for bedrock. See requirements/README.md
+# for how this differs from requirements-bedrock.txt.
+-e .[dev]
+boto3==1.42.97

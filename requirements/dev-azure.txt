@@ -1,0 +1,4 @@
+# One-command local dev setup for azure. See requirements/README.md
+# for how this differs from requirements-azure.txt.
+-e .[dev]
+azure-ai-inference>=1.0.0b9

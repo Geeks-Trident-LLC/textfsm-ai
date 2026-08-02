@@ -39,6 +39,14 @@ pip install -e ".[dev]"
 pip install -r requirements/requirements-anthropic.txt
 ```
 
+Or in one step, via `requirements/dev-<provider>.txt`:
+
+```bash
+pip install -r requirements/dev-anthropic.txt
+```
+
+See [`requirements/README.md`](requirements/README.md) for the full set.
+
 ---
 
 ## 🧪 Running Tests

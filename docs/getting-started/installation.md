@@ -92,5 +92,15 @@ pip install -r requirements/requirements-anthropic.txt
 pip install -r requirements/requirements-openai.txt
 ```
 
+Or, for a single provider, `requirements/dev-<provider>.txt` does both
+steps in one file (`-e .[dev]` plus that provider's SDK):
+
+```bash
+pip install -r requirements/dev-anthropic.txt
+```
+
+See [`requirements/README.md`](https://github.com/Geeks-Trident-LLC/textfsm-ai/blob/main/requirements/README.md)
+for the full set and how the two styles differ.
+
 For docs tooling (mkdocs + mkdocstrings), see
 [CONTRIBUTING.md](https://github.com/Geeks-Trident-LLC/textfsm-ai/blob/main/CONTRIBUTING.md).
