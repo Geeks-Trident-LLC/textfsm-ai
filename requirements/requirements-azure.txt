@@ -1,0 +1,5 @@
+# SDK for the azure provider extra.
+#
+# Mirrors the `azure` extra in pyproject.toml - keep in sync if that
+# changes.
+azure-ai-inference>=1.0.0b9

@@ -1,0 +1,8 @@
+# SDK for the gemini provider extra.
+# gemini and vertexai both use google-genai's Client class, just
+# constructed differently (api_key=... vs vertexai=True, project=,
+# location=) - see requirements-vertexai.txt.
+#
+# Mirrors the `gemini` extra in pyproject.toml - keep in sync if that
+# changes.
+google-genai>=0.2.0

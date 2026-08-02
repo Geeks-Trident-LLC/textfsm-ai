@@ -1,0 +1,8 @@
+# SDK for the mistral provider extra.
+# Pinned exactly: 1.10.0 is the last mistralai release supporting
+# Python 3.9 (1.10.1+ and all 2.x require Python >=3.10, which would
+# break this package's >=3.9 support).
+#
+# Mirrors the `mistral` extra in pyproject.toml - keep in sync if that
+# changes.
+mistralai==1.10.0
