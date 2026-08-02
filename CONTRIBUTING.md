@@ -31,6 +31,22 @@ pip install -e ".[all,dev]"
 Working on a single provider? Install just that one instead, e.g.
 `pip install -e ".[anthropic,dev]"`.
 
+Prefer `requirements.txt`-style installs? Each provider extra also has a
+matching pinned file under `requirements/`:
+
+```bash
+pip install -e ".[dev]"
+pip install -r requirements/requirements-anthropic.txt
+```
+
+Or in one step, via `requirements/dev-<provider>.txt`:
+
+```bash
+pip install -r requirements/dev-anthropic.txt
+```
+
+See [`requirements/README.md`](requirements/README.md) for the full set.
+
 ---
 
 ## 🧪 Running Tests

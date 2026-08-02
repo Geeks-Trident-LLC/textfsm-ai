@@ -1,0 +1,13 @@
+# SDK for the oci provider extra.
+# Pinned exactly for reproducibility (the latest release already
+# supports Python 3.9, verified via `pip download --python-version
+# 3.9` resolution, unlike mistralai/boto3/cohere above). Note: this
+# is a much heavier dependency than every other provider SDK - ~36MB,
+# since it's Oracle's single all-services SDK (compute, storage,
+# IAM, ...), not a Generative-AI-only package (no such package exists
+# on PyPI) - plus crypto libs (cryptography, pyOpenSSL) needed for its
+# request-signing auth model.
+#
+# Mirrors the `oci` extra in pyproject.toml - keep in sync if that
+# changes.
+oci==2.182.0

@@ -1,0 +1,10 @@
+# SDK for the openai provider extra.
+# Also covers deepseek, groq, xai, together, fireworks, cerebras,
+# perplexity, openrouter, and moonshot - all reach their API through the
+# OpenAI-compatible chat-completions surface
+# (textfsm_ai/providers/openai_compat_provider.py) and need nothing
+# beyond this package.
+#
+# Mirrors the `openai` extra in pyproject.toml - keep in sync if that
+# changes.
+openai>=1.0.0
