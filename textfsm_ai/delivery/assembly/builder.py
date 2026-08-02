@@ -1,6 +1,5 @@
 # textfsm_ai/delivery/assembly/builder.py
 
-from textfsm_ai.core.pricing import estimate_cost
 from textfsm_ai.delivery.core.package import (
     Debug,
     Default,
@@ -51,28 +50,11 @@ def build_delivery_package(
         handling=getattr(metadata, "handling", []),
     )
 
-    input_tokens = getattr(response, "input_tokens", 0)
-    output_tokens = getattr(response, "output_tokens", 0)
-    total_tokens = getattr(response, "total_tokens", 0)
-    cost_result = estimate_cost(
-        input_tokens=input_tokens,
-        output_tokens=output_tokens,
-        total_tokens=total_tokens,
-        currency="dollar",
-        provider=llm_info.provider_name,
-        model=llm_info.model,
-    )
-
     usage = Usage(
-        input_tokens=input_tokens,
-        output_tokens=output_tokens,
-        total_tokens=total_tokens,
+        input_tokens=getattr(response, "input_tokens", 0),
+        output_tokens=getattr(response, "output_tokens", 0),
+        total_tokens=getattr(response, "total_tokens", 0),
         llm_duration_ms=getattr(response, "duration_ms", 0),
-        currency="dollar",
-        input_per_million=cost_result.input_per_million,
-        output_per_million=cost_result.output_per_million,
-        estimated_cost=cost_result.estimated_cost,
-        warning=cost_result.warning or "",
     )
 
     dsl = dsl_pipeline.dsl or None
