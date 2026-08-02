@@ -134,7 +134,7 @@ Key options:
 
 | Option | Purpose |
 |---|---|
-| `--mode` | Output verbosity: `quiet` (template or error only), `default` (template + readable DSL + recognizers), `info` (adds version/LLM-config/usage/cost), `debug` (adds the full raw generation + DSL pipeline dump). Default: `default` |
+| `--mode` | Output verbosity: `quiet` (template or error only), `default` (template + readable DSL + recognizers), `info` (adds version/LLM-config/token usage), `debug` (adds the full raw generation + DSL pipeline dump). Default: `default` |
 | `--json` | Emit the selected mode's output as JSON instead of formatted text |
 
 Exit code is `0` on success and `1` if generation or DSL compilation failed

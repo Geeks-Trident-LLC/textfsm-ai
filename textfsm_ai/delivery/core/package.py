@@ -176,29 +176,17 @@ class Usage(Serializable):
     output_tokens: int = 0
     total_tokens: int = 0
     llm_duration_ms: float = 0.0
-    currency: str = "dollar"
-    input_per_million: float = 0.0
-    output_per_million: float = 0.0
-    estimated_cost: float = 0.0
-    warning: str = ""
 
     def to_string(self) -> str:
-        """Return a readable summary of token usage and cost estimation."""
+        """Return a readable summary of token usage."""
         parts = [
             format_block_title("LLM Usage"),
             f"Input Tokens       : {self.input_tokens}",
             f"Output Tokens      : {self.output_tokens}",
             f"Total Tokens       : {self.total_tokens}",
             f"LLM Duration (ms)  : {self.llm_duration_ms}",
-            f"Input per Million  : {self.input_per_million}",
-            f"Output per Million : {self.output_per_million}",
-            f"Estimated Cost     : ${self.estimated_cost:.6f}",
+            format_block_title("LLM Usage", ended=True),
         ]
-
-        if self.warning:
-            parts.append(f"Warning            : {self.warning}")
-
-        parts.append(format_block_title("LLM Usage", ended=True))
 
         return "\n".join(parts)
 

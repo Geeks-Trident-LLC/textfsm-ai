@@ -312,8 +312,8 @@ Modes (`delivery/core/modes.py`'s `DeliveryMode` enum), each strictly a
 superset of the previous:
 - `quiet` — canonical template only, or a formatted failure/status block
 - `default` — adds readable DSL + recognizers (`Output` dataclass)
-- `info` — adds version info, masked LLM config, token usage/cost
-  estimate (`core/pricing.py`), and the LLM's structured response
+- `info` — adds version info, masked LLM config, token usage, and the
+  LLM's structured response
 - `debug` — adds the full raw `GenerationPipeline`/`DSLPipeline` JSON
   dumps
 
@@ -454,7 +454,7 @@ supports 3.9).
 textfsm_ai/
   api.py, api_models.py       — public API surface (§8)
   cli/                        — click commands (§9)
-  core/                       — Serializable mixin, utils, pricing, ValidationResult
+  core/                       — Serializable mixin, utils, ValidationResult
   providers/                  — Provider implementations + registry (§3)
   model_catalog/              — model name → tier classification, curated lists (§3.4)
   orchestrator/                — auto-routing, retries (§3.5)

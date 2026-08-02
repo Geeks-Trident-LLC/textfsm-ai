@@ -110,8 +110,6 @@ def test_full_happy_path():
     assert pkg.info.usage.input_tokens == 10
     assert pkg.info.usage.output_tokens == 20
     assert pkg.info.usage.total_tokens == 30
-    assert pkg.info.usage.estimated_cost > 0
-    assert pkg.info.usage.warning == ""
     assert pkg.info.llm_structured_response.variables == {"FOO": "word"}
     assert pkg.debug.duration_ms == 1234
     assert pkg.debug.generation_pipeline is gen_pipeline
@@ -243,25 +241,3 @@ def test_model_auto_inferred_from_raw_payload_when_missing():
     )
 
     assert pkg.info.llm_info.model == "inferred-model-xyz"
-
-
-def test_unknown_pricing_model_produces_warning():
-    model_info = {
-        **MODEL_INFO,
-        "provider_name": "anthropic",
-        "model": "totally-unknown-model",
-    }
-    response = _make_response()
-    metadata = _make_metadata(response=response)
-    stage = _make_stage(metadata=metadata)
-    gen_pipeline = _make_generation_pipeline(last_stage=stage)
-    dsl_pipeline = DSLPipeline(dsl=None, ready=False)
-
-    pkg = build_delivery_package(
-        model_info=model_info,
-        generation_pipeline=gen_pipeline,
-        dsl_pipeline=dsl_pipeline,
-    )
-
-    assert pkg.info.usage.warning != ""
-    assert pkg.info.usage.estimated_cost == 0.0
