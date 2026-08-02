@@ -8,6 +8,7 @@ import os
 
 import click
 
+from textfsm_ai.delivery.assembly.builder import accumulate_usage
 from textfsm_ai.generation.controller.generation_controller import GenerationController
 from textfsm_ai.providers.config import load_config_from_env, load_config_from_file
 
@@ -194,13 +195,15 @@ def generate(
         click.echo(json.dumps(pipeline.to_dict(), indent=2))
         return
 
-    # --usage → token usage
+    # --usage → accumulated token usage across every attempt/retry
     if usage:
         click.echo("=== LLM Usage ===")
-        if resp:
-            click.echo(f"prompt_tokens: {resp.input_tokens}")
-            click.echo(f"completion_tokens: {resp.output_tokens}")
-            click.echo(f"total_tokens: {resp.total_tokens}")
+        acc = accumulate_usage(pipeline)
+        if acc.calls:
+            click.echo(f"llm_calls: {acc.calls}")
+            click.echo(f"prompt_tokens: {acc.input_tokens}")
+            click.echo(f"completion_tokens: {acc.output_tokens}")
+            click.echo(f"total_tokens: {acc.total_tokens}")
         else:
             click.echo("No token usage available.")
 

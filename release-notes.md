@@ -1,31 +1,28 @@
-# v0.7.0 — Leaner Scope, Pip-Extras Alternative
+# v0.7.1 — Accurate Token Usage
 
-## 📦 New: `requirements/` as a `pip install -r` Alternative
-Prefer requirements files over `pip install textfsm-ai[<provider>]`?
-Every provider now has a matching file:
+## 🐛 Fixed: Token Usage Was Undercounted
+`--mode info/debug` and `generate --usage` reported only the *last*
+generation attempt's token counts, silently dropping every prior
+base-prompt attempt and correction-prompt retry - each a real, billed
+LLM call. A run that failed twice before succeeding on a
+correction-prompt retry showed only that final call's numbers.
 
-```bash
-pip install textfsm-ai
-pip install -r requirements/requirements-anthropic.txt
+`Usage` now sums tokens and duration across every attempt, and gains a
+`calls` field:
+
+```
+==== LLM Usage ====
+LLM Calls          : 3
+Input Tokens       : 412
+Output Tokens      : 198
+Total Tokens       : 610
+LLM Duration (ms)  : 2540.0
+==== END LLM Usage ====
 ```
 
-Or for local dev, `requirements/dev-<provider>.txt` does an editable
-install plus dev tooling plus that provider's SDK in one command.
-
-## ⚠️ Breaking: Cost/Pricing Estimation Removed
-Estimating dollar cost for an LLM call was a maintenance burden
-disproportionate to what a template-generation tool should own -
-maintaining an accurate price table across 18 providers, forever.
-`--mode info/debug` still shows token counts and duration; it no
-longer shows `estimated_cost`/`currency`/per-million pricing.
-
-## ⚠️ Breaking: `list-models` Simplified
-`list-models <provider>` now always fetches that provider's live
-models directly - no more curated/`--latest`/filter modes. The
-`quality`/`balance`/`speed`/`thinking` tier taxonomy is gone: deciding
-which model is "best" is a model-selection-advisor concern, not
-something a parsing tool should be opining on. Per-provider default
-model IDs are unaffected.
+`default` mode is unaffected (no usage shown there). `debug` mode's
+per-stage raw pipeline breakdown was already accurate and needed no
+change.
 
 ## 📦 Version
-`0.6.1 → 0.7.0`
+`0.7.0 → 0.7.1`
