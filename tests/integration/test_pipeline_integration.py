@@ -232,6 +232,7 @@ def test_info_mode_output_as_json(delivery_controller: DeliveryController):
     assert_keys(keys, node.llm_structured_response)
 
     keys = [
+        "calls",
         "input_tokens",
         "llm_duration_ms",
         "output_tokens",
@@ -307,6 +308,7 @@ def test_debug_mode_output_as_json(delivery_controller: DeliveryController):
     assert_keys(keys, node.llm_response)
 
     keys = [
+        "calls",
         "input_tokens",
         "llm_duration_ms",
         "output_tokens",

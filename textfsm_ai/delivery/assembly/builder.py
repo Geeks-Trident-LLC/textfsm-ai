@@ -18,6 +18,35 @@ from textfsm_ai.dsl.core.models import DSLPipeline
 from textfsm_ai.generation.core.models import GenerationPipeline
 
 
+def accumulate_usage(generation_pipeline: GenerationPipeline) -> Usage:
+    """
+    Sum token usage across every LLM call in the pipeline - every
+    base-prompt attempt and every correction-prompt retry each cost a
+    real call, not just the final (winning or last-tried) stage.
+    """
+    stages = generation_pipeline.stages or []
+
+    input_tokens = 0
+    output_tokens = 0
+    total_tokens = 0
+    llm_duration_ms = 0.0
+
+    for stage in stages:
+        response = getattr(getattr(stage, "metadata", None), "response", None)
+        input_tokens += getattr(response, "input_tokens", None) or 0
+        output_tokens += getattr(response, "output_tokens", None) or 0
+        total_tokens += getattr(response, "total_tokens", None) or 0
+        llm_duration_ms += getattr(response, "duration_ms", None) or 0
+
+    return Usage(
+        calls=len(stages),
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        total_tokens=total_tokens,
+        llm_duration_ms=llm_duration_ms,
+    )
+
+
 def build_delivery_package(
     *,
     model_info: dict,
@@ -50,12 +79,7 @@ def build_delivery_package(
         handling=getattr(metadata, "handling", []),
     )
 
-    usage = Usage(
-        input_tokens=getattr(response, "input_tokens", 0),
-        output_tokens=getattr(response, "output_tokens", 0),
-        total_tokens=getattr(response, "total_tokens", 0),
-        llm_duration_ms=getattr(response, "duration_ms", 0),
-    )
+    usage = accumulate_usage(generation_pipeline)
 
     dsl = dsl_pipeline.dsl or None
 

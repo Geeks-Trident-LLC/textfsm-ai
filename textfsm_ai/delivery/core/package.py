@@ -172,15 +172,21 @@ class LLMStructuredResponse(Serializable):
 
 @dataclass
 class Usage(Serializable):
+    """Token usage accumulated across every LLM call in the pipeline -
+    every base-prompt attempt and every correction-prompt retry, not
+    just the final (winning or last-tried) one."""
+
+    calls: int = 0
     input_tokens: int = 0
     output_tokens: int = 0
     total_tokens: int = 0
     llm_duration_ms: float = 0.0
 
     def to_string(self) -> str:
-        """Return a readable summary of token usage."""
+        """Return a readable summary of accumulated token usage."""
         parts = [
             format_block_title("LLM Usage"),
+            f"LLM Calls          : {self.calls}",
             f"Input Tokens       : {self.input_tokens}",
             f"Output Tokens      : {self.output_tokens}",
             f"Total Tokens       : {self.total_tokens}",
