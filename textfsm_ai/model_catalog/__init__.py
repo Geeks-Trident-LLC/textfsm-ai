@@ -3,397 +3,55 @@ from .model_registry import ModelRegistry
 
 class model:
     class openai:
-        class quality:
-            chat = ModelRegistry.get("openai", "quality", "chat")
-
-        class balance:
-            chat = ModelRegistry.get("openai", "balance", "chat")
-
-        class speed:
-            chat = ModelRegistry.get("openai", "speed", "chat")
-
-        class thinking:
-            class quality:
-                chat = ModelRegistry.get("openai", "thinking", "quality", "chat")
-
-            class balance:
-                chat = ModelRegistry.get("openai", "thinking", "balance", "chat")
-
-            class speed:
-                chat = ModelRegistry.get("openai", "thinking", "speed", "chat")
-
-        default = ModelRegistry.alias("openai_default")
+        default = ModelRegistry.default("openai")
 
     class azure:
-        class quality:
-            chat = ModelRegistry.get("azure", "quality", "chat")
-
-        class balance:
-            chat = ModelRegistry.get("azure", "balance", "chat")
-
-        class speed:
-            chat = ModelRegistry.get("azure", "speed", "chat")
-
-        class thinking:
-            class quality:
-                chat = ModelRegistry.get("azure", "thinking", "quality", "chat")
-
-            class balance:
-                chat = ModelRegistry.get("azure", "thinking", "balance", "chat")
-
-            class speed:
-                chat = ModelRegistry.get("azure", "thinking", "speed", "chat")
-
-        default = ModelRegistry.alias("azure_default")
+        default = ModelRegistry.default("azure")
 
     class anthropic:
-        class quality:
-            chat = ModelRegistry.get("anthropic", "quality", "chat")
-
-        class balance:
-            chat = ModelRegistry.get("anthropic", "balance", "chat")
-
-        class speed:
-            chat = ModelRegistry.get("anthropic", "speed", "chat")
-
-        class thinking:
-            class quality:
-                chat = ModelRegistry.get("anthropic", "thinking", "quality", "chat")
-
-            class balance:
-                chat = ModelRegistry.get("anthropic", "thinking", "balance", "chat")
-
-            class speed:
-                chat = ModelRegistry.get("anthropic", "thinking", "speed", "chat")
-
-        default = ModelRegistry.alias("anthropic_default")
+        default = ModelRegistry.default("anthropic")
 
     class gemini:
-        class quality:
-            chat = ModelRegistry.get("gemini", "quality", "chat")
-
-        class balance:
-            chat = ModelRegistry.get("gemini", "balance", "chat")
-
-        class speed:
-            chat = ModelRegistry.get("gemini", "speed", "chat")
-
-        class thinking:
-            class quality:
-                chat = ModelRegistry.get("gemini", "thinking", "quality", "chat")
-
-            class balance:
-                chat = ModelRegistry.get("gemini", "thinking", "balance", "chat")
-
-            class speed:
-                chat = ModelRegistry.get("gemini", "thinking", "speed", "chat")
-
-        default = ModelRegistry.alias("gemini_default")
+        default = ModelRegistry.default("gemini")
 
     class deepseek:
-        class quality:
-            chat = ModelRegistry.get("deepseek", "quality", "chat")
-
-        class balance:
-            chat = ModelRegistry.get("deepseek", "balance", "chat")
-
-        class speed:
-            chat = ModelRegistry.get("deepseek", "speed", "chat")
-
-        class thinking:
-            class quality:
-                chat = ModelRegistry.get("deepseek", "thinking", "quality", "chat")
-
-            class balance:
-                chat = ModelRegistry.get("deepseek", "thinking", "balance", "chat")
-
-            class speed:
-                chat = ModelRegistry.get("deepseek", "thinking", "speed", "chat")
-
-        default = ModelRegistry.alias("deepseek_default")
+        default = ModelRegistry.default("deepseek")
 
     class groq:
-        class quality:
-            chat = ModelRegistry.get("groq", "quality", "chat")
-
-        class balance:
-            chat = ModelRegistry.get("groq", "balance", "chat")
-
-        class speed:
-            chat = ModelRegistry.get("groq", "speed", "chat")
-
-        class thinking:
-            class quality:
-                chat = ModelRegistry.get("groq", "thinking", "quality", "chat")
-
-            class balance:
-                chat = ModelRegistry.get("groq", "thinking", "balance", "chat")
-
-            class speed:
-                chat = ModelRegistry.get("groq", "thinking", "speed", "chat")
-
-        default = ModelRegistry.alias("groq_default")
+        default = ModelRegistry.default("groq")
 
     class xai:
-        class quality:
-            chat = ModelRegistry.get("xai", "quality", "chat")
-
-        class balance:
-            chat = ModelRegistry.get("xai", "balance", "chat")
-
-        class speed:
-            chat = ModelRegistry.get("xai", "speed", "chat")
-
-        class thinking:
-            class quality:
-                chat = ModelRegistry.get("xai", "thinking", "quality", "chat")
-
-            class balance:
-                chat = ModelRegistry.get("xai", "thinking", "balance", "chat")
-
-            class speed:
-                chat = ModelRegistry.get("xai", "thinking", "speed", "chat")
-
-        default = ModelRegistry.alias("xai_default")
+        default = ModelRegistry.default("xai")
 
     class together:
-        class quality:
-            chat = ModelRegistry.get("together", "quality", "chat")
-
-        class balance:
-            chat = ModelRegistry.get("together", "balance", "chat")
-
-        class speed:
-            chat = ModelRegistry.get("together", "speed", "chat")
-
-        class thinking:
-            class quality:
-                chat = ModelRegistry.get("together", "thinking", "quality", "chat")
-
-            class balance:
-                chat = ModelRegistry.get("together", "thinking", "balance", "chat")
-
-            class speed:
-                chat = ModelRegistry.get("together", "thinking", "speed", "chat")
-
-        default = ModelRegistry.alias("together_default")
+        default = ModelRegistry.default("together")
 
     class fireworks:
-        class quality:
-            chat = ModelRegistry.get("fireworks", "quality", "chat")
-
-        class balance:
-            chat = ModelRegistry.get("fireworks", "balance", "chat")
-
-        class speed:
-            chat = ModelRegistry.get("fireworks", "speed", "chat")
-
-        class thinking:
-            class quality:
-                chat = ModelRegistry.get("fireworks", "thinking", "quality", "chat")
-
-            class balance:
-                chat = ModelRegistry.get("fireworks", "thinking", "balance", "chat")
-
-            class speed:
-                chat = ModelRegistry.get("fireworks", "thinking", "speed", "chat")
-
-        default = ModelRegistry.alias("fireworks_default")
+        default = ModelRegistry.default("fireworks")
 
     class cerebras:
-        class quality:
-            chat = ModelRegistry.get("cerebras", "quality", "chat")
-
-        class balance:
-            chat = ModelRegistry.get("cerebras", "balance", "chat")
-
-        class speed:
-            chat = ModelRegistry.get("cerebras", "speed", "chat")
-
-        class thinking:
-            class quality:
-                chat = ModelRegistry.get("cerebras", "thinking", "quality", "chat")
-
-            class balance:
-                chat = ModelRegistry.get("cerebras", "thinking", "balance", "chat")
-
-            class speed:
-                chat = ModelRegistry.get("cerebras", "thinking", "speed", "chat")
-
-        default = ModelRegistry.alias("cerebras_default")
+        default = ModelRegistry.default("cerebras")
 
     class perplexity:
-        class quality:
-            chat = ModelRegistry.get("perplexity", "quality", "chat")
-
-        class balance:
-            chat = ModelRegistry.get("perplexity", "balance", "chat")
-
-        class speed:
-            chat = ModelRegistry.get("perplexity", "speed", "chat")
-
-        class thinking:
-            class quality:
-                chat = ModelRegistry.get("perplexity", "thinking", "quality", "chat")
-
-            class balance:
-                chat = ModelRegistry.get("perplexity", "thinking", "balance", "chat")
-
-            class speed:
-                chat = ModelRegistry.get("perplexity", "thinking", "speed", "chat")
-
-        default = ModelRegistry.alias("perplexity_default")
+        default = ModelRegistry.default("perplexity")
 
     class openrouter:
-        class quality:
-            chat = ModelRegistry.get("openrouter", "quality", "chat")
-
-        class balance:
-            chat = ModelRegistry.get("openrouter", "balance", "chat")
-
-        class speed:
-            chat = ModelRegistry.get("openrouter", "speed", "chat")
-
-        class thinking:
-            class quality:
-                chat = ModelRegistry.get("openrouter", "thinking", "quality", "chat")
-
-            class balance:
-                chat = ModelRegistry.get("openrouter", "thinking", "balance", "chat")
-
-            class speed:
-                chat = ModelRegistry.get("openrouter", "thinking", "speed", "chat")
-
-        default = ModelRegistry.alias("openrouter_default")
+        default = ModelRegistry.default("openrouter")
 
     class moonshot:
-        class quality:
-            chat = ModelRegistry.get("moonshot", "quality", "chat")
-
-        class balance:
-            chat = ModelRegistry.get("moonshot", "balance", "chat")
-
-        class speed:
-            chat = ModelRegistry.get("moonshot", "speed", "chat")
-
-        class thinking:
-            class quality:
-                chat = ModelRegistry.get("moonshot", "thinking", "quality", "chat")
-
-            class balance:
-                chat = ModelRegistry.get("moonshot", "thinking", "balance", "chat")
-
-            class speed:
-                chat = ModelRegistry.get("moonshot", "thinking", "speed", "chat")
-
-        default = ModelRegistry.alias("moonshot_default")
+        default = ModelRegistry.default("moonshot")
 
     class mistral:
-        class quality:
-            chat = ModelRegistry.get("mistral", "quality", "chat")
-
-        class balance:
-            chat = ModelRegistry.get("mistral", "balance", "chat")
-
-        class speed:
-            chat = ModelRegistry.get("mistral", "speed", "chat")
-
-        class thinking:
-            class quality:
-                chat = ModelRegistry.get("mistral", "thinking", "quality", "chat")
-
-            class balance:
-                chat = ModelRegistry.get("mistral", "thinking", "balance", "chat")
-
-            class speed:
-                chat = ModelRegistry.get("mistral", "thinking", "speed", "chat")
-
-        default = ModelRegistry.alias("mistral_default")
+        default = ModelRegistry.default("mistral")
 
     class bedrock:
-        class quality:
-            chat = ModelRegistry.get("bedrock", "quality", "chat")
-
-        class balance:
-            chat = ModelRegistry.get("bedrock", "balance", "chat")
-
-        class speed:
-            chat = ModelRegistry.get("bedrock", "speed", "chat")
-
-        class thinking:
-            class quality:
-                chat = ModelRegistry.get("bedrock", "thinking", "quality", "chat")
-
-            class balance:
-                chat = ModelRegistry.get("bedrock", "thinking", "balance", "chat")
-
-            class speed:
-                chat = ModelRegistry.get("bedrock", "thinking", "speed", "chat")
-
-        default = ModelRegistry.alias("bedrock_default")
+        default = ModelRegistry.default("bedrock")
 
     class cohere:
-        class quality:
-            chat = ModelRegistry.get("cohere", "quality", "chat")
-
-        class balance:
-            chat = ModelRegistry.get("cohere", "balance", "chat")
-
-        class speed:
-            chat = ModelRegistry.get("cohere", "speed", "chat")
-
-        class thinking:
-            class quality:
-                chat = ModelRegistry.get("cohere", "thinking", "quality", "chat")
-
-            class balance:
-                chat = ModelRegistry.get("cohere", "thinking", "balance", "chat")
-
-            class speed:
-                chat = ModelRegistry.get("cohere", "thinking", "speed", "chat")
-
-        default = ModelRegistry.alias("cohere_default")
+        default = ModelRegistry.default("cohere")
 
     class vertexai:
-        class quality:
-            chat = ModelRegistry.get("vertexai", "quality", "chat")
-
-        class balance:
-            chat = ModelRegistry.get("vertexai", "balance", "chat")
-
-        class speed:
-            chat = ModelRegistry.get("vertexai", "speed", "chat")
-
-        class thinking:
-            class quality:
-                chat = ModelRegistry.get("vertexai", "thinking", "quality", "chat")
-
-            class balance:
-                chat = ModelRegistry.get("vertexai", "thinking", "balance", "chat")
-
-            class speed:
-                chat = ModelRegistry.get("vertexai", "thinking", "speed", "chat")
-
-        default = ModelRegistry.alias("vertexai_default")
+        default = ModelRegistry.default("vertexai")
 
     class oci:
-        class quality:
-            chat = ModelRegistry.get("oci", "quality", "chat")
-
-        class balance:
-            chat = ModelRegistry.get("oci", "balance", "chat")
-
-        class speed:
-            chat = ModelRegistry.get("oci", "speed", "chat")
-
-        class thinking:
-            class quality:
-                chat = ModelRegistry.get("oci", "thinking", "quality", "chat")
-
-            class balance:
-                chat = ModelRegistry.get("oci", "thinking", "balance", "chat")
-
-            class speed:
-                chat = ModelRegistry.get("oci", "thinking", "speed", "chat")
-
-        default = ModelRegistry.alias("oci_default")
+        default = ModelRegistry.default("oci")
