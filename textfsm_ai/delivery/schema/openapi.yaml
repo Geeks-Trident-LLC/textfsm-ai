@@ -136,9 +136,6 @@
 #         total_tokens:
 #           type: integer
 #           minimum: 0
-#         estimated_cost:
-#           type: number
-#           nullable: true
 #         duration_ms:
 #           type: integer
 #           nullable: true

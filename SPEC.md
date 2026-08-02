@@ -48,7 +48,7 @@ automatic model-name routing.
 │ Providers (textfsm_ai/providers/)                               │
 │ Model Catalog (textfsm_ai/model_catalog/)                       │
 │   one class per LLM provider, lazily imported;                  │
-│   curated model lists, tier classification                      │
+│   a curated default model ID per provider                       │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -111,16 +111,24 @@ needing extra constructor params must be added there explicitly.
 ### 3.4 Model catalog (`model_catalog/`)
 
 Separate from the provider *code* is the provider *model catalog*:
-- `providers.yaml` / `curated-models.yaml` — per-provider model lists,
-  grouped into tiers
-- `tiers.py` — the `Tier` enum: `quality-chat`, `balance-chat`,
-  `speed-chat`, `thinking-chat`, `other`
-- `patterns.py` + `classifier.py` — regex patterns and classification
-  logic that sort a raw model-name string (fetched live from a
-  provider's API) into a tier
-- `model_registry.py` / `__init__.py` — the `model.<provider>.<tier>.chat`
+- `providers.yaml` — a flat `{provider: default_model_id}` mapping; not
+  a quality/speed opinion, just "a real, working model ID for this
+  provider"
+- `model_registry.py` / `__init__.py` — the `model.<provider>.default`
   facade used throughout the codebase and tests (e.g.
-  `MODEL.groq.default`)
+  `MODEL.groq.default`) instead of hardcoding raw model-ID strings
+  everywhere
+
+This package previously also included a `quality`/`balance`/`speed`/
+`thinking` tier-classification system (`tiers.py`, `patterns.py`,
+`classifier.py`, `curated-models.yaml`) backing `list-models`'
+filtering and `--latest` LLM-based reclassification. Removed as
+out-of-scope for a template-generation tool — "which model should I
+use" is a model-selection-advisor concern, not parsing infrastructure,
+unlike the plain default-model-ID mapping above (which is structural:
+every provider class's constructor needs *some* fallback, and the test
+suite needs *some* known-valid model ID to reference instead of
+hardcoding strings everywhere).
 
 This package was named `textfsm_ai/models/` before v0.6.1 — renamed to
 `model_catalog` to disambiguate from the *data-model* dataclass files
@@ -312,8 +320,8 @@ Modes (`delivery/core/modes.py`'s `DeliveryMode` enum), each strictly a
 superset of the previous:
 - `quiet` — canonical template only, or a formatted failure/status block
 - `default` — adds readable DSL + recognizers (`Output` dataclass)
-- `info` — adds version info, masked LLM config, token usage/cost
-  estimate (`core/pricing.py`), and the LLM's structured response
+- `info` — adds version info, masked LLM config, token usage, and the
+  LLM's structured response
 - `debug` — adds the full raw `GenerationPipeline`/`DSLPipeline` JSON
   dumps
 
@@ -379,7 +387,7 @@ commands:
 | `generate` | `generate_cmd.py` | sample → LLM-generated template, many output-selection flags (`--template-only`, `--records`, `--explain`, `--handling`, `--sample`, `--raw`, `--usage`, `--sections`, `--json`, `--debug`) |
 | `dsl` | `dsl_cmd.py` | template + sample → canonical/readable/recognizers, no LLM call |
 | `pipeline` | `pipeline_cmd.py` | sample → LLM template → DSL compile, in one call, packaged per `--mode` |
-| `list-models` | `list_models_cmd.py` | curated or live (`--latest`/`--latest-raw`) model list per provider, with tier filters |
+| `list-models` | `list_models_cmd.py` | a provider's live models, fetched from that provider's own API |
 | `providers` | `providers_cmd.py` | `list`/`info`/`test` subcommands |
 | `orchestrator` | `orchestrator_cmd.py` | `route`/`run` subcommands — the auto-routing path (§3.5), distinct from `generate`/`pipeline`'s explicit `--provider` |
 | `version` | `version_cmd.py` | prints `__version__` |
@@ -454,9 +462,9 @@ supports 3.9).
 textfsm_ai/
   api.py, api_models.py       — public API surface (§8)
   cli/                        — click commands (§9)
-  core/                       — Serializable mixin, utils, pricing, ValidationResult
+  core/                       — Serializable mixin, utils, ValidationResult
   providers/                  — Provider implementations + registry (§3)
-  model_catalog/              — model name → tier classification, curated lists (§3.4)
+  model_catalog/              — default model ID per provider (§3.4)
   orchestrator/                — auto-routing, retries (§3.5)
   generation/                  — sample → LLM → validated template (§4)
     core/                      — dataclasses + prompts.yaml

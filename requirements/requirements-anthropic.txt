@@ -1,0 +1,5 @@
+# SDK for the anthropic provider extra.
+#
+# Mirrors the `anthropic` extra in pyproject.toml - keep in sync if that
+# changes.
+anthropic>=0.8.0

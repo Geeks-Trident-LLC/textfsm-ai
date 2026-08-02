@@ -175,15 +175,12 @@ def test_llm_structured_response_to_string_empty_template_shows_placeholder():
 # ============================================================
 
 
-def test_usage_to_string_without_warning():
+def test_usage_to_string():
     usage = Usage(
         input_tokens=100,
         output_tokens=50,
         total_tokens=150,
         llm_duration_ms=250.5,
-        input_per_million=1.5,
-        output_per_million=3.0,
-        estimated_cost=0.0001234,
     )
     text = usage.to_string()
 
@@ -191,15 +188,7 @@ def test_usage_to_string_without_warning():
     assert "Input Tokens       : 100" in text
     assert "Output Tokens      : 50" in text
     assert "Total Tokens       : 150" in text
-    assert "Estimated Cost     : $0.000123" in text
-    assert "Warning" not in text
-
-
-def test_usage_to_string_with_warning():
-    usage = Usage(warning="cost estimate unavailable for this model")
-    text = usage.to_string()
-
-    assert "Warning            : cost estimate unavailable for this model" in text
+    assert "LLM Duration (ms)  : 250.5" in text
 
 
 # ============================================================

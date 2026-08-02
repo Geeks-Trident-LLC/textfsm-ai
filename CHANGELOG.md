@@ -1,3 +1,42 @@
+## v0.7.0 — 2026‑08‑02
+
+### Added
+- `requirements/requirements-<provider>.txt` and `requirements/
+  dev-<provider>.txt` — a `pip install -r ...` alternative to the
+  `pip install textfsm-ai[<provider>]` extras syntax, for pinned
+  lockfiles, Docker layer caching, or tooling built around `-r` flags.
+  One SDK-only file and one one-command-dev-setup file (`-e .[dev]`
+  plus that provider's SDK) per provider. See `requirements/README.md`
+
+### Changed
+- **Breaking:** removed cost/pricing estimation entirely
+  (`core/pricing.py`, `pricing.yaml`, including the Claude Sonnet 5
+  introductory-pricing auto-update mechanism). `delivery`'s `Usage`
+  dataclass (visible via `--mode info/debug`) drops `currency`/
+  `estimated_cost`/`input_per_million`/`output_per_million`/`warning`,
+  keeping only the factual token counts and duration. Maintaining a
+  per-provider, per-model price table across 18 providers is
+  disproportionate upkeep for a template-generation tool and belongs
+  to dedicated cost-tracking tooling instead.
+- **Breaking:** `list-models` no longer has curated/`--latest`/filter
+  modes — it now always fetches a provider's live models directly
+  (requires that provider's credentials, same as `generate`).
+  `--latest`, `--latest-raw`, `--premium`, `--no-premium`, `--quality`,
+  `--balance`, `--speed` are all removed, along with the
+  `quality-chat`/`balance-chat`/`speed-chat`/`thinking-chat` tier
+  taxonomy that backed them (`model_catalog/tiers.py`, `patterns.py`,
+  `classifier.py`, `curated-models.yaml`) — "which model should I use"
+  is a model-selection-advisor concern, not parsing infrastructure.
+  Per-provider default model IDs (`MODEL.<provider>.default`,
+  `pyproject.toml`-adjacent `providers.yaml`) are kept unchanged - that
+  part is structural (every provider's constructor default, and the
+  test suite's model-ID references), not advisory.
+
+### Removed
+- `textfsm_ai/core/pricing.py`, `pricing.yaml`
+- `textfsm_ai/model_catalog/tiers.py`, `patterns.py`, `classifier.py`,
+  `curated-models.yaml`
+
 ## v0.6.1 — 2026‑08‑01
 
 ### Added

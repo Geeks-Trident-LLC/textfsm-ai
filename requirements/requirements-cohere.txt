@@ -1,0 +1,8 @@
+# SDK for the cohere provider extra.
+# Pinned exactly: 5.21.1 is the last cohere release supporting
+# Python 3.9 (6.x/7.x require Python >=3.10); verified via
+# `pip download --python-version 3.9` resolution.
+#
+# Mirrors the `cohere` extra in pyproject.toml - keep in sync if that
+# changes.
+cohere==5.21.1

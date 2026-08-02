@@ -3,7 +3,9 @@
 `textfsm-ai` supports 18 LLM providers, but no single install needs all of
 their SDKs at once. Since [v0.6.0](../changelog.md), `pip install
 textfsm-ai` installs only the core CLI/API — every provider SDK is an
-opt-in extra (see [Installation](../getting-started/installation.md)).
+opt-in extra, either via `pip install textfsm-ai[<provider>]` or a
+matching `pip install -r requirements/requirements-<provider>.txt` file
+(see [Installation](../getting-started/installation.md) for both).
 This page documents exactly what each extra pulls in, verified with real,
 clean-venv installs — useful when you're sizing a container image or just
 curious where the weight goes.

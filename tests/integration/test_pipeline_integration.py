@@ -232,12 +232,8 @@ def test_info_mode_output_as_json(delivery_controller: DeliveryController):
     assert_keys(keys, node.llm_structured_response)
 
     keys = [
-        "currency",
-        "estimated_cost",
-        "input_per_million",
         "input_tokens",
         "llm_duration_ms",
-        "output_per_million",
         "output_tokens",
         "total_tokens",
     ]
@@ -311,12 +307,8 @@ def test_debug_mode_output_as_json(delivery_controller: DeliveryController):
     assert_keys(keys, node.llm_response)
 
     keys = [
-        "currency",
-        "estimated_cost",
-        "input_per_million",
         "input_tokens",
         "llm_duration_ms",
-        "output_per_million",
         "output_tokens",
         "total_tokens",
     ]
