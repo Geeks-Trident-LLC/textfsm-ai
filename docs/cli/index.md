@@ -142,17 +142,12 @@ Exit code is `0` on success and `1` if generation or DSL compilation failed
 
 ## list-models
 
-List models for a provider — curated groups by default, or live data from the
-provider's API.
+List a provider's live models, fetched directly from the provider's own
+API (requires that provider's credentials, same as `generate`):
 
 ```bash
 textfsm-ai list-models openai
-textfsm-ai list-models openai --latest       # fetch + LLM-classify into tiers
-textfsm-ai list-models openai --latest-raw   # fetch without classification
-textfsm-ai list-models openai --premium --quality
 ```
-
-Filter flags: `--premium`, `--no-premium`, `--quality`, `--balance`, `--speed`.
 
 ## providers
 
