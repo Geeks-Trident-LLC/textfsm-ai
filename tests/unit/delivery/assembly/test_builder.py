@@ -19,9 +19,12 @@ MODEL_INFO = {
 }
 
 
-def _make_generation_pipeline(*, last_stage=None, max_retries=1):
+def _make_generation_pipeline(*, last_stage=None, max_retries=1, stages=None):
+    if stages is None:
+        stages = [last_stage] if last_stage is not None else []
     return GenerationPipeline(
         model="claude-sonnet-4-5",
+        stages=stages,
         last_stage=last_stage,
         max_retries=max_retries,
         ready=True,
@@ -107,6 +110,7 @@ def test_full_happy_path():
     assert pkg.default.output.template == "Value FOO (\\S+)"
     assert pkg.default.status.passed is True
     assert pkg.info.llm_info.provider_name == "anthropic"
+    assert pkg.info.usage.calls == 1
     assert pkg.info.usage.input_tokens == 10
     assert pkg.info.usage.output_tokens == 20
     assert pkg.info.usage.total_tokens == 30
@@ -223,6 +227,43 @@ def test_quiet_template_uses_metadata_template_when_dsl_missing():
     )
 
     assert pkg.quiet.template == "metadata template text"
+
+
+def test_usage_accumulates_across_all_stages_not_just_last():
+    # Simulate a base-prompt attempt that failed validation followed by a
+    # correction-prompt retry that succeeded - both cost real LLM tokens.
+    failed_response = _make_response(
+        input_tokens=10, output_tokens=20, total_tokens=30, duration_ms=500
+    )
+    failed_metadata = _make_metadata(response=failed_response, template="bad tmpl")
+    failed_stage = _make_stage(metadata=failed_metadata, name="attempt-1")
+
+    succeeded_response = _make_response(
+        input_tokens=15, output_tokens=25, total_tokens=40, duration_ms=700
+    )
+    succeeded_metadata = _make_metadata(
+        response=succeeded_response, template="good tmpl"
+    )
+    succeeded_stage = _make_stage(metadata=succeeded_metadata, name="attempt-2")
+
+    gen_pipeline = _make_generation_pipeline(
+        last_stage=succeeded_stage, stages=[failed_stage, succeeded_stage]
+    )
+    dsl_pipeline = DSLPipeline(dsl=None, ready=False)
+
+    pkg = build_delivery_package(
+        model_info=MODEL_INFO,
+        generation_pipeline=gen_pipeline,
+        dsl_pipeline=dsl_pipeline,
+    )
+
+    assert pkg.info.usage.calls == 2
+    assert pkg.info.usage.input_tokens == 25
+    assert pkg.info.usage.output_tokens == 45
+    assert pkg.info.usage.total_tokens == 70
+    assert pkg.info.usage.llm_duration_ms == 1200
+    # debug.usage is the same accumulated object, not a per-stage one
+    assert pkg.debug.usage.calls == 2
 
 
 def test_model_auto_inferred_from_raw_payload_when_missing():

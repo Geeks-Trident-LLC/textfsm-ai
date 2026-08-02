@@ -177,6 +177,7 @@ def test_llm_structured_response_to_string_empty_template_shows_placeholder():
 
 def test_usage_to_string():
     usage = Usage(
+        calls=2,
         input_tokens=100,
         output_tokens=50,
         total_tokens=150,
@@ -185,6 +186,7 @@ def test_usage_to_string():
     text = usage.to_string()
 
     assert "LLM Usage" in text
+    assert "LLM Calls          : 2" in text
     assert "Input Tokens       : 100" in text
     assert "Output Tokens      : 50" in text
     assert "Total Tokens       : 150" in text

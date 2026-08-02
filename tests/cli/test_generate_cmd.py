@@ -335,15 +335,45 @@ def test_generate_usage_output_with_response(tmp_path):
         meta.response.input_tokens = 10
         meta.response.output_tokens = 20
         meta.response.total_tokens = 30
+        pipeline.stages = [pipeline.last_stage]
 
         result = runner.invoke(
             generate, [str(input_file), "--provider", "openai", "--usage"]
         )
 
     assert result.exit_code == 0
+    assert "llm_calls: 1" in result.output
     assert "prompt_tokens: 10" in result.output
     assert "completion_tokens: 20" in result.output
     assert "total_tokens: 30" in result.output
+
+
+def test_generate_usage_output_accumulates_across_stages(tmp_path):
+    with _mocked_generate(tmp_path) as (runner, instance, input_file):
+        pipeline = instance.run.return_value
+        pipeline.ready = True
+
+        failed_stage = pipeline.last_stage.__class__()
+        failed_stage.metadata.response.input_tokens = 10
+        failed_stage.metadata.response.output_tokens = 20
+        failed_stage.metadata.response.total_tokens = 30
+
+        succeeded_stage = pipeline.last_stage
+        succeeded_stage.metadata.response.input_tokens = 15
+        succeeded_stage.metadata.response.output_tokens = 25
+        succeeded_stage.metadata.response.total_tokens = 40
+
+        pipeline.stages = [failed_stage, succeeded_stage]
+
+        result = runner.invoke(
+            generate, [str(input_file), "--provider", "openai", "--usage"]
+        )
+
+    assert result.exit_code == 0
+    assert "llm_calls: 2" in result.output
+    assert "prompt_tokens: 25" in result.output
+    assert "completion_tokens: 45" in result.output
+    assert "total_tokens: 70" in result.output
 
 
 def test_generate_usage_output_without_response(tmp_path):
@@ -351,6 +381,7 @@ def test_generate_usage_output_without_response(tmp_path):
         pipeline = instance.run.return_value
         pipeline.ready = True
         pipeline.last_stage.metadata = None
+        pipeline.stages = []
 
         result = runner.invoke(
             generate, [str(input_file), "--provider", "openai", "--usage"]
