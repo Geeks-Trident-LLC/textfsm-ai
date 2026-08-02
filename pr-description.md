@@ -1,62 +1,39 @@
 ## Summary
 
-This PR prepares the v0.7.0 release: a `pip install -r ...`
-alternative to the provider extras syntax, and removal of two features
-judged out of scope for a template-generation tool (cost estimation,
-model-tier classification), following v0.6.1. **Contains two breaking
-changes** — see below.
+This PR prepares the v0.7.1 patch release: a fix for undercounted
+token usage in `--mode info/debug` and `generate --usage`, following
+v0.7.0. No breaking changes.
 
 ## What's Included
 
-### `requirements/` Alternative to Pip Extras (#65)
-- `requirements-<provider>.txt` (SDK only, mirrors the matching
-  `pyproject.toml` extra) and `dev-<provider>.txt` (`-e .[dev]` plus
-  that provider's SDK, one-command local dev setup) for all 9 distinct
-  provider SDKs
-- No `requirements-all.txt`/`dev-all.txt` - `pip install
-  textfsm-ai[all]` covers that
-- Documented in `requirements/README.md`, `docs/getting-started/
-  installation.md`, `CONTRIBUTING.md`
-
-### Remove Cost/Pricing Estimation (#66)
-- Deleted `core/pricing.py` + `pricing.yaml` entirely (432 lines,
-  including a hardcoded-cutoff-date Claude Sonnet 5 pricing
-  auto-updater)
-- `delivery`'s `Usage` dataclass keeps only token counts + duration;
-  drops `currency`/`estimated_cost`/`input_per_million`/
-  `output_per_million`/`warning`
-- `generate`'s `--usage` flag was already token-only, unaffected
-
-### Drop Model Tier Classification (#67)
-- Removed `tiers.py`, `patterns.py`, `classifier.py`,
-  `curated-models.yaml` (~1,900 lines) - the `quality`/`balance`/
-  `speed`/`thinking` taxonomy and the `list-models` filtering/
-  `--latest` LLM-reclassification built on it
-- `list-models <provider>` now always does a live fetch, no flags
-- Kept: `model_catalog/providers.yaml` flattened to `{provider:
-  default_model_id}`; `MODEL.<provider>.default` still resolves
-  identically (verified against all 51 files that reference it)
-
-## Breaking Changes
-
-1. **`Usage`'s JSON/dict shape changes** (`--mode info/debug --json`,
-   Python API's `DeliveryOutput`) - cost/pricing fields gone.
-2. **`list-models` behavior changes** - always requires live provider
-   credentials now; every filter flag and the credential-free curated
-   fallback are gone.
-
-Neither is part of the documented public-API stability contract
-(`pricing`/`Usage`/tier fields never appeared in `api.py`/
-`api_models.py`/`__init__.py`), but both are real, user-visible output/
-CLI-behavior changes.
+### Fix: Accumulate Token Usage Across All Retries (#68)
+- `Usage` previously reported only the **last** generation stage's
+  token counts, silently dropping every prior base-prompt attempt and
+  correction-prompt retry - each of which is a real, billed LLM call.
+  A run that failed twice before succeeding on the third attempt
+  showed only the third attempt's usage.
+- `Usage` gains a `calls` field (count of LLM calls actually made) and
+  now sums `input_tokens`/`output_tokens`/`total_tokens`/
+  `llm_duration_ms` across every stage in `GenerationPipeline.stages`.
+- `generate --usage` had the identical last-stage-only bug in a
+  separate code path; fixed with the same new `accumulate_usage()`
+  helper (`delivery/assembly/builder.py`) to avoid duplicating the
+  summation logic.
+- `default` mode is unaffected (no usage shown there); `info`/`debug`
+  both show the same accumulated summary - `debug`'s per-stage raw
+  breakdown via the dumped pipeline JSON was already accurate and is
+  unchanged.
 
 ## Release Artifacts
-- CHANGELOG updated for v0.7.0
+- CHANGELOG updated for v0.7.1
 - Release notes generated
-- Version bumped from 0.6.1 → 0.7.0 (minor, given the two breaking
+- Version bumped from 0.7.0 → 0.7.1 (patch - bug fix, no breaking
   changes)
 
 ## Testing
-- Full unit and integration suite passing (876 passed, 44 skipped)
+- Full unit and integration suite passing (829 passed, 44 skipped)
 - `tox -e lint` / `tox -e typecheck` clean
-- TestPyPI release validated (`v0.7.0-test`)
+- `mkdocs build --strict` clean
+- New tests covering multi-stage accumulation in both the delivery
+  builder and the `generate` CLI command
+- TestPyPI release validated (`v0.7.1-test`)

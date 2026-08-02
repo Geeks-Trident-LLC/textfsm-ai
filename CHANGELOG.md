@@ -1,3 +1,16 @@
+## v0.7.1 — 2026‑08‑02
+
+### Fixed
+- **Token usage was undercounted**: `--mode info/debug` and `generate
+  --usage` reported only the last generation attempt's token counts,
+  silently dropping every prior base-prompt attempt and
+  correction-prompt retry — each of which is a real, billed LLM
+  call. `Usage` now sums `input_tokens`/`output_tokens`/
+  `total_tokens`/`llm_duration_ms` across every attempt and gains a
+  `calls` field (total LLM calls actually made). `default` mode is
+  unaffected (no usage shown there); `debug` mode's per-stage raw
+  pipeline breakdown was already accurate and is unchanged.
+
 ## v0.7.0 — 2026‑08‑02
 
 ### Added
