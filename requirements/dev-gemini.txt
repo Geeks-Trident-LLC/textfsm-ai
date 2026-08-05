@@ -1,4 +1,4 @@
 # One-command local dev setup for gemini. See requirements/README.md
 # for how this differs from requirements-gemini.txt.
 -e .[dev]
-google-genai>=0.2.0
+anyask[gemini]>=0.1.1

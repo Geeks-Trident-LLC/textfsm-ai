@@ -11,10 +11,12 @@ Two sets, for two different audiences:
 
 ## `requirements-<provider>.txt`
 
-Just the provider SDK, nothing else - mirrors the matching
-`pyproject.toml` extra exactly. Use this if you already have
-`textfsm-ai` installed (from PyPI, or `-e .` locally) and just want to
-add a provider:
+Just `anyask[<provider>]` (which pulls in that provider's real SDK),
+nothing else - mirrors the matching `pyproject.toml` extra exactly. All
+LLM calls go through the [`anyask`](https://github.com/Geeks-Trident-LLC/anyask)
+package rather than a vendored copy of each provider. Use this if you
+already have `textfsm-ai` installed (from PyPI, or `-e .` locally) and
+just want to add a provider:
 
 ```bash
 pip install textfsm-ai

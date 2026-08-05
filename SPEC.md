@@ -23,92 +23,72 @@ a validated TextFSM template, in one of two ways:
    patterns — no LLM call involved.
 
 These two steps can be run independently or chained end to end. The
-system is provider-agnostic: 18 LLM providers are supported behind one
-interface, selected either explicitly (`--provider anthropic`) or by
-automatic model-name routing.
+system is provider-agnostic: 18 LLM providers are supported, always
+selected explicitly (`--provider anthropic`) — there is no auto-routing
+or fallback between providers.
 
 ## 2. Layered architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│ CLI (textfsm_ai/cli/)          Public API (textfsm_ai/api.py)   │
-├─────────────────────────────────────────────────────────────────┤
-│ Delivery (textfsm_ai/delivery/)                                 │
-│   chains generation + dsl, packages output per verbosity        │
-├────────────────────────────────┬────────────────────────────────┤
-│ Generation                     │ DSL                            │
-│ (textfsm_ai/generation/)       │ (textfsm_ai/dsl/)              │
-│   sample -> LLM -> template    │   template -> AST ->           │
-│   + records + validation       │   canonical/readable/          │
-│                                │   recognizers                  │
-├────────────────────────────────┴────────────────────────────────┤
-│ Orchestrator (textfsm_ai/orchestrator/)                         │
-│   auto-routes a model name to a provider, retries/fallback      │
-├─────────────────────────────────────────────────────────────────┤
-│ Providers (textfsm_ai/providers/)                               │
-│ Model Catalog (textfsm_ai/model_catalog/)                       │
-│   one class per LLM provider, lazily imported;                  │
-│   a curated default model ID per provider                       │
-└─────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────┐
+│ CLI (textfsm_ai/cli/)          Public API (textfsm_ai/api.py)     │
+├───────────────────────────────────────────────────────────────────┤
+│ Delivery (textfsm_ai/delivery/)                                   │
+│   chains generation + dsl, packages output per verbosity          │
+├────────────────────────────────┬──────────────────────────────────┤
+│ Generation                     │ DSL                              │
+│ (textfsm_ai/generation/)       │ (textfsm_ai/dsl/)                │
+│   sample -> LLM -> template    │   template -> AST ->             │
+│   + records + validation       │   canonical/readable/            │
+│                                │   recognizers                    │
+├────────────────────────────────┴──────────────────────────────────┤
+│ Providers (textfsm_ai/providers/)                                 │
+│   delegates all LLM calls to the anyask package -                 │
+│   no vendored provider SDK clients live in this repo              │
+│ Model Catalog (textfsm_ai/model_catalog/)                         │
+│   a default model ID per provider                                 │
+└───────────────────────────────────────────────────────────────────┘
 ```
 
 Each layer only depends on the ones below it. `generation/` and `dsl/`
 don't depend on each other — `delivery/` is what wires them together.
-`orchestrator/` is a separate, parallel entry point (auto-routing a bare
-model name to a provider) used by `textfsm-ai orchestrator route/run`
-and `providers test`, not by the `generate`/`pipeline` path, which
-always resolves the provider explicitly via `--provider`.
+There is no auto-routing/fallback layer: `generate`/`pipeline` always
+resolve the provider explicitly via `--provider`, and the LLM call
+itself is delegated to the [`anyask`](https://github.com/Geeks-Trident-LLC/anyask)
+package rather than a layer this repo owns.
 
 ## 3. Provider system
 
-### 3.1 `Provider` interface (`orchestrator/provider.py`)
+`textfsm_ai/providers/` no longer implements any provider SDK client
+itself — every actual LLM call goes through `anyask.ask(prompt, *,
+provider, model, **kwargs)` (or `anyask.list_models()` for
+`list-models`), a standalone package (same author, MIT) that owns the
+18 provider implementations, its own `Provider` ABC, and its own
+lazy-SDK-import registry. What's left in this repo is only what's
+specific to *textfsm-ai as a tool*, not to *calling an LLM*:
 
-An abstract base class every provider implements:
-- `name: str` — class attribute, the provider's registry key
-- `async generate(prompt, *, model, **kwargs) -> dict`
-- `generate_sync(prompt, *, model, **kwargs) -> dict`
-- `supports(model: str) -> bool`
-- `from_env() -> Provider` (classmethod)
+- `providers/config.py` — CLI credential resolution
+  (`load_config_from_file`/`load_config_from_env`, `ProvidersConfig`/
+  `ProviderConfig`), independent of which library actually places the
+  call. See §10.
+- `generation/support/llm_extractor.py` — calls `anyask.ask()` and
+  translates its typed `AskResponse` (or a raised
+  `ProviderError`/`ProviderAuthError`/`ProviderNotFoundError`) into
+  this repo's own `LLMRawResponse` shape, so the rest of the generation
+  pipeline (§4) is unaware `anyask` exists at all.
+- `generation/engine/generation_engine.py` — resolves
+  `provider_name`/`model`/`api_key`/`endpoint`/`api_version`/
+  `deployment`/`region`/`project`/`compartment_id` from CLI/env/config
+  and forwards all of them unconditionally to `extractor.extract()`;
+  `anyask.ask()`'s own construction-kwarg splitting picks out what each
+  provider actually needs and ignores the rest, so there is no
+  per-provider branching on this side either.
 
-### 3.2 Registry and lazy loading (`providers/registry.py`)
+Every per-provider pip extra (`pip install textfsm-ai[anthropic]`, ...)
+is a one-line pass-through to the matching `anyask[<provider>]` extra —
+see §11.
 
-`ProviderRegistry` holds a static map of
-`{provider_name: (module_path, class_name, pip_extra)}` for all 19
-registered names (18 providers + `openai_compat`, the shared
-OpenAI-compatible base class). `registry.get(name)` only calls
-`importlib.import_module()` — and thus only imports that provider's SDK
-— the first time that specific name is requested, caching the resolved
-class afterward. A missing SDK raises a clear `ImportError` naming the
-correct `pip install textfsm-ai[<extra>]`.
-
-This means `import textfsm_ai` and building the registry never require
-any provider SDK to be installed; only *using* a specific provider does.
-See `docs/guides/dependency-footprint.md` for the exact package cost per
-extra.
-
-### 3.3 Two provider shapes
-
-- **Shape A ("OpenAI-compatible")** — `deepseek`, `groq`, `xai`,
-  `together`, `fireworks`, `cerebras`, `perplexity`, `openrouter`,
-  `moonshot` all subclass `OpenAICompatProvider`
-  (`providers/openai_compat_provider.py`), which wraps the `openai`
-  SDK's client pointed at a different `base_url`. No SDK of their own —
-  the `[openai]` pip extra covers all nine.
-- **Shape B ("native SDK")** — `openai`, `anthropic`, `gemini`,
-  `vertexai`, `azure`, `mistral`, `bedrock`, `cohere`, `oci` each have
-  their own provider file with custom `generate()`/`generate_sync()`
-  logic mapping to that SDK's actual request/response shape.
-
-Most providers construct with just `(api_key, model)`. Four need more:
-`azure` (`api_key, endpoint, api_version, model`), `bedrock`
-(`region, model`), `vertexai` (`project, region, model`), `oci`
-(`compartment_id, region, model`). This shaping is hardcoded in
-`generation/engine/generation_engine.py`'s `run()`/
-`run_correction_prompt()` via an `if provider_type.name == ...` chain,
-not something the `Provider` interface abstracts — a new provider
-needing extra constructor params must be added there explicitly.
-
-### 3.4 Model catalog (`model_catalog/`)
+### 3.1 Model catalog (`model_catalog/`)
 
 Separate from the provider *code* is the provider *model catalog*:
 - `providers.yaml` — a flat `{provider: default_model_id}` mapping; not
@@ -136,24 +116,6 @@ described in §7 (`generation/core/models.py`, `dsl/core/models.py`,
 `core/models.py`), which are an unrelated, conventional meaning of
 "models."
 
-### 3.5 Orchestrator routing (`orchestrator/routing.py`)
-
-`RoutingTable` maps a model-name *prefix* to a provider name via an
-ordered list of `RoutingRule(prefix, provider_name)`, checked
-first-match (not longest-prefix-match — ordering matters, and is
-extensively commented in the source for every provider that required
-non-obvious rule placement due to open-weight-model catalog overlaps).
-`Orchestrator.run()` uses `route()` (no fallback) for the primary
-provider, then also tries any other configured provider whose
-`supports(model)` returns `True`, retrying on
-`ProviderRateLimitError`/`ProviderTimeoutError`.
-
-`vertexai` and `oci` are deliberately excluded from the routing table
-entirely — `vertexai` serves identical Gemini model IDs to the native
-`gemini` provider (no distinguishing prefix is possible), and `oci`'s
-`meta.`/`xai.` vendor prefixes collide with Bedrock's own re-hosted
-namespace. Both must always be selected via explicit `--provider`.
-
 ## 4. Generation pipeline (`generation/`)
 
 ```
@@ -168,8 +130,8 @@ generation_engine.run(provider_name, api_key, model, sample, ...)
     ├─ prompt_builder.PromptBuilder().base_prompt(sample)
     │     reads generation/core/prompts.yaml's `base` template
     │
-    ├─ extractor.extract(provider, model, prompt)
-    │     calls provider.generate_sync(), wraps into LLMResponse
+    ├─ extractor.extract(provider_name, model, prompt)
+    │     calls anyask.ask() (§3), wraps into LLMResponse
     │     (timing, token usage, raw payload)
     │
     ├─ structured_extractor.extract(response)
@@ -339,7 +301,7 @@ dataclasses, enums, and known LLM SDK response objects).
 Three separate files named `models.py` exist, each scoped to one
 feature area and holding that area's own dataclasses — this is the
 conventional "data model" meaning, distinct from `model_catalog/`
-(§3.4):
+(§3.1):
 - `core/models.py` — `ValidationResult`
 - `generation/core/models.py` — `LLMRawResponse`, `LLMResponse`,
   `StructuredResponse`, `TemplateValidationResult`,
@@ -374,8 +336,8 @@ Every function follows one of two naming conventions:
 library), and the result types (`LLMResult`, `DSLResult`, `TemplateAST`,
 `DeliveryOutput`, `ValidationResult`). This is the only part of the
 package with a semver-stability contract; everything else
-(`generation/`, `dsl/`, `delivery/`, `providers/`, `model_catalog/`,
-`orchestrator/`) is internal implementation.
+(`generation/`, `dsl/`, `delivery/`, `providers/`, `model_catalog/`) is
+internal implementation.
 
 ## 9. CLI surface (`textfsm_ai/cli/`)
 
@@ -387,9 +349,8 @@ commands:
 | `generate` | `generate_cmd.py` | sample → LLM-generated template, many output-selection flags (`--template-only`, `--records`, `--explain`, `--handling`, `--sample`, `--raw`, `--usage`, `--sections`, `--json`, `--debug`) |
 | `dsl` | `dsl_cmd.py` | template + sample → canonical/readable/recognizers, no LLM call |
 | `pipeline` | `pipeline_cmd.py` | sample → LLM template → DSL compile, in one call, packaged per `--mode` |
-| `list-models` | `list_models_cmd.py` | a provider's live models, fetched from that provider's own API |
+| `list-models` | `list_models_cmd.py` | a provider's live models, via `anyask.list_models()` |
 | `providers` | `providers_cmd.py` | `list`/`info`/`test` subcommands |
-| `orchestrator` | `orchestrator_cmd.py` | `route`/`run` subcommands — the auto-routing path (§3.5), distinct from `generate`/`pipeline`'s explicit `--provider` |
 | `version` | `version_cmd.py` | prints `__version__` |
 
 `generate` and `pipeline` share the exact same provider-credential
@@ -403,7 +364,7 @@ documented inline.
 
 ## 10. Configuration (`providers/config.py`)
 
-`OrchestratorConfig` holds a `Dict[str, ProviderConfig]`
+`ProvidersConfig` holds a `Dict[str, ProviderConfig]`
 (`name`/`type`/`params`), sourced from two places, merged by the CLI
 (env vars take precedence over the YAML file when both are present):
 - `load_config_from_file(path="")` — defaults to
@@ -420,25 +381,31 @@ naming.
 
 ## 11. Packaging & dependencies
 
-Since v0.6.0, `pyproject.toml`'s base `dependencies` covers only the
-core CLI/API (`PyYAML`, `requests`, `click`, `textfsm`, conditionally
-`tomli`) — zero provider SDKs. Every provider is a
-`[project.optional-dependencies]` extra
-(`pip install textfsm-ai[anthropic]`, `[openai]` — also covers the nine
-OpenAI-compatible providers at no extra package cost — `[gemini]`,
-`[vertexai]`, `[azure]`, `[mistral]`, `[bedrock]`, `[cohere]`, `[oci]`,
-or `[all]` for every provider). This only works safely because of the
-lazy-loading registry (§3.2) — without it, importing `textfsm_ai` at all
-would require every SDK regardless of which extra was installed. See
-`docs/guides/dependency-footprint.md` for verified per-extra package
-counts (14–34 packages depending on the provider's own SDK design).
+`pyproject.toml`'s base `dependencies` covers only the core CLI/API
+(`PyYAML`, `requests`, `click`, `textfsm`, conditionally `tomli`) plus
+`anyask` itself — zero provider SDKs. `anyask`'s own bare install pulls
+only `PyYAML`, which this package already depends on unconditionally,
+so adding it is +1 package (`anyask` itself) with zero new *transitive*
+dependencies on a bare `pip install textfsm-ai` — verified via a real
+clean-venv install.
 
-Four provider SDKs are pinned to an exact version rather than a floor,
-each because it's the last release still supporting this package's
-`requires-python = ">=3.9"` floor: `mistralai==1.10.0`,
-`boto3==1.42.97`, `cohere==5.21.1`. `oci==2.182.0` is pinned for
-reproducibility rather than a 3.9 constraint (its latest release already
-supports 3.9).
+Every provider is a `[project.optional-dependencies]` extra that's a
+one-line pass-through to the matching `anyask` extra, e.g. `anthropic =
+["anyask[anthropic]>=0.1.1"]` — `pip install textfsm-ai[anthropic]`
+still works exactly as before, it now resolves `anyask[anthropic]`
+(which pulls the real `anthropic` SDK) instead of pulling that SDK
+directly. `[openai]` also covers the nine OpenAI-compatible providers
+at no extra package cost (same as before); `[all]` pulls
+`anyask[all]`, every provider SDK at once. This only works safely
+because `anyask` does its own lazy SDK importing (§3) — without it,
+importing `textfsm_ai` at all would require every SDK regardless of
+which extra was installed. See `docs/guides/dependency-footprint.md`
+for verified per-extra package counts.
+
+Exact-version pins for individual provider SDKs (e.g. `mistralai`,
+`boto3`, `cohere`, `oci`) are `anyask`'s concern now, not this
+package's — see its own `pyproject.toml` for the current pins and
+rationale.
 
 ## 12. Testing conventions
 
@@ -452,9 +419,10 @@ supports 3.9).
   `lint` (ruff + black check), `format` (ruff + black, writes changes),
   `typecheck` (mypy, config lives in `pyproject.toml`'s `[tool.mypy]`),
   and `docs` (`mkdocs build --strict`).
-- Provider tests mock at the HTTP boundary (`respx`, already a `dev`
-  dependency) rather than mocking SDK client methods directly, to catch
-  real request-shape regressions.
+- Generation-pipeline tests mock `anyask.ask()` directly (function
+  boundary) rather than any HTTP/SDK layer — provider SDK behavior
+  itself is `anyask`'s own test suite's responsibility, not this
+  repo's.
 
 ## 13. Repository layout
 
@@ -463,9 +431,8 @@ textfsm_ai/
   api.py, api_models.py       — public API surface (§8)
   cli/                        — click commands (§9)
   core/                       — Serializable mixin, utils, ValidationResult
-  providers/                  — Provider implementations + registry (§3)
-  model_catalog/              — default model ID per provider (§3.4)
-  orchestrator/                — auto-routing, retries (§3.5)
+  providers/                  — CLI credential config, delegates LLM calls to anyask (§3)
+  model_catalog/              — default model ID per provider (§3.1)
   generation/                  — sample → LLM → validated template (§4)
     core/                      — dataclasses + prompts.yaml
     engine/                    — the run()/run_correction_prompt() pipeline

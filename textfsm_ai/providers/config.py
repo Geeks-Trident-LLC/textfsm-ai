@@ -17,18 +17,18 @@ class ProviderConfig:
 
 
 @dataclass
-class OrchestratorConfig:
+class ProvidersConfig:
     providers: Dict[str, ProviderConfig]
 
 
-def load_config_from_file(path: str = "") -> OrchestratorConfig:
+def load_config_from_file(path: str = "") -> ProvidersConfig:
     if not path:
         from textfsm_ai import BASE_DIR
 
         path = str(BASE_DIR / "model_catalog" / "providers.yaml")
 
     if not os.path.exists(path):
-        return OrchestratorConfig(providers={})
+        return ProvidersConfig(providers={})
 
     with open(path, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f) or {}
@@ -44,10 +44,10 @@ def load_config_from_file(path: str = "") -> OrchestratorConfig:
             params=item.get("params", {}),
         )
 
-    return OrchestratorConfig(providers=providers_cfg)
+    return ProvidersConfig(providers=providers_cfg)
 
 
-def load_config_from_env() -> OrchestratorConfig:
+def load_config_from_env() -> ProvidersConfig:
     providers_cfg: Dict[str, ProviderConfig] = {}
 
     if os.getenv("OPENAI_API_KEY"):
@@ -202,4 +202,4 @@ def load_config_from_env() -> OrchestratorConfig:
             },
         )
 
-    return OrchestratorConfig(providers=providers_cfg)
+    return ProvidersConfig(providers=providers_cfg)

@@ -7,6 +7,12 @@ need an API key; a few cloud-gateway providers (Bedrock, Vertex AI, OCI)
 use their own ambient credential chains instead and take extra parameters
 in place of `api_key`.
 
+The actual per-provider SDK calls are delegated to
+[`anyask`](https://github.com/Geeks-Trident-LLC/anyask), a standalone
+package (same maintainer) that owns the 18 provider implementations —
+textfsm-ai's `pip install textfsm-ai[<provider>]` extras are a thin
+pass-through to the matching `anyask[<provider>]` extra.
+
 Run `textfsm-ai providers list` at any time for the live, code-derived
 version of this table.
 
@@ -41,8 +47,9 @@ examples, including the three cloud-gateway providers above.
 
 ## Two implementation shapes
 
-Internally, providers fall into two groups — this only matters if you're
-extending textfsm-ai itself, not for calling it:
+Internally (inside `anyask`, not this repo), providers fall into two
+groups — this only matters if you're extending provider support itself,
+not for calling textfsm-ai:
 
 - **Shape A** — OpenAI-compatible chat-completions API (DeepSeek, Groq,
   xAI, Together AI, Fireworks AI, Cerebras, Perplexity, OpenRouter,
@@ -55,20 +62,5 @@ extending textfsm-ai itself, not for calling it:
   since they authenticate via their cloud platform's own credential chain
   rather than a project-level API key.
 
-## Routing collisions
-
-A few providers are intentionally **not** included in the orchestrator's
-automatic model-prefix routing table (`orchestrator route` / `orchestrator
-run` without an explicit `--provider`), because their model IDs are
-ambiguous with another provider's:
-
-- **Vertex AI** serves the exact same Gemini model ID strings as the
-  native `gemini` provider (e.g. `gemini-2.5-pro` means the same thing to
-  both) — an unresolvable string collision.
-- **OCI** uses `vendor.model-name` IDs (`meta.llama-3.3-70b-instruct`,
-  `xai.grok-4-fast-reasoning`) that share the `meta.` vendor prefix with
-  Bedrock's own re-hosted model namespace.
-
-Both must always be selected with an explicit `--provider vertexai` /
-`--provider oci` (or `provider="vertexai"` / `provider="oci"` in the
-Python API) — a bare model name will never auto-route to them.
+There is no automatic provider routing or fallback — `--provider` (or
+`provider="..."` in the Python API) is always explicit.

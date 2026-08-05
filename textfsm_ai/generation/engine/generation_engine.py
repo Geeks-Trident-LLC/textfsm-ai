@@ -9,7 +9,6 @@ from textfsm_ai.generation.support import (
     structured_extractor,
     validator,
 )
-from textfsm_ai.providers.registry import get_provider_by_name
 
 
 def run(
@@ -24,24 +23,21 @@ def run(
     compartment_id: str = "",
     **kwargs,
 ):
-    provider_type = get_provider_by_name(provider_name)
-    if provider_type.name == "azure":
-        deployment = model
-        provider = provider_type(api_key, endpoint, api_version, deployment)
-    elif provider_type.name == "bedrock":
-        provider = provider_type(region, model)
-    elif provider_type.name == "vertexai":
-        provider = provider_type(project, region, model)
-    elif provider_type.name == "oci":
-        provider = provider_type(compartment_id, region, model)
-    else:
-        provider = provider_type(api_key, model)
-
     # Build prompt
     prompt = prompt_builder.PromptBuilder().base_prompt(sample)
 
     response = extractor.extract(
-        provider=provider, model=model, prompt=prompt, **kwargs
+        provider_name,
+        model=model,
+        prompt=prompt,
+        api_key=api_key,
+        endpoint=endpoint,
+        api_version=api_version,
+        deployment=model,
+        region=region,
+        project=project,
+        compartment_id=compartment_id,
+        **kwargs,
     )
     structured = structured_extractor.extract(response)
     result = generator.generate(structured)
@@ -62,18 +58,6 @@ def run_correction_prompt(
     compartment_id: str = "",
     **kwargs,
 ):
-    provider_type = get_provider_by_name(provider_name)
-    if provider_type.name == "azure":
-        provider = provider_type(api_key, endpoint, api_version, model)
-    elif provider_type.name == "bedrock":
-        provider = provider_type(region, model)
-    elif provider_type.name == "vertexai":
-        provider = provider_type(project, region, model)
-    elif provider_type.name == "oci":
-        provider = provider_type(compartment_id, region, model)
-    else:
-        provider = provider_type(api_key, model)
-
     metadata = prev_result.metadata
 
     prev_response = metadata.response.content if metadata else ""
@@ -88,7 +72,17 @@ def run_correction_prompt(
     )
 
     response = extractor.extract(
-        provider=provider, model=model, prompt=prompt, **kwargs
+        provider_name,
+        model=model,
+        prompt=prompt,
+        api_key=api_key,
+        endpoint=endpoint,
+        api_version=api_version,
+        deployment=model,
+        region=region,
+        project=project,
+        compartment_id=compartment_id,
+        **kwargs,
     )
     structured = structured_extractor.extract(response)
     result = generator.generate(structured)

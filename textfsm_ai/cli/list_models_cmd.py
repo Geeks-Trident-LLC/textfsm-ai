@@ -1,9 +1,7 @@
 # textfsm_ai/cli/list_models_cmd.py
 
+import anyask
 import click
-
-from textfsm_ai.providers.model_listing_mixin import ModelListingMixin
-from textfsm_ai.providers.registry import registry
 
 
 @click.command("list-models")
@@ -13,22 +11,14 @@ def list_models(provider: str) -> None:
     List a provider's live models, fetched from the provider's own API.
     """
 
+    click.echo(f"Fetching models from provider: {provider} ...\n")
+
     try:
-        provider_cls = registry.get(provider)
-    except KeyError:
-        click.echo(f"Unknown provider: {provider}")
+        models = anyask.list_models(provider)
+    except anyask.ProviderNotFoundError:
+        click.echo(f"Unknown provider or unsupported model listing: {provider}")
         click.echo("Use `textfsm-ai providers list` to see available providers.")
         return
-
-    if not issubclass(provider_cls, ModelListingMixin):
-        click.echo(f"Provider '{provider}' does not support model listing.")
-        return
-
-    click.echo(f"Fetching models from provider: {provider} ...\n")
-    prov = provider_cls.from_env()
-
-    try:
-        models = prov.fetch_latest_models()
     except Exception as e:
         click.echo(f"Error: {e}")
         return

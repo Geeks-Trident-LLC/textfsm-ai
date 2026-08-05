@@ -1,7 +1,8 @@
 # tests/cli/test_providers_cmd.py
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
+import anyask
 from click.testing import CliRunner
 
 from textfsm_ai.cli.providers_cmd import (
@@ -10,55 +11,91 @@ from textfsm_ai.cli.providers_cmd import (
     providers_list,
     providers_test,
 )
-from textfsm_ai.orchestrator.types import OrchestratorResponse
-from textfsm_ai.providers.config import OrchestratorConfig, ProviderConfig
+from textfsm_ai.providers.config import ProviderConfig, ProvidersConfig
 
 
 def test_providers_test_cli():
     runner = CliRunner()
 
-    # Fake orchestrator response
-    fake_resp = OrchestratorResponse(
-        provider="openai", model="openai/gpt-4o-mini", raw={"content": "hello world"}
+    fake_resp = anyask.AskResponse(
+        content="hello world",
+        usage=anyask.TokenUsage(prompt_tokens=1, completion_tokens=2, total_tokens=3),
+        finish_reason="stop",
+        provider="openai",
+        model="gpt-4o-mini",
+        raw={},
     )
 
-    func_name = "textfsm_ai.cli.providers_cmd.create_orchestrator_from_config"
-
-    # Patch config loader + orchestrator factory + asyncio.run
     with (
         patch("textfsm_ai.cli.providers_cmd._load_config") as mock_load_cfg,
-        patch(func_name) as mock_factory,
-        patch("textfsm_ai.cli.providers_cmd.asyncio.run") as mock_async_run,
+        patch("textfsm_ai.cli.providers_cmd.anyask.ask") as mock_ask,
     ):
-        mock_load_cfg.return_value = MagicMock()  # config object not used
-        mock_orch = MagicMock()
-        mock_factory.return_value = mock_orch
-
-        # When asyncio.run(orch.run(req)) is called, return fake_resp
-        mock_async_run.return_value = fake_resp
+        mock_load_cfg.return_value = ProvidersConfig(providers={})
+        mock_ask.return_value = fake_resp
 
         result = runner.invoke(
-            providers_test, ["--model", "openai/gpt-4o-mini", "--prompt", "hello"]
+            providers_test,
+            [
+                "--provider",
+                "openai",
+                "--model",
+                "gpt-4o-mini",
+                "--prompt",
+                "hello",
+            ],
         )
 
-    # Assertions
     assert result.exit_code == 0
     output = result.output
 
     assert "Provider: openai" in output
-    assert "Model: openai/gpt-4o-mini" in output
+    assert "Model: gpt-4o-mini" in output
     assert "hello world" in output
 
-    # Ensure orchestrator was actually called
-    mock_async_run.assert_called_once()
-    mock_factory.assert_called_once()
+    mock_ask.assert_called_once_with("hello", provider="openai", model="gpt-4o-mini")
+
+
+def test_providers_test_cli_passes_configured_params():
+    runner = CliRunner()
+
+    fake_resp = anyask.AskResponse(
+        content="hi",
+        usage=anyask.TokenUsage(prompt_tokens=1, completion_tokens=1, total_tokens=2),
+        finish_reason="stop",
+        provider="anthropic",
+        model="m",
+        raw={},
+    )
+
+    cfg = ProvidersConfig(
+        providers={
+            "anthropic": ProviderConfig(
+                name="anthropic", type="anthropic", params={"api_key": "sk-test"}
+            )
+        }
+    )
+
+    with (
+        patch("textfsm_ai.cli.providers_cmd._load_config", return_value=cfg),
+        patch("textfsm_ai.cli.providers_cmd.anyask.ask") as mock_ask,
+    ):
+        mock_ask.return_value = fake_resp
+
+        runner.invoke(
+            providers_test,
+            ["--provider", "anthropic", "--model", "m", "--prompt", "hi"],
+        )
+
+    mock_ask.assert_called_once_with(
+        "hi", provider="anthropic", model="m", api_key="sk-test"
+    )
 
 
 # ---------------------------------------------------------
 # _load_config
 # ---------------------------------------------------------
 def test_load_config_uses_env_when_no_path():
-    sentinel = OrchestratorConfig(providers={})
+    sentinel = ProvidersConfig(providers={})
 
     with patch(
         "textfsm_ai.cli.providers_cmd.load_config_from_env", return_value=sentinel
@@ -70,7 +107,7 @@ def test_load_config_uses_env_when_no_path():
 
 
 def test_load_config_uses_file_when_path_given():
-    sentinel = OrchestratorConfig(providers={})
+    sentinel = ProvidersConfig(providers={})
 
     with patch(
         "textfsm_ai.cli.providers_cmd.load_config_from_file", return_value=sentinel
@@ -101,7 +138,7 @@ def test_providers_list_empty_registry():
 def test_providers_info_found_masks_sensitive_params():
     runner = CliRunner()
 
-    cfg = OrchestratorConfig(
+    cfg = ProvidersConfig(
         providers={
             "openai": ProviderConfig(
                 name="openai",
