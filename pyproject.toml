@@ -23,7 +23,6 @@ dependencies = [
     "requests>=2.32",
     "click>=8.1",
     "textfsm>=1.1.0",
-    "tomli; python_version < '3.11'",
     "anyask>=0.1.1",
 ]
 

@@ -11,10 +11,12 @@ param(
 )
 
 function Get-Version {
-    @"
-import tomllib
-print(tomllib.load(open("pyproject.toml","rb"))["project"]["version"])
-"@ | python
+    $content = Get-Content -Raw "pyproject.toml"
+    if ($content -match 'version\s*=\s*"([^"]+)"') {
+        return $matches[1]
+    }
+    Write-Error "Version not found in pyproject.toml"
+    exit 1
 }
 
 function Update-Version([string]$part) {
