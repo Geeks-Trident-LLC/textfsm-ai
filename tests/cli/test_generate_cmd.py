@@ -18,7 +18,7 @@ from textfsm_ai.cli.generate_cmd import (
     resolve_project,
     resolve_region,
 )
-from textfsm_ai.providers.config import OrchestratorConfig, ProviderConfig
+from textfsm_ai.providers.config import ProviderConfig, ProvidersConfig
 
 # All provider-specific env vars the helpers under test consult. Cleared in
 # every relevant test so a developer's real API keys never leak into
@@ -66,8 +66,8 @@ def _mocked_generate(
         patch("textfsm_ai.cli.generate_cmd.load_config_from_env") as mock_env,
         patch("textfsm_ai.cli.generate_cmd.GenerationController") as mock_ctrl,
     ):
-        mock_file.return_value = OrchestratorConfig(providers={provider: fake_provider})
-        mock_env.return_value = OrchestratorConfig(providers={})
+        mock_file.return_value = ProvidersConfig(providers={provider: fake_provider})
+        mock_env.return_value = ProvidersConfig(providers={})
         yield CliRunner(), mock_ctrl.return_value, input_file
 
 
@@ -86,8 +86,8 @@ def test_generate_basic_output(tmp_path):
         patch("textfsm_ai.cli.generate_cmd.load_config_from_env") as mock_env,
         patch("textfsm_ai.cli.generate_cmd.GenerationController") as mock_ctrl,
     ):
-        mock_file.return_value = OrchestratorConfig(providers={"openai": fake_provider})
-        mock_env.return_value = OrchestratorConfig(providers={})
+        mock_file.return_value = ProvidersConfig(providers={"openai": fake_provider})
+        mock_env.return_value = ProvidersConfig(providers={})
 
         instance = mock_ctrl.return_value
         instance.run.return_value.last_stage.template = "mocked output"

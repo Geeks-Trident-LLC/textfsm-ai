@@ -2,8 +2,8 @@
 
 `textfsm-ai` installs a `textfsm-ai` command with subcommands for generating
 templates, compiling templates into readable DSL/recognizer form, running
-the full sample-to-output pipeline in one shot, listing/inspecting
-providers, and driving the orchestrator directly.
+the full sample-to-output pipeline in one shot, and listing/inspecting
+providers.
 
 ## Version
 
@@ -185,27 +185,11 @@ Prints the configured type and params for that provider, with sensitive keys
 (`api_key`, `token`, `secret`, `password`-like) masked to `***`.
 
 ```bash
-textfsm-ai providers test --model openai/gpt-4o-mini --prompt "Say hello" [--config path/to/config.yaml]
+textfsm-ai providers test --provider openai --model gpt-4o-mini --prompt "Say hello" [--config path/to/config.yaml]
 ```
-Sends a test prompt straight through the orchestrator to whichever provider
-the model routes to, and prints the raw response.
-
-## orchestrator
-
-```bash
-textfsm-ai orchestrator route --model claude-opus-4-8
-```
-```text
-Model: claude-opus-4-8
-Routed provider: anthropic
-```
-Shows which provider a model would route to, without making a real call.
-
-```bash
-textfsm-ai orchestrator run --model gpt-4o-mini --prompt "Say hello" [--config path/to/config.yaml]
-```
-Runs a full orchestrator request (routing + retries + provider call) and
-prints the response.
+Sends a test prompt straight to the given provider and prints the raw
+response - a quick way to confirm credentials/connectivity without
+running a full template generation.
 
 ## Next steps
 

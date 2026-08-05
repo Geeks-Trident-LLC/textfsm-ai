@@ -52,19 +52,3 @@ def test_providers_info_no_config(monkeypatch):
 
     assert result.exit_code == 0
     assert "No configured provider" in result.output
-
-
-def test_orchestrator_route_basic():
-    """
-    The orchestrator route command should resolve the provider based on
-    model prefix rules and print the routed provider name.
-    """
-    runner = CliRunner()
-    result = runner.invoke(
-        main,
-        ["orchestrator", "route", "--model", "openai/gpt-4o-mini"],
-    )
-
-    assert result.exit_code == 0
-    assert "Routed provider" in result.output
-    assert "openai" in result.output

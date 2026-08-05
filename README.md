@@ -11,7 +11,7 @@ It helps you automatically generate templates, validate patterns, explain parsin
 
 - **AI-Powered Template Generation** — Turn raw CLI output into production-ready TextFSM templates in seconds.
 - **Smart Validation & Refinement** — Automatically verify template correctness and refine ambiguous patterns with AI assistance.
-- **Flexible Multi-Provider AI Routing** — Use the best AI model for each task with automatic routing across supported cloud providers.
+- **18 Supported LLM Providers** — Pick the provider and model for each task; every provider is called through one consistent interface.
 
 ---
 

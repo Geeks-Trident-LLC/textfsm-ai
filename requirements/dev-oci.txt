@@ -1,4 +1,4 @@
-# One-command local dev setup for oci. See requirements/README.md for
-# how this differs from requirements-oci.txt.
+# One-command local dev setup for oci. See requirements/README.md
+# for how this differs from requirements-oci.txt.
 -e .[dev]
-oci==2.182.0
+anyask[oci]>=0.1.1

@@ -1,9 +1,6 @@
-# SDK for the bedrock provider extra.
-# Pinned exactly: 1.42.97 is the newest boto3 release with a
-# Python 3.9-compatible botocore; verified via
-# `pip download --python-version 3.9` resolution, since boto3 bumps
-# its Python floor frequently across even small version bumps.
+# SDK for the bedrock provider extra, via anyask.
 #
 # Mirrors the `bedrock` extra in pyproject.toml - keep in sync if that
-# changes.
-boto3==1.42.97
+# changes. See https://github.com/Geeks-Trident-LLC/anyask for the SDK
+# version pin anyask[bedrock] resolves to.
+anyask[bedrock]>=0.1.1

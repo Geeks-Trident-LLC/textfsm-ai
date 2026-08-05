@@ -1,6 +1,4 @@
-# One-command local dev setup for openai (also covers deepseek/groq/
-# xai/together/fireworks/cerebras/perplexity/openrouter/moonshot).
-# See requirements/README.md for how this differs from
-# requirements-openai.txt.
+# One-command local dev setup for openai. See requirements/README.md
+# for how this differs from requirements-openai.txt.
 -e .[dev]
-openai>=1.0.0
+anyask[openai]>=0.1.1

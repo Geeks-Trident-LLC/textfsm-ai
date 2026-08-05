@@ -1,88 +1,50 @@
 # textfsm_ai/generation/engine/llm_extractor.py
 
 
+import anyask
+
 from textfsm_ai.generation.core.models import LLMRawResponse
-from textfsm_ai.orchestrator.provider import Provider
 
 
-def extract(provider: Provider, model: str, prompt: str, **kwargs) -> LLMRawResponse:
+def extract(provider_name: str, model: str, prompt: str, **kwargs) -> LLMRawResponse:
     """
-    Robust LLM extractor that gracefully handles:
-    - provider overload / busy / rate limit
-    - network failures
-    - malformed provider responses
-    - missing content
-    - provider-supplied error payloads
+    Call `provider_name`'s `model` via `anyask.ask()` and normalize the
+    result into the dict-shaped `LLMRawResponse.raw` this module has
+    always produced, so downstream code (extractor.py) needs no changes.
+
+    Any failure - unknown provider, missing credentials, a provider SDK
+    error, network failure - surfaces as `anyask`'s exception types
+    (`ProviderNotFoundError`/`ProviderAuthError`/`ProviderError`, all
+    subclassing `Exception`) and is caught here.
     """
 
     try:
-        raw = provider.generate_sync(prompt, model=model, **kwargs)
-
-        # Provider returned None or empty
-        if not raw:
-            return LLMRawResponse(
-                raw={},
-                reason="provider returned empty or null response",
-                ready=False,
-            )
-
-        # Provider returned something non-dict (bad provider implementation)
-        if not isinstance(raw, dict):
-            return LLMRawResponse(
-                raw={"raw": raw},
-                reason=f"provider returned non-dict response: {type(raw).__name__}",
-                ready=False,
-            )
-
-        # ---------------------------------------------------------
-        # 1. Provider returned explicit error payload: {"error": {...}}
-        # ---------------------------------------------------------
-        if isinstance(raw.get("error"), dict):
-            err = raw["error"]
-            err_type = err.get("type", "unknown")
-            err_msg = err.get("message", "no-message")
-            return LLMRawResponse(
-                raw=raw,
-                reason=f"LLM-ERROR-{err_type}-{err_msg}",
-                ready=False,
-            )
-
-        # ---------------------------------------------------------
-        # 2. Provider returned raw response object containing error
-        #    e.g. raw["raw"].error.type / raw["raw"].error.message
-        # ---------------------------------------------------------
-        raw_obj = raw.get("raw")
-        if raw_obj is not None:
-            err_obj = getattr(raw_obj, "error", None)
-            if err_obj:
-                err_type = getattr(err_obj, "type", "unknown")
-                err_msg = getattr(err_obj, "message", "no-message")
-                return LLMRawResponse(
-                    raw=raw,
-                    reason=f"LLM-ERROR-{err_type}-{err_msg}",
-                    ready=False,
-                )
-
-        # ---------------------------------------------------------
-        # 3. Missing or empty content
-        # ---------------------------------------------------------
-        content = raw.get("content")
-        if content is None or content == "":
-            return LLMRawResponse(
-                raw=raw,
-                reason="provider returned response without content",
-                ready=False,
-            )
-
-        # ---------------------------------------------------------
-        # 4. Success
-        # ---------------------------------------------------------
-        return LLMRawResponse(raw=raw, ready=True)
-
+        response = anyask.ask(prompt, provider=provider_name, model=model, **kwargs)
     except Exception as ex:
-        # Catch-all for overload, busy, network, provider errors
         return LLMRawResponse(
             raw={},
             reason=f"{type(ex).__name__}: {ex}",
             ready=False,
         )
+
+    content = response.content
+
+    if content is None or content == "":
+        return LLMRawResponse(
+            raw={"content": content, "raw": response.raw},
+            reason="provider returned response without content",
+            ready=False,
+        )
+
+    return LLMRawResponse(
+        raw={
+            "content": content,
+            "usage": {
+                "prompt_tokens": response.usage.prompt_tokens,
+                "completion_tokens": response.usage.completion_tokens,
+                "total_tokens": response.usage.total_tokens,
+            },
+            "raw": response.raw,
+        },
+        ready=True,
+    )

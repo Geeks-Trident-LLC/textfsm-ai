@@ -1,152 +1,113 @@
 # tests/unit/generation/support/test_llm_extractor.py
 
-from types import SimpleNamespace
+from unittest.mock import patch
+
+import anyask
 
 from textfsm_ai.generation.core.models import LLMRawResponse
 from textfsm_ai.generation.support.llm_extractor import extract
 
 
-# ---------------------------------------------------------
-# Mock Provider
-# ---------------------------------------------------------
-class MockProvider:
-    def __init__(self, behavior):
-        """
-        behavior: dict controlling provider behavior
-          - {"return": {...}} → return this dict
-          - {"return": None} → return None
-          - {"raise": Exception("msg")} → raise exception
-        """
-        self.behavior = behavior
-
-    def generate_sync(self, prompt, model):
-        if "raise" in self.behavior:
-            raise self.behavior["raise"]
-        return self.behavior.get("return")
+def _ask_response(content="hello", prompt_tokens=10, completion_tokens=20, raw="RAW"):
+    return anyask.AskResponse(
+        content=content,
+        usage=anyask.TokenUsage(
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            total_tokens=prompt_tokens + completion_tokens,
+        ),
+        finish_reason="stop",
+        provider="anthropic",
+        model="x",
+        raw=raw,
+    )
 
 
-# ---------------------------------------------------------
-# Tests
-# ---------------------------------------------------------
 def test_extract_success_nonempty():
-    provider = MockProvider({"return": {"content": "hello"}})
-
-    result = extract(provider, model="x", prompt="test")
+    with patch("anyask.ask", return_value=_ask_response(content="hello")):
+        result = extract("anthropic", model="x", prompt="test")
 
     assert isinstance(result, LLMRawResponse)
     assert result.ready is True
-    assert result.raw == {"content": "hello"}
+    assert result.raw["content"] == "hello"
+    assert result.raw["usage"] == {
+        "prompt_tokens": 10,
+        "completion_tokens": 20,
+        "total_tokens": 30,
+    }
+    assert result.raw["raw"] == "RAW"
     assert result.reason == ""
 
 
-def test_extract_success_empty_dict():
-    provider = MockProvider({"return": {}})
+def test_extract_empty_content():
+    with patch("anyask.ask", return_value=_ask_response(content="")):
+        result = extract("anthropic", model="x", prompt="test")
 
-    result = extract(provider, model="x", prompt="test")
+    assert isinstance(result, LLMRawResponse)
+    assert result.ready is False
+    assert result.reason == "provider returned response without content"
+
+
+def test_extract_none_content():
+    with patch("anyask.ask", return_value=_ask_response(content=None)):
+        result = extract("anthropic", model="x", prompt="test")
+
+    assert isinstance(result, LLMRawResponse)
+    assert result.ready is False
+    assert result.reason == "provider returned response without content"
+
+
+def test_extract_provider_error_exception():
+    with patch("anyask.ask", side_effect=anyask.ProviderError("boom")):
+        result = extract("anthropic", model="x", prompt="test")
 
     assert isinstance(result, LLMRawResponse)
     assert result.ready is False
     assert result.raw == {}
-    assert "empty" in result.reason.lower()
-
-
-def test_extract_success_none():
-    provider = MockProvider({"return": None})
-
-    result = extract(provider, model="x", prompt="test")
-
-    assert isinstance(result, LLMRawResponse)
-    assert result.ready is False
-    assert result.raw == {}
-    assert "empty" in result.reason.lower()
-
-
-def test_extract_exception():
-    provider = MockProvider({"raise": RuntimeError("boom")})
-
-    result = extract(provider, model="x", prompt="test")
-
-    assert isinstance(result, LLMRawResponse)
-    assert result.ready is False
-    assert result.raw == {}
-    assert "RuntimeError" in result.reason
+    assert "ProviderError" in result.reason
     assert "boom" in result.reason
 
 
-def test_extract_non_dict_response():
-    provider = MockProvider({"return": "unexpected string response"})
-
-    result = extract(provider, model="x", prompt="test")
+def test_extract_provider_auth_error_exception():
+    with patch("anyask.ask", side_effect=anyask.ProviderAuthError("no api key")):
+        result = extract("anthropic", model="x", prompt="test")
 
     assert result.ready is False
-    assert result.raw == {"raw": "unexpected string response"}
-    assert "non-dict response: str" in result.reason
+    assert "ProviderAuthError" in result.reason
+    assert "no api key" in result.reason
 
 
-def test_extract_explicit_error_payload():
-    provider = MockProvider(
-        {"return": {"error": {"type": "rate_limit", "message": "too many requests"}}}
+def test_extract_provider_not_found_exception():
+    with patch("anyask.ask", side_effect=anyask.ProviderNotFoundError("unknown")):
+        result = extract("bogus", model="x", prompt="test")
+
+    assert result.ready is False
+    assert "ProviderNotFoundError" in result.reason
+
+
+def test_extract_generic_exception():
+    with patch("anyask.ask", side_effect=RuntimeError("network down")):
+        result = extract("anthropic", model="x", prompt="test")
+
+    assert result.ready is False
+    assert "RuntimeError" in result.reason
+    assert "network down" in result.reason
+
+
+def test_extract_forwards_provider_model_prompt_and_kwargs():
+    with patch("anyask.ask", return_value=_ask_response()) as mock_ask:
+        extract(
+            "azure",
+            model="my-deployment",
+            prompt="test prompt",
+            api_key="k",
+            endpoint="https://example.azure.com",
+        )
+
+    mock_ask.assert_called_once_with(
+        "test prompt",
+        provider="azure",
+        model="my-deployment",
+        api_key="k",
+        endpoint="https://example.azure.com",
     )
-
-    result = extract(provider, model="x", prompt="test")
-
-    assert result.ready is False
-    assert result.reason == "LLM-ERROR-rate_limit-too many requests"
-
-
-def test_extract_explicit_error_payload_missing_type_and_message():
-    provider = MockProvider({"return": {"error": {}}})
-
-    result = extract(provider, model="x", prompt="test")
-
-    assert result.ready is False
-    assert result.reason == "LLM-ERROR-unknown-no-message"
-
-
-def test_extract_nested_raw_object_with_error_attribute():
-    raw_obj = SimpleNamespace(
-        error=SimpleNamespace(type="server_error", message="internal failure")
-    )
-    provider = MockProvider({"return": {"raw": raw_obj}})
-
-    result = extract(provider, model="x", prompt="test")
-
-    assert result.ready is False
-    assert result.reason == "LLM-ERROR-server_error-internal failure"
-
-
-def test_extract_nested_raw_object_error_missing_attrs_uses_defaults():
-    raw_obj = SimpleNamespace(error=SimpleNamespace())
-    provider = MockProvider({"return": {"raw": raw_obj}})
-
-    result = extract(provider, model="x", prompt="test")
-
-    assert result.ready is False
-    assert result.reason == "LLM-ERROR-unknown-no-message"
-
-
-def test_extract_raw_object_without_error_attribute_proceeds_normally():
-    raw_obj = SimpleNamespace(some_field="value")
-    provider = MockProvider({"return": {"raw": raw_obj, "content": "hello"}})
-
-    result = extract(provider, model="x", prompt="test")
-
-    assert result.ready is True
-
-
-def test_extract_missing_content_key():
-    provider = MockProvider({"return": {"some_other_key": "value"}})
-
-    result = extract(provider, model="x", prompt="test")
-
-    assert result.ready is False
-    assert result.reason == "provider returned response without content"
-
-
-def test_extract_empty_string_content():
-    provider = MockProvider({"return": {"content": ""}})
-
-    result = extract(provider, model="x", prompt="test")
-
-    assert result.ready is False
-    assert result.reason == "provider returned response without content"

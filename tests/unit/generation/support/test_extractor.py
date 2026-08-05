@@ -5,27 +5,13 @@ from textfsm_ai.generation.support import extractor
 
 
 # ---------------------------------------------------------
-# Mock provider
-# ---------------------------------------------------------
-class MockProvider:
-    name = "MockProvider"
-
-    def __init__(self, behavior):
-        """
-        behavior:
-          - {"raw": LLMRawResponse(...)}
-        """
-        self.behavior = behavior
-
-
-# ---------------------------------------------------------
 # Patch llm_extractor.extract
 # ---------------------------------------------------------
 class DummyLLMExtractor:
     def __init__(self, raw_response):
         self.raw_response = raw_response
 
-    def __call__(self, provider, model, prompt):
+    def __call__(self, provider_name, model, prompt, **kwargs):
         return self.raw_response
 
 
@@ -44,8 +30,7 @@ def test_extract_success_with_content(monkeypatch):
         DummyLLMExtractor(raw),
     )
 
-    provider = MockProvider({})
-    result = extractor.extract(provider, model="m", prompt="p")
+    result = extractor.extract("MockProvider", model="m", prompt="p")
 
     assert isinstance(result, LLMResponse)
     assert result.ready is True
@@ -70,8 +55,7 @@ def test_extract_success_empty_content(monkeypatch):
         DummyLLMExtractor(raw),
     )
 
-    provider = MockProvider({})
-    result = extractor.extract(provider, model="m", prompt="p")
+    result = extractor.extract("MockProvider", model="m", prompt="p")
 
     assert isinstance(result, LLMResponse)
     assert result.ready is False
@@ -88,8 +72,7 @@ def test_extract_failure_raw_not_ready(monkeypatch):
         DummyLLMExtractor(raw),
     )
 
-    provider = MockProvider({})
-    result = extractor.extract(provider, model="m", prompt="p")
+    result = extractor.extract("MockProvider", model="m", prompt="p")
 
     assert isinstance(result, LLMResponse)
     assert result.ready is False
@@ -117,8 +100,7 @@ def test_extract_usage_variants(monkeypatch):
         DummyLLMExtractor(raw),
     )
 
-    provider = MockProvider({})
-    result = extractor.extract(provider, model="m", prompt="p")
+    result = extractor.extract("MockProvider", model="m", prompt="p")
 
     assert result.input_tokens == 10
     assert result.output_tokens == 20
@@ -134,8 +116,7 @@ def test_extract_no_usage(monkeypatch):
         DummyLLMExtractor(raw),
     )
 
-    provider = MockProvider({})
-    result = extractor.extract(provider, model="m", prompt="p")
+    result = extractor.extract("MockProvider", model="m", prompt="p")
 
     assert result.input_tokens is None
     assert result.output_tokens is None

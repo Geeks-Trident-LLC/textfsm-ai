@@ -1,5 +1,6 @@
-# SDK for the azure provider extra.
+# SDK for the azure provider extra, via anyask.
 #
 # Mirrors the `azure` extra in pyproject.toml - keep in sync if that
-# changes.
-azure-ai-inference>=1.0.0b9
+# changes. See https://github.com/Geeks-Trident-LLC/anyask for the SDK
+# version pin anyask[azure] resolves to.
+anyask[azure]>=0.1.1

@@ -1,4 +1,4 @@
 # One-command local dev setup for cohere. See requirements/README.md
 # for how this differs from requirements-cohere.txt.
 -e .[dev]
-cohere==5.21.1
+anyask[cohere]>=0.1.1
