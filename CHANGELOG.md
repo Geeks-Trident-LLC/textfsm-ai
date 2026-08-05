@@ -1,3 +1,22 @@
+## v0.8.1 — 2026‑08‑05
+
+### Removed
+- `scripts/verify-version.py`/`.ps1` - redundant with
+  `tests/unit/test_version_consistency.py`, which already runs the same
+  regex-based version-consistency check as a real pytest test in CI.
+  The now-dangling pre-commit hook and Makefile target that invoked
+  `verify-version.py` are removed with it.
+- The conditional `tomli` dependency in `pyproject.toml` - nothing in
+  `textfsm_ai`'s own source or tooling parses TOML anymore (see below).
+
+### Changed
+- Every remaining place that read `pyproject.toml`'s version
+  (`release.ps1`'s `Get-Version`, the `Makefile`'s `VERSION :=`, and
+  the docs-deploy GitHub Actions workflow) used `tomllib`/`tomli`
+  instead of the regex approach already used elsewhere in this repo.
+  Refactored all three to regex - `release.ps1` now uses PowerShell's
+  native `-match` instead of shelling out to Python at all.
+
 ## v0.8.0 — 2026‑08‑05
 
 ### Changed
