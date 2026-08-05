@@ -1,11 +1,4 @@
-VERSION := $(shell python - <<'EOF'
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
-print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])
-EOF
-)
+VERSION := $(shell python -c "import re; print(re.search(r'version\s*=\s*\"([^\"]+)\"', open('pyproject.toml').read()).group(1))")
 
 CURRENT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 
@@ -111,10 +104,6 @@ tox-typecheck:
 # -----------------------------
 # Version checks
 # -----------------------------
-verify-version:
-	@echo "Checking version consistency..."
-	@python scripts/verify-version.py
-
 test-version:
 	pytest -q tests/unit/test_version_consistency.py
 
@@ -122,4 +111,4 @@ test-version:
     release-test release-prod release \
     bump-patch bump-minor bump-major \
     tox tox-lint tox-typecheck \
-    verify-version test-version
+    test-version

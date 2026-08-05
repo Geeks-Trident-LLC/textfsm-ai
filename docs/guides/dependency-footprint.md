@@ -21,10 +21,9 @@ pip install textfsm-ai
 ```
 
 Installs `textfsm_ai` itself plus its 5 core dependencies: `PyYAML`,
-`requests`, `click`, `textfsm`, and `anyask` (`tomli` also lists as a
-dependency, but only actually installs on Python <3.11). `anyask`'s own
-bare install needs only `PyYAML`, already in this list, so it adds
-exactly one package with zero new transitive dependencies.
+`requests`, `click`, `textfsm`, and `anyask`. `anyask`'s own bare
+install needs only `PyYAML`, already in this list, so it adds exactly
+one package with zero new transitive dependencies.
 
 This is fully functional on its own — `import textfsm_ai`, the CLI, and
 `textfsm-ai providers list` all work. Only *using* a provider requires

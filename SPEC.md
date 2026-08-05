@@ -382,8 +382,8 @@ naming.
 ## 11. Packaging & dependencies
 
 `pyproject.toml`'s base `dependencies` covers only the core CLI/API
-(`PyYAML`, `requests`, `click`, `textfsm`, conditionally `tomli`) plus
-`anyask` itself — zero provider SDKs. `anyask`'s own bare install pulls
+(`PyYAML`, `requests`, `click`, `textfsm`) plus `anyask` itself — zero
+provider SDKs. `anyask`'s own bare install pulls
 only `PyYAML`, which this package already depends on unconditionally,
 so adding it is +1 package (`anyask` itself) with zero new *transitive*
 dependencies on a bare `pip install textfsm-ai` — verified via a real
