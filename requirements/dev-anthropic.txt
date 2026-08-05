@@ -1,4 +1,4 @@
 # One-command local dev setup for anthropic. See requirements/README.md
 # for how this differs from requirements-anthropic.txt.
 -e .[dev]
-anthropic>=0.8.0
+anyask[anthropic]>=0.1.1

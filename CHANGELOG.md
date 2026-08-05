@@ -1,3 +1,33 @@
+## v0.8.0 — 2026‑08‑05
+
+### Changed
+- **Breaking (internal only):** all 18 LLM provider implementations are
+  now delegated to [`anyask`](https://github.com/Geeks-Trident-LLC/anyask)
+  (same author, MIT) instead of being vendored in this repo.
+  `textfsm_ai.providers.<x>_provider` and `textfsm_ai.providers.registry`
+  no longer exist; `textfsm_ai/providers/` now holds only CLI credential
+  resolution (`config.py`, `OrchestratorConfig` renamed to
+  `ProvidersConfig`). `pip install textfsm-ai[<provider>]` is
+  **unchanged** for end users - every extra name still works, now as a
+  one-line pass-through to the matching `anyask[<provider>]` extra.
+- **Breaking (internal only):** removed `textfsm_ai/orchestrator/`
+  entirely, including the `textfsm-ai orchestrator route/run` CLI
+  commands. It auto-routed a bare model name to a provider with
+  fallback/retry, but was confirmed unused by the real
+  `generate`/`pipeline` path (which always resolves a provider
+  explicitly via `--provider`) and duplicated `generate` while doing
+  exactly the routing/fallback `anyask` itself explicitly avoids.
+  `providers test` (a provider connectivity smoke test) is kept, now
+  calling `anyask.ask()` directly with a required `--provider` flag
+  instead of inferring the provider from a `"provider/model"`-shaped
+  `--model` string via the removed routing table.
+
+### Removed
+- `textfsm_ai/orchestrator/` (`orchestrator.py`, `routing.py`,
+  `factory.py`, `types.py`, `errors.py`, `provider.py`)
+- `textfsm_ai/providers/*_provider.py` (18 files), `registry.py`,
+  `model_listing_mixin.py`
+
 ## v0.7.1 — 2026‑08‑02
 
 ### Fixed

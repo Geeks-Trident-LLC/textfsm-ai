@@ -1,28 +1,31 @@
-# v0.7.1 — Accurate Token Usage
+# v0.8.0 — Provider Calls Delegated to `anyask`
 
-## 🐛 Fixed: Token Usage Was Undercounted
-`--mode info/debug` and `generate --usage` reported only the *last*
-generation attempt's token counts, silently dropping every prior
-base-prompt attempt and correction-prompt retry - each a real, billed
-LLM call. A run that failed twice before succeeding on a
-correction-prompt retry showed only that final call's numbers.
+## 🔧 Changed: Providers Now Powered by `anyask`
+All 18 LLM provider implementations are now delegated to
+[`anyask`](https://github.com/Geeks-Trident-LLC/anyask) - a standalone
+package (same maintainer) that owns the actual per-provider SDK calls -
+instead of being vendored inside `textfsm-ai`.
 
-`Usage` now sums tokens and duration across every attempt, and gains a
-`calls` field:
+**Nothing changes for normal usage.** `pip install
+textfsm-ai[anthropic]` (or any other provider) still works exactly as
+before; it now pulls in `anyask[anthropic]` instead of the SDK
+directly, adding exactly one extra package with zero new transitive
+dependencies.
 
-```
-==== LLM Usage ====
-LLM Calls          : 3
-Input Tokens       : 412
-Output Tokens      : 198
-Total Tokens       : 610
-LLM Duration (ms)  : 2540.0
-==== END LLM Usage ====
-```
+## ⚠️ Breaking (Internal Only): `orchestrator/` Removed
+`textfsm_ai.orchestrator` and the `textfsm-ai orchestrator route/run`
+CLI commands are gone. This was an auto-routing/fallback layer that
+turned out to be unused by the real `generate`/`pipeline` path (which
+always takes an explicit `--provider`) - dead weight duplicating
+`generate`. `providers test` (a quick connectivity check) is kept, now
+with a required `--provider` flag instead of guessing the provider
+from the model name.
 
-`default` mode is unaffected (no usage shown there). `debug` mode's
-per-stage raw pipeline breakdown was already accurate and needed no
-change.
+## ⚠️ Breaking (Internal Only): Module Removals
+`textfsm_ai.providers.<x>_provider` modules and `OrchestratorConfig`
+(renamed `ProvidersConfig`) are gone. Neither was part of the
+documented public API - only relevant if you were importing internals
+directly.
 
 ## 📦 Version
-`0.7.0 → 0.7.1`
+`0.7.1 → 0.8.0`

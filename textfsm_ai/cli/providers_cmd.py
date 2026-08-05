@@ -1,18 +1,16 @@
 from __future__ import annotations
 
-import asyncio
 from typing import Optional
 
+import anyask
 import click
+from anyask.registry import registry
 
-from textfsm_ai.orchestrator.factory import create_orchestrator_from_config
-from textfsm_ai.orchestrator.types import OrchestratorRequest
 from textfsm_ai.providers.config import (
-    OrchestratorConfig,
+    ProvidersConfig,
     load_config_from_env,
     load_config_from_file,
 )
-from textfsm_ai.providers.registry import registry
 
 PROVIDER_DESCRIPTIONS = {
     "openai": "Native OpenAI API",
@@ -36,7 +34,7 @@ PROVIDER_DESCRIPTIONS = {
 }
 
 
-def _load_config(config_path: Optional[str]) -> OrchestratorConfig:
+def _load_config(config_path: Optional[str]) -> ProvidersConfig:
     if config_path:
         return load_config_from_file(config_path)
     return load_config_from_env()
@@ -98,20 +96,25 @@ def providers_info(provider_name: str, config_path: Optional[str]) -> None:
 
 
 @providers_group.command("test")
+@click.option(
+    "--provider", "provider_name", required=True, help="Provider name, e.g. openai"
+)
 @click.option("--config", "config_path", type=click.Path(exists=True), required=False)
-@click.option("--model", required=True, help="Model name, e.g. openai/gpt-4o-mini")
+@click.option("--model", required=True, help="Model name, e.g. gpt-4o-mini")
 @click.option("--prompt", required=True, help="Prompt to send to the provider")
-def providers_test(config_path: Optional[str], model: str, prompt: str) -> None:
+def providers_test(
+    provider_name: str, config_path: Optional[str], model: str, prompt: str
+) -> None:
     """
-    Send a test prompt through the orchestrator to the appropriate provider.
+    Send a test prompt directly to a provider.
     """
     cfg = _load_config(config_path)
-    orch = create_orchestrator_from_config(cfg)
+    pcfg = cfg.providers.get(provider_name)
+    params = pcfg.params if pcfg else {}
 
-    req = OrchestratorRequest(model=model, prompt=prompt)
-    resp = asyncio.run(orch.run(req))
+    response = anyask.ask(prompt, provider=provider_name, model=model, **params)
 
-    click.echo(f"Provider: {resp.provider}")
-    click.echo(f"Model: {resp.model}")
+    click.echo(f"Provider: {response.provider}")
+    click.echo(f"Model: {response.model}")
     click.echo("-" * 40)
-    click.echo(resp.content)
+    click.echo(response.content)

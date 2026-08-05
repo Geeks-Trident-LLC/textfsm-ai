@@ -1,5 +1,6 @@
-# SDK for the anthropic provider extra.
+# SDK for the anthropic provider extra, via anyask.
 #
 # Mirrors the `anthropic` extra in pyproject.toml - keep in sync if that
-# changes.
-anthropic>=0.8.0
+# changes. See https://github.com/Geeks-Trident-LLC/anyask for the SDK
+# version pin anyask[anthropic] resolves to.
+anyask[anthropic]>=0.1.1

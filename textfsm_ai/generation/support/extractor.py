@@ -5,14 +5,13 @@ from datetime import datetime, timezone
 
 from textfsm_ai.generation.core.models import LLMResponse
 from textfsm_ai.generation.support import llm_extractor
-from textfsm_ai.orchestrator.provider import Provider
 
 
-def extract(provider: Provider, model: str, prompt: str, **kwargs) -> LLMResponse:
+def extract(provider_name: str, model: str, prompt: str, **kwargs) -> LLMResponse:
     sent_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     start = time.time()
 
-    raw = llm_extractor.extract(provider, model=model, prompt=prompt, **kwargs)
+    raw = llm_extractor.extract(provider_name, model=model, prompt=prompt, **kwargs)
 
     duration_ms = int((time.time() - start) * 1000)
     received_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -22,7 +21,7 @@ def extract(provider: Provider, model: str, prompt: str, **kwargs) -> LLMRespons
         return LLMResponse(
             content="",
             prompt=prompt,
-            provider=provider.name,
+            provider=provider_name,
             model=model,
             duration_ms=duration_ms,
             sent_at=sent_at,
@@ -47,7 +46,7 @@ def extract(provider: Provider, model: str, prompt: str, **kwargs) -> LLMRespons
     return LLMResponse(
         content=content,
         prompt=prompt,
-        provider=provider.name,
+        provider=provider_name,
         model=model,
         input_tokens=input_tokens,
         output_tokens=output_tokens,
